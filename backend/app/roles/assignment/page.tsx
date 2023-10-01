@@ -7,6 +7,7 @@ import RoleBox from "@/components/RoleBox";
 import Layout from "@/components/Layout";
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import UserItem from '@/components/UserItem';
 
 
 const ItemType = 'USER';
@@ -16,23 +17,6 @@ interface User {
     username: string;
 }
 
-const UserItem: React.FC<User> = ({ id, username }) => {
-  const [, ref] = useDrag({
-    type: ItemType,
-    item: { id },
-  });
-
-  const [, drop] = useDrop({
-    accept: ItemType
-  });
-
-  return (
-    console.log(username),
-    <div ref={(node) => ref(drop(node))} style={{ padding: '0.5rem' }}>
-      {username}
-    </div>
-  );
-};
 
 interface Role {
     role_id: number;
@@ -128,6 +112,36 @@ export default function AssignRoles() {
         }
     };
 
+    const onDrop = (item: { id: number; currentRole: number }, newRoleId: number) => {
+      const userId = item.id;
+      const oldRoleId = item.currentRole;
+      console.log("OLD ROLE ID");
+      console.log(oldRoleId);
+      if (oldRoleId !== newRoleId) {
+          console.log(`${userId} was removed from role ${oldRoleId} and assigned to ${newRoleId}`);
+          if(oldRoleId) { removeUserRole(userId, oldRoleId); } // Remove from old role
+          assignUserRoles(userId, newRoleId); // Assign to new role
+      }
+  };
+
+  const removeUserRole = async (userId: number, roleId: number) => {
+    try {
+        const res = await axios.delete(`/api/user-role/${userId}/${roleId}`);
+        const data = await res.data;
+
+        if (!data.success) {
+            throw new Error(data.error);
+        }
+
+        toast.success('Role removed successfully!');
+        setRefresh(prev => !prev);  // To re-render and show the updated roles
+    } catch (error) {
+        toast.error('Error removing role');
+        console.error('Error removing role', error);
+    }
+};
+
+
   return (
     console.log(roles),
     console.log(users),
@@ -141,10 +155,7 @@ export default function AssignRoles() {
             ))}
           </div>
           {roles.map((role, index) => (
-            <RoleBox key={index} role={role.role_name} role_id={role.role_id} users={role.users} onDrop={(user, role) => {
-              console.log(`${user} was assigned to ${role}`);
-              assignUserRoles(user, role);
-            }} />
+            <RoleBox key={index} role={role.role_name} role_id={role.role_id} users={role.users} onDrop={(item) => onDrop(item, role.role_id)} />
           ))}
         </div>
       </Layout>

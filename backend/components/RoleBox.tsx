@@ -2,6 +2,7 @@
 import React from 'react';
 import { useDrop } from 'react-dnd';
 import { Button, Tag } from 'antd';
+import UserItem from './UserItem';
 
 interface User {
     id: number;
@@ -12,15 +13,15 @@ interface RoleBoxProps {
   role: string;
   role_id: number;
   users?: User[];
-  onDrop: (user: number, role_id: number) => void;
+  onDrop: (item: any, role_id: number) => void;
 }
 
 const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
   const [, drop] = useDrop({
     accept: 'USER',
-    drop: (item: any, monitor) => {
-      onDrop(item.id, role_id);
-    },
+    drop: (item) => {
+      onDrop(item, role_id);  // Pass the entire item object here
+  },
   });
 
   return (
@@ -35,8 +36,8 @@ const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
       }}
     >
       <div>{role}</div>
-      {users && users.map((user: User) => (
-            <Tag key={user.id} color="blue">{user.username}</Tag>
+      {users && users.map((user: User, index) => (
+            <UserItem key={index} id={user.id} currentRole={role_id} username={user.username} />
         ))}
     </div>
   );
