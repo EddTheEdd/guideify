@@ -89,6 +89,12 @@ export default function Courses() {
           title: 'Name',
           dataIndex: 'name',
           key: 'name',
+          render: (text, record) => ({
+            props: {
+              style: { borderLeft: `6px solid ${record.rgb_value}` },
+            },
+            children: <div>{text}</div>,
+          }),
         },
         {
             title: 'Description',

@@ -3,6 +3,7 @@ exports.up = function (knex) {
         table.increments('course_id').primary();
         table.string('name').notNullable();
         table.text('description').notNullable();
+        table.string('rgb_value');
         table.timestamps(true, true);
     });
 };

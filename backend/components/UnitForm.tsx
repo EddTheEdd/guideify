@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Select, Input, Button, message } from 'antd';
 import axios from 'axios';
 import TextEditor from './TextEditor';
+import QuestForm from './QuestForm';
 
 const { Option } = Select;
 
@@ -20,6 +21,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
     });
   const [unitName, setUnitName] = useState<string>(unit.title);
   const [order, setOrder] = useState(unit.order);
+  const [quest, setQuest] = useState([]);
 
   useEffect(() => {
     setUnitType(unit.content_type);
@@ -63,7 +65,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
   };
 
   return (
-    console.log(unit),
+    console.log(formData),
     <>
         <p>{unitName}</p>  {/* Use the index prop here for dynamic unit numbering */}
         <Form layout="vertical">
@@ -107,9 +109,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
         )}
 
         {unitType === 'questionnaire' && (
-            <Form.Item label="Question" name="question">
-                <Input placeholder="Enter your question" name="question" onChange={handleInputChange} />
-            </Form.Item>
+            <QuestForm quest={quest} setQuest={setQuest}/>
         )}
 
         <Form.Item>

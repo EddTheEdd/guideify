@@ -10,7 +10,7 @@ interface Unit {
     content: string;
   }
 
-const UnitsBox: React.FC = ({courseId}) => {
+const UnitsBox: React.FC = ({courseId, rgbString, textColor}) => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [unitTempId, setUnitTempId] = useState(100);
 
@@ -36,7 +36,7 @@ const UnitsBox: React.FC = ({courseId}) => {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <Button type="primary" onClick={addUnit} style={{ marginBottom: '20px' }}>
+      <Button type="primary" onClick={addUnit} style={{ backgroundColor: rgbString, borderColor: rgbString, color: textColor, marginBottom: '20px' }}>
         Add Unit
       </Button>
 
