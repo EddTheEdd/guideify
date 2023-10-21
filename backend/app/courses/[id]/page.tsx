@@ -106,17 +106,16 @@ const CoursePage: React.FC = ({params}: any) => {
         <>
         <Layout >
             {course ? (
-                <Card bordered={false} style={{ backgroundColor: rgbString, color: textColor, maxWidth: 800, margin: '0 auto' }}>
+                <Card className="coursepage_course_card" bordered={false} style={{ backgroundColor: rgbString, color: textColor, maxWidth: 800, margin: '0 auto' }}>
                     <div>
                     <Title level={2} style={{color: textColor}}>{course.name}</Title>
                     <Text style={{color: textColor}}>{course.description}</Text>
                     </div>
                     <SettingOutlined onClick={() => setModalVisible(true)} style={{ fontSize: '24px'}} />
-                    {/* You can add more course details here */}
                 </Card>
                 
             ) : (
-                <Content>Loading...</Content> // Adjust this part based on your design preferences
+                <Content>Loading...</Content>
             )}
             {/* Space for more development work */}
             <Space direction="vertical" style={{ width: '100%', marginTop: 20 }}>

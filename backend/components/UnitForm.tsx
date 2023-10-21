@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Select, Input, Button, message } from "antd";
+import { Form, Select, Input, Button, message, Divider } from "antd";
 import axios from "axios";
 import TextEditor from "./TextEditor";
 import QuestForm from "./QuestForm";
@@ -13,7 +13,8 @@ interface UnitFormProps {
 }
 
 const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
-  const [unitType, setUnitType] = useState<string | null>(unit.content_type);
+  console.log(unit);
+  const [unitType, setUnitType] = useState<string | "null">(unit.content_type);
   const [formData, setFormData] = useState<any>({
     content: unit.content,
     videoUrl: unit.content_type === "video" ? unit.content : "",
@@ -22,7 +23,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
   const [unitName, setUnitName] = useState<string>(unit.title);
   const [order, setOrder] = useState(unit.order);
   const [quest, setQuest] = useState(unit.questionnaire || []);
-  const [questTitle, setQuestTitle] = useState(unit.questionaire ? unit.questionaire[0].title : "Question Title");
+  const [questTitle, setQuestTitle] = useState(unit.questionnaire[0] ? unit.questionnaire[0].title : "");
 
   useEffect(() => {
     setUnitType(unit.content_type);
@@ -80,12 +81,18 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
     }
   };
 
+  const unitTypes = {
+    quest: "Questionnaire",
+    text: "Reading Material",
+    video: "Video Content",
+  }
+
   return (
     console.log(formData),
     (
       <>
-        <p>{unitName}</p>{" "}
-        {/* Use the index prop here for dynamic unit numbering */}
+        <p className={"unitform-unitname"}>{unitName}</p>{" "}
+        <Divider>{unitTypes[unitType as keyof typeof unitTypes]}</Divider>
         <Form layout="vertical">
           <Form.Item
             label="Unit Name"
@@ -122,6 +129,8 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
             </Select>
           </Form.Item>
 
+          <Divider></Divider>
+
           {unitType === "text" && (
             <>
               <Form.Item
@@ -153,9 +162,9 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
 
           {unitType === "quest" && (
             <>
-              <Form.Item label="Questionnaire Title" name={`${index}-quest_title`} initialValue={questTitle}>
+              <Form.Item label="Questionnaire Title" tooltip="You can reuse this questionnaire in different units!" name={`${index}-quest_title`} initialValue={questTitle}>
                 <Input
-                  placeholder="Enter your question title"
+                  placeholder="The capitals of the world!"
                   name="text"
                   value={questTitle}
                   onChange={(e: any) =>

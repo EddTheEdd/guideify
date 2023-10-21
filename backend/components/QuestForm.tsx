@@ -27,7 +27,6 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
     ]);
   };
 
-
   const handleQuestionTypeChange = (value: string, index: number) => {
     console.log(value);
     console.log(index);
@@ -52,7 +51,11 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
     });
   };
 
-  const handleMultiAnswerChange = (value: string, index: number, answerIndex: number) => {
+  const handleMultiAnswerChange = (
+    value: string,
+    index: number,
+    answerIndex: number
+  ) => {
     console.log(value);
     console.log(index);
     setQuest((prev: any) => {
@@ -62,7 +65,7 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
       updatedQuest[index] = updatedItem;
       return updatedQuest;
     });
-  }
+  };
 
   const handleAnswerChange = (value: string, index: number) => {
     console.log(value);
@@ -101,7 +104,7 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
       updatedQuest[index] = updatedItem;
       return updatedQuest;
     });
-  }
+  };
 
   // const handleUnitTypeChange = (value: string) => {
   //   setUnitType(value);
@@ -142,7 +145,7 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
     console.log(quest),
     (
       <>
-        <Form.Item label="Questionnaire">
+        <Form.Item className="questform_quest_block">
           {quest.map((question: any, index: number) => (
             <div key={index}>
               <Form.Item
@@ -158,59 +161,86 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
                   <Option value="multi_choice">Multiple Choice</Option>
                 </Select>
               </Form.Item>
-              <Form.Item label="Question" name={`${index}-text`} initialValue={question.question_text}>
-                <Input
-                  placeholder="Enter your question"
-                  name="question_text"
-                  value={question.question_text}
-                  onChange={(e: any) =>
-                    handleQuestionChange(e.target.value, index)
-                  }
-                />
-              </Form.Item>
-              {question.type === "text" ? (
-                <Form.Item label="Answer" name={`${index}-correct_answer`} initialValue={question.correct_answer}>
+              <div className="questform_question_answer_block">
+                <Form.Item
+                  label="Question"
+                  name={`${index}-text`}
+                  initialValue={question.question_text}
+                >
                   <Input
-                    placeholder="Enter your answer"
-                    name="correct_answer"
-                    value={question.correct_answer}
+                    placeholder="Enter your question"
+                    name="question_text"
+                    value={question.question_text}
                     onChange={(e: any) =>
-                      handleAnswerChange(e.target.value, index)
+                      handleQuestionChange(e.target.value, index)
                     }
                   />
                 </Form.Item>
-              ) : (
-                <>
-                  {question.answers.map((answer: any, answerIndex: number) => (
-                    <div
-                      key={answerIndex}
-                      style={{ display: "flex", alignItems: "center" }}
-                    >
-                      <Checkbox checked={question.checked_answers.includes(answerIndex)} onChange={() => {selectAnswer(index, answerIndex)}} />
-                      <Input
-                        defaultValue={answer}
-                        onChange={(e: any) => {handleMultiAnswerChange(e.target.value, index, answerIndex)}}
-                        style={{ marginLeft: "10px" }}
-                      />
-                    </div>
-                  ))}
-                  <Button
-                    type="primary"
-                    onClick={() => {addAnswer(index)}}
-                    style={{ marginTop: "13px" }}
+                {question.type === "text" ? (
+                  <Form.Item
+                    label="Answer"
+                    name={`${index}-correct_answer`}
+                    initialValue={question.correct_answer}
                   >
-                    | Add Question |
-                  </Button>
-                </>
-              )}
+                    <Input
+                      placeholder="Enter your answer"
+                      name="correct_answer"
+                      value={question.correct_answer}
+                      onChange={(e: any) =>
+                        handleAnswerChange(e.target.value, index)
+                      }
+                    />
+                  </Form.Item>
+                ) : (
+                  <div className="questform_answer_block">
+                    {question.answers.map(
+                      (answer: any, answerIndex: number) => (
+                        <div
+                          key={answerIndex}
+                          style={{ display: "flex", alignItems: "center" }}
+                        >
+                          <Checkbox
+                            checked={question.checked_answers.includes(
+                              answerIndex
+                            )}
+                            onChange={() => {
+                              selectAnswer(index, answerIndex);
+                            }}
+                          />
+                          <Input
+                            defaultValue={answer}
+                            onChange={(e: any) => {
+                              handleMultiAnswerChange(
+                                e.target.value,
+                                index,
+                                answerIndex
+                              );
+                            }}
+                            style={{ marginLeft: "10px" }}
+                          />
+                        </div>
+                      )
+                    )}
+                    <Button
+                      type="primary"
+                      onClick={() => {
+                        addAnswer(index);
+                      }}
+                      style={{ marginTop: "13px" }}
+                    >
+                      Add Answer
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
           <Button
             type="primary"
             onClick={addQuestion}
-            style={{ marginTop: "13px" }}
+            style={{ marginTop: "13px", width: "100%" }}
           >
-            +
+            Add Question
           </Button>
         </Form.Item>
       </>

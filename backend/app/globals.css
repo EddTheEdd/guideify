@@ -26,12 +26,55 @@ body {
     rgb(var(--background-start-rgb));
 } */
 
-.ant-form {
-  border: solid 2px black;
-  padding: 5px;
+
+
+.unitform-unitname {
+  text-align: center;
+  font-size: 40px;
+  margin: 15px;
+  font-weight: bold;
 }
 
-.ant-form-item {
-  border-top: solid 2px black;
-  border-bottom: solid 2px black;
+.questform_answer_block {
+  margin-left: 30px;
 }
+
+.questform_answer_block div {
+  margin-bottom: 5px;
+}
+
+.questform_quest_block {
+  margin-left: 30px;
+}
+
+.questform_question_answer_block {
+  margin-left: 30px;
+}
+
+.coursepage_course_card div div h2 {
+  font-size: 50px;
+  margin: unset;
+}
+
+.coursepage_course_card div div span {
+  font-size: 16px;
+  margin: unset;
+}
+
+.coursepage_course_card > div {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.coursepage_course_card > div > div {
+  grid-area: 1 / 1;
+}
+
+.coursepage_course_card > div > span {
+  grid-area: 1 / 2;
+  display: grid;
+  align-content: start;
+  justify-content: end;
+}
+
+
