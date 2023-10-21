@@ -19,6 +19,19 @@ export async function GET(request: NextRequest) {
 
         const units = result.rows;
 
+        for (let unit of units) {
+            if (unit.content_type === 'quest') {
+                const questResult = await pool.query(`
+                    SELECT q.*, qs.* 
+                    FROM questionnaires q 
+                    INNER JOIN questions qs ON q.quest_id = qs.quest_id
+                    WHERE q.quest_id = $1
+                `, [unit.quest_id]);
+
+                unit.questionnaire = questResult.rows;
+            }
+        }
+
         return NextResponse.json({
             success: true,
             units: units

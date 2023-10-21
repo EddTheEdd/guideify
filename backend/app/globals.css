@@ -25,3 +25,13 @@ body {
     )
     rgb(var(--background-start-rgb));
 } */
+
+.ant-form {
+  border: solid 2px black;
+  padding: 5px;
+}
+
+.ant-form-item {
+  border-top: solid 2px black;
+  border-bottom: solid 2px black;
+}

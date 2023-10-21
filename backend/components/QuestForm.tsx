@@ -11,17 +11,22 @@ interface QuestFormProps {
 }
 
 const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
+  console.log(quest);
   const addQuestion = () => {
     setQuest((prev: any) => [
       ...prev,
       {
-        text: "Type your question here.",
+        question_text: "Type your question here.",
         type: "text",
         correct_answer: "What is the correct answer?",
         answers: ["Answer 1", "Answer 2", "Answer 3"],
+        checked_answers: [0, 1],
+        requires_review: false,
+        order: 1,
       },
     ]);
   };
+
 
   const handleQuestionTypeChange = (value: string, index: number) => {
     console.log(value);
@@ -38,12 +43,65 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
   const handleQuestionChange = (value: string, index: number) => {
     console.log(value);
     console.log(index);
+    setQuest((prev: any) => {
+      const updatedQuest = [...prev];
+      const updatedItem = { ...updatedQuest[index] };
+      updatedItem.question_text = value;
+      updatedQuest[index] = updatedItem;
+      return updatedQuest;
+    });
   };
+
+  const handleMultiAnswerChange = (value: string, index: number, answerIndex: number) => {
+    console.log(value);
+    console.log(index);
+    setQuest((prev: any) => {
+      const updatedQuest = [...prev];
+      const updatedItem = { ...updatedQuest[index] };
+      updatedItem.answers[answerIndex] = value;
+      updatedQuest[index] = updatedItem;
+      return updatedQuest;
+    });
+  }
 
   const handleAnswerChange = (value: string, index: number) => {
     console.log(value);
     console.log(index);
+    setQuest((prev: any) => {
+      const updatedQuest = [...prev];
+      const updatedItem = { ...updatedQuest[index] };
+      updatedItem.correct_answer = value;
+      updatedQuest[index] = updatedItem;
+      return updatedQuest;
+    });
   };
+
+  const addAnswer = (index: number) => {
+    setQuest((prev: any) => {
+      const updatedQuest = [...prev];
+      const updatedItem = { ...updatedQuest[index] };
+      updatedItem.answers.push("Answer");
+      updatedQuest[index] = updatedItem;
+      return updatedQuest;
+    });
+  };
+
+  const selectAnswer = (index: number, answerIndex: number) => {
+    setQuest((prev: any) => {
+      const updatedQuest = [...prev];
+      const updatedItem = { ...updatedQuest[index] };
+      if (updatedItem.checked_answers.includes(answerIndex)) {
+        updatedItem.checked_answers.splice(
+          updatedItem.checked_answers.indexOf(answerIndex),
+          1
+        );
+      } else {
+        updatedItem.checked_answers.push(answerIndex);
+      }
+      updatedQuest[index] = updatedItem;
+      return updatedQuest;
+    });
+  }
 
   // const handleUnitTypeChange = (value: string) => {
   //   setUnitType(value);
@@ -89,7 +147,7 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
             <div key={index}>
               <Form.Item
                 label="Question Type"
-                name="type"
+                name={`${index}-type`}
                 initialValue={question.type}
               >
                 <Select
@@ -97,40 +155,53 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
                   onChange={(value) => handleQuestionTypeChange(value, index)}
                 >
                   <Option value="text">Text</Option>
-                  <Option value="multiple_choice">Multiple Choice</Option>
+                  <Option value="multi_choice">Multiple Choice</Option>
                 </Select>
               </Form.Item>
-              <Form.Item label="Question" name="text">
+              <Form.Item label="Question" name={`${index}-text`} initialValue={question.question_text}>
                 <Input
                   placeholder="Enter your question"
-                  name="text"
-                  value={question.text}
-                  onChange={(e: any) => handleQuestionChange(e.target.value, index)}
+                  name="question_text"
+                  value={question.question_text}
+                  onChange={(e: any) =>
+                    handleQuestionChange(e.target.value, index)
+                  }
                 />
               </Form.Item>
               {question.type === "text" ? (
-                <Form.Item label="Answer" name="correct_answer">
+                <Form.Item label="Answer" name={`${index}-correct_answer`} initialValue={question.correct_answer}>
                   <Input
                     placeholder="Enter your answer"
                     name="correct_answer"
                     value={question.correct_answer}
-                    onChange={(e: any) => handleAnswerChange(e.target.value, index)}
+                    onChange={(e: any) =>
+                      handleAnswerChange(e.target.value, index)
+                    }
                   />
                 </Form.Item>
               ) : (
-                question.answers.map((answer: any, index: number) => (
-                  <div
-                    key={index}
-                    style={{ display: "flex", alignItems: "center" }}
+                <>
+                  {question.answers.map((answer: any, answerIndex: number) => (
+                    <div
+                      key={answerIndex}
+                      style={{ display: "flex", alignItems: "center" }}
+                    >
+                      <Checkbox checked={question.checked_answers.includes(answerIndex)} onChange={() => {selectAnswer(index, answerIndex)}} />
+                      <Input
+                        defaultValue={answer}
+                        onChange={(e: any) => {handleMultiAnswerChange(e.target.value, index, answerIndex)}}
+                        style={{ marginLeft: "10px" }}
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    type="primary"
+                    onClick={() => {addAnswer(index)}}
+                    style={{ marginTop: "13px" }}
                   >
-                    <Checkbox onChange={() => console.log(answer)} />
-                    <Input
-                      defaultValue={answer}
-                      onChange={(e: any) => console.log(e.target.value)}
-                      style={{ marginLeft: "10px" }}
-                    />
-                  </div>
-                ))
+                    | Add Question |
+                  </Button>
+                </>
               )}
             </div>
           ))}

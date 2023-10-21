@@ -19,6 +19,15 @@ const UnitsBox: React.FC = ({courseId, rgbString, textColor}) => {
     const fetchUnits = async () => {
         try {
             const response = await axios.get(`/api/units/${courseId}`);
+            // extract answers and checked_answers, json decode and put back in:
+            response.data.units.forEach((unit: any) => {
+                if (unit.content_type === "quest") {
+                    unit.questionnaire.forEach((quest: any) => {
+                        quest.answers = JSON.parse(quest.answers);
+                        quest.checked_answers = JSON.parse(quest.checked_answers);
+                    });
+                }
+            });
             console.log(response.data.units);
             setUnits(response.data.units);
         } catch (error) {
