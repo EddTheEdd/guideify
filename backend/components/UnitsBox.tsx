@@ -8,6 +8,7 @@ interface Unit {
     name: string;
     type: string;
     content: string;
+    questionnaire: any;
   }
 
 const UnitsBox: React.FC = ({courseId, rgbString, textColor}) => {
@@ -27,6 +28,9 @@ const UnitsBox: React.FC = ({courseId, rgbString, textColor}) => {
                         quest.checked_answers = JSON.parse(quest.checked_answers);
                     });
                 }
+                if (!unit?.questionnaire) {
+                    unit.questionnaire = [];
+                }
             });
             console.log(response.data.units);
             setUnits(response.data.units);
@@ -39,7 +43,7 @@ const UnitsBox: React.FC = ({courseId, rgbString, textColor}) => {
     }, []);
 
   const addUnit = () => {
-    setUnits(prev => [...prev, {id:unitTempId, name:"New Unit", type:"", content:""}]);
+    setUnits(prev => [...prev, {id:unitTempId, name:"New Unit", type:"", content:"", questionnaire:[]}]);
     setUnitTempId(prevId => prevId + 1);
   };
 

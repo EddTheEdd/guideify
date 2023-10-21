@@ -22,8 +22,8 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
   });
   const [unitName, setUnitName] = useState<string>(unit.title);
   const [order, setOrder] = useState(unit.order);
-  const [quest, setQuest] = useState(unit.questionnaire || []);
-  const [questTitle, setQuestTitle] = useState(unit.questionnaire[0] ? unit.questionnaire[0].title : "");
+  const [quest, setQuest] = useState(unit?.questionnaire || []);
+  const [questTitle, setQuestTitle] = useState(unit?.questionnaire[0] ? unit.questionnaire[0].title : "");
 
   useEffect(() => {
     setUnitType(unit.content_type);
