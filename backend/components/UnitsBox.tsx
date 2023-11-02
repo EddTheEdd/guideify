@@ -6,6 +6,7 @@ import axios from 'axios';
 interface Unit {
     id: number;
     name: string;
+    description: string,
     type: string;
     content: string;
     questionnaire: any;
@@ -43,7 +44,7 @@ const UnitsBox: React.FC = ({courseId, rgbString, textColor}) => {
     }, []);
 
   const addUnit = () => {
-    setUnits(prev => [...prev, {id:unitTempId, name:"New Unit", type:"", content:"", questionnaire:[]}]);
+    setUnits(prev => [...prev, {id:unitTempId, name:"New Unit", description: "", type:"", content:"", questionnaire:[]}]);
     setUnitTempId(prevId => prevId + 1);
   };
 

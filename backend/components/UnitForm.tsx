@@ -21,6 +21,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
     question: unit.content_type === "quest" ? unit.content : "",
   });
   const [unitName, setUnitName] = useState<string>(unit.title);
+  const [unitDescription, setUnitDescription] = useState<string>(unit.description);
   const [order, setOrder] = useState(unit.order);
   const [quest, setQuest] = useState(unit?.questionnaire || []);
   const [questTitle, setQuestTitle] = useState(unit?.questionnaire[0] ? unit.questionnaire[0].title : "");
@@ -28,6 +29,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
   useEffect(() => {
     setUnitType(unit.content_type);
     setUnitName(unit.title);
+    setUnitDescription(unit.description);
     setOrder(unit.order);
   }, [unit]);
 
@@ -68,6 +70,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
         ...formData,
         type: unitType,
         title: unitName,
+        description: unitDescription,
         order: order,
         courseId,
         unitId: unit.unit_id,
@@ -103,6 +106,18 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
               placeholder="New Unit"
               value={unitName}
               onChange={(e: any) => setUnitName(e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Unit Description"
+            name="unitDescription"
+            initialValue={unit.description}
+          >
+            <Input
+              placeholder="New Description"
+              value={unitDescription}
+              onChange={(e: any) => setUnitDescription(e.target.value)}
             />
           </Form.Item>
 

@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
       unitId,
       questTitle,
       quest,
+      description
     } = reqBody;
     console.log({ courseId, title, type, content, videoUrl, order });
     let result;
@@ -66,21 +67,21 @@ export async function POST(request: NextRequest) {
       // Update the existing unit
       query = `
                 UPDATE course_units 
-                SET course_id = $1, title = $2, content_type = $3, content = $4, "order" = $5, "quest_id" = $6
-                WHERE unit_id = $7
+                SET course_id = $1, title = $2, content_type = $3, content = $4, "order" = $5, "quest_id" = $6, description = $7
+                WHERE unit_id = $8
                 RETURNING *;
             `;
-      values = [courseId, title, type, content, order, questId || null, unitId];
+      values = [courseId, title, type, content, order, questId || null, description, unitId];
       message = "Unit updated successfully";
     } else {
       console.log("SAVING UNIT");
       // Insert a new unit
       query = `
-                INSERT INTO course_units (course_id, title, content_type, content, "order", quest_id) 
-                VALUES ($1, $2, $3, $4, $5, $6) 
+                INSERT INTO course_units (course_id, title, content_type, content, "order", quest_id, description) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7) 
                 RETURNING *;
             `;
-      values = [courseId, title, type, content, order, questId || null];
+      values = [courseId, title, type, content, order, questId || null, description];
       message = "Unit added successfully";
     }
 
