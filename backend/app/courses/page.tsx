@@ -106,6 +106,20 @@ export default function Courses() {
             dataIndex: 'units',
             key: 'units',
         },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_: any, record: Unit) => (
+              <>
+                <Link href={`/courses/view/${record.id}`}>
+                  View
+                </Link>
+                <Link style={{marginLeft: "13px"}}href={`/courses/${record.id}`}>
+                  Edit
+                </Link>
+              </>
+            ),
+          },
     ];
 
     return (

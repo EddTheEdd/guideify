@@ -10,7 +10,7 @@ interface LayoutProps {
 const menuItems = [
     { label: 'Home', link: '/' },
     { label: 'Roles', link: '/roles' },
-    { label: 'Services', link: '/services' },
+    { label: 'Courses', link: '/courses' },
     { label: 'Portfolio', link: '/portfolio' },
     { label: 'Contact', link: '/contact' },
 ];

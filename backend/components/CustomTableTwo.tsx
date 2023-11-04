@@ -15,10 +15,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns }) => {
   return <Table 
     dataSource={data} 
     columns={columns} 
-    onRow={(record) => ({
-      onClick: () => {
-        router.push(`/courses/${record.id}`);
-      },
+    onRow={(record: any) => ({
       style: {
         borderLeft: record.rgb_value ? `4px solid ${record.rgb_value}` : undefined
       }

@@ -59,6 +59,7 @@ const Card = ({ title, unitId, contentType, description, progress }) => {
   return (
     <div
       className={`card ${isExpanded ? "expanded" : ""}`}
+      style={{ cursor: "pointer" }}
       onClick={() => {
         router.push(`/unit/view/${unitId}`);
       }}

@@ -118,6 +118,10 @@ body {
   color: #007bff;
 }
 
+.read-more:hover {
+  text-decoration: underline;
+}
+
 .unitpage_main_content {
   text-align: center;
   margin: 50px;
