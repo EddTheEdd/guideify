@@ -3,10 +3,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Layout from "@/components/Layout";
-import { Divider, Tag, Typography } from "antd";
+import { Button, Divider, Tag, Typography } from "antd";
 import DOMPurify from "dompurify";
 
 const { Title, Text } = Typography;
+
+interface Progress {
+  completed: boolean;
+  startedAt?: Date;
+  finishedAt?: Date;
+}
+
 
 interface Unit {
   unit_id: number;
@@ -15,6 +22,7 @@ interface Unit {
   description: string;
   type: string;
   content: string;
+  progress: Progress;
 }
 
 const tags = [
@@ -46,7 +54,7 @@ const tagColors = {
 const UnitPage: React.FC = ({ params }: any) => {
   const id = params.id;
   const [unit, setUnit] = useState<Unit | null>(null);
-  const [wasInserted, setWasInserted] = useState(true);
+  const [completed, setCompleted] = useState(false);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     setLoading(true);
@@ -56,7 +64,7 @@ const UnitPage: React.FC = ({ params }: any) => {
       try {
         const response = await axios.get(`/api/unit/${id}`);
         setUnit(response.data.unit);
-        setWasInserted(response.data.wasInserted);
+        setCompleted(response.data.unit.progress.completed);
         console.log(response.data.unit);
         setLoading(false);
       } catch (error) {
@@ -66,6 +74,21 @@ const UnitPage: React.FC = ({ params }: any) => {
 
     fetchUnit();
   }, [id]);
+
+  const markAsComplete = async () => {
+    try {
+      if (!unit) {
+        console.error("Unit is undefined");
+        return;
+      }
+
+      const response = await axios.post(`/api/unit/${id}/complete`);
+      setCompleted(true);
+      console.log(response);
+    } catch (error) {
+      console.error("Error marking unit as complete", error);
+    }
+  }
 
   const safeContent = unit ? DOMPurify.sanitize(unit.content) : "";
 
@@ -86,15 +109,16 @@ const UnitPage: React.FC = ({ params }: any) => {
                 <Tag
                   color={`${
                     tagColors[
-                      wasInserted ? "Not Started" : "In Progress"
+                      completed ? "Completed" : "In Progress"
                     ]
                   }`}
                 >
-                  {wasInserted ? tags[0].text : tags[1].text}
+                  {completed ? "Completed" : "In Progress"}
                 </Tag>
                 <Divider></Divider>
                 <div className="unitpage_main_body" dangerouslySetInnerHTML={{ __html: safeContent }}></div>
               </div>
+              <Button className="unitpage_main_button" disabled={completed} onClick={() => {markAsComplete()}}>Mark as Completed</Button>
             </>
           )}
         </Layout>
