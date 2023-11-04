@@ -1,7 +1,9 @@
 import pool from "@/dbConfig/pgConfig"; 
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
+    const userId = getDataFromToken(request)
     const courseId = request.nextUrl.pathname.split('/').pop();  // Extract the last part of the URL as course ID
 
     if (!courseId) {
@@ -30,6 +32,10 @@ export async function GET(request: NextRequest) {
 
                 unit.questionnaire = questResult.rows;
             }
+
+            const progressResult = await pool.query(`
+                SELECT * FROM user_course_progress WHERE unit_id = $1 AND user_id = $2`, [unit.unit_id, userId]);
+            unit.progress = progressResult.rows[0];
         }
 
         return NextResponse.json({

@@ -5,7 +5,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "@/components/Layout";
 import CustomTable from "@/components/CustomTable";
-import { Button, Checkbox, Input, Modal, Select } from "antd";
+import { Button, Checkbox, Input, Modal, Select, Tag } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import { useRouter } from "next/navigation";
@@ -23,28 +23,90 @@ interface Unit {
   content_type: string;
   description: string;
   type: string; // For instance: 'text', 'video', or 'questionnaire'
+  progress: string;
 }
 
-const Card = ({ title, unitId, contentType, description }) => {
-    const router = useRouter();
+const tags = [
+  {
+    text: "Not Started",
+  },
+  {
+    text: "In Progress",
+  },
+  {
+    text: "Completed",
+  },
+  {
+    text: "Failed",
+  },
+  {
+    text: "Withdrawn",
+  },
+];
+
+const tagColors = {
+  "Not Started": "orange",
+  "In Progress": "blue",
+  Completed: "green",
+  Failed: "red",
+  Withdrawn: "gray",
+};
+
+const Card = ({ title, unitId, contentType, description, progress }) => {
+  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div
       className={`card ${isExpanded ? "expanded" : ""}`}
-      onClick={() => {router.push(`/unit/${unitId}/view`);}}
+      onClick={() => {
+        router.push(`/unit/view/${unitId}`);
+      }}
     >
       <div className="card-header">
-        <strong>{title}</strong>
-        <br />
-        <em>{contentType}</em>
+        <div className="card_header_text">
+          <strong>{title}</strong>
+          <br />
+          <em>{contentType}</em>
+        </div>
+        <div className="card_header_tag">
+          {progress ? (
+            <Tag
+              color={`${
+                tagColors[
+                  progress.completed ? "Completed" : "In Progress"
+                ] as keyof typeof tagColors
+              }`}
+            >
+              {progress.completed ? "Completed" : "In Progress"}
+            </Tag>
+          ) : (
+            <Tag color={`${tagColors["Not Started"]}`}>Not Started</Tag>
+          )}
+        </div>
       </div>
       <div className="card-body">
-        {description ? description.length > 150 ? isExpanded ? description : `${description.substring(0, 150)}...` : "" : description}
-        {description ? description.length > 150 && !isExpanded && (
-            <div className="read-more" onClick={() => {setIsExpanded(!isExpanded)}}>Read more</div>
-            ) : ""}
+        {description
+          ? description.length > 150
+            ? isExpanded
+              ? description
+              : `${description.substring(0, 150)}...`
+            : description
+          : ""}
       </div>
+      {description
+        ? description.length > 150 && (
+            <div
+              className="read-more"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              Read {isExpanded ? "less" : "more"}
+            </div>
+          )
+        : ""}
     </div>
   );
 };
@@ -115,6 +177,7 @@ export default function CourceView({ params }: any) {
             title={unit.title}
             contentType={unit.content_type}
             description={unit.description}
+            progress={unit.progress}
           />
         ))}
       </div>
