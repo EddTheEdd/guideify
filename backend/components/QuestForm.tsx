@@ -147,6 +147,7 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
       <>
         <Form.Item className="questform_quest_block">
           {quest.map((question: any, index: number) => (
+            console.log(question),
             <div key={index}>
               <Form.Item
                 label="Question Type"

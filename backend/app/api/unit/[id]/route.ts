@@ -46,11 +46,32 @@ export async function GET(request: NextRequest) {
         [userId, unitId]
       );
       const progress = {
-        completed: false
-      }
+        completed: false,
+      };
       unit.progress = progress;
     } else {
       unit.progress = progressResult.rows[0];
+    }
+
+    if (unit.content_type === "quest") {
+      // Get the questionnaire but without the answers
+      const questResult = await pool.query(
+        `
+          SELECT q.*, qs.*, a.*
+          FROM questionnaires q 
+          INNER JOIN questions qs ON q.quest_id = qs.quest_id
+          LEFT JOIN user_answers a ON qs.question_id = a.question_id AND a.user_id = $2
+          WHERE q.quest_id = $1
+      `,
+        [unit.quest_id, userId]
+      );
+
+      questResult.rows.forEach((question: any) => {
+        delete question.checked_answers;
+        delete question.correct_answer;
+      });
+
+      unit.questionnaire = questResult.rows;
     }
 
     return NextResponse.json({

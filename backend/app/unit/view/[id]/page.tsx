@@ -5,6 +5,7 @@ import axios from "axios";
 import Layout from "@/components/Layout";
 import { Button, Divider, Tag, Typography } from "antd";
 import DOMPurify from "dompurify";
+import AnswerForm from "@/components/AnswerForm";
 
 const { Title, Text } = Typography;
 
@@ -55,6 +56,7 @@ const UnitPage: React.FC = ({ params }: any) => {
   const id = params.id;
   const [unit, setUnit] = useState<Unit | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [quest, setQuest] = useState([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     setLoading(true);
@@ -64,6 +66,14 @@ const UnitPage: React.FC = ({ params }: any) => {
       try {
         const response = await axios.get(`/api/unit/${id}`);
         setUnit(response.data.unit);
+
+        // extract answers, json decode and put back in:
+        const quest = response.data.unit.questionnaire;
+        quest.forEach((quest: any) => {
+          quest.answers = JSON.parse(quest.answers);
+        });
+        setQuest(quest);
+
         setCompleted(response.data.unit.progress.completed);
         console.log(response.data.unit);
         setLoading(false);
@@ -118,6 +128,7 @@ const UnitPage: React.FC = ({ params }: any) => {
                 <Divider></Divider>
                 <div className="unitpage_main_body" dangerouslySetInnerHTML={{ __html: safeContent }}></div>
               </div>
+              <AnswerForm quest={quest} setQuest={setQuest} />
               <Button className="unitpage_main_button" disabled={completed} onClick={() => {markAsComplete()}}>Mark as Completed</Button>
             </>
           )}
