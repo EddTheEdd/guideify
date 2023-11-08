@@ -7,9 +7,10 @@ export async function POST(request: NextRequest) {
     const userId = getDataFromToken(request);
 
     const reqBody = await request.json();
-    const { answers } = reqBody;
+    const { answers, unitId } = reqBody;
     console.log("Answers: ", Object.entries(answers));
 
+    let completeQuizAfterSubmit = true;
     for (const [questionId, answer] of Object.entries(answers)) {
       const checkAnswerQuery = await pool.query(
         `SELECT * FROM questions WHERE question_id = $1`,
@@ -24,6 +25,10 @@ export async function POST(request: NextRequest) {
       }
 
       const originalQuestion = checkAnswerQuery.rows[0];
+      console.log(originalQuestion);
+      if (originalQuestion.requires_review === true) {
+        completeQuizAfterSubmit = false;
+      }
       let answerIsCorrect = false;
       if (
         originalQuestion.type === "text" &&
@@ -55,6 +60,22 @@ export async function POST(request: NextRequest) {
       console.log(newAnswer);
     }
 
+    if (completeQuizAfterSubmit) {
+      console.log("HUMBO");
+      const completeQuiz = await pool.query(
+        `
+        UPDATE user_course_progress SET completed = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
+        [userId, unitId]
+      );
+
+      if (completeQuiz.rowCount === 0) {
+        return NextResponse.json(
+          { error: "Could not complete quiz." },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json({
       message: "Answers submitted successfully",
       success: true,
@@ -66,4 +87,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

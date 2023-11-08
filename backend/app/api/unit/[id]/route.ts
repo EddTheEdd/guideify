@@ -53,7 +53,21 @@ export async function GET(request: NextRequest) {
       unit.progress = progressResult.rows[0];
     }
 
+    let hasAnsweredThisQuiz = false;
     if (unit.content_type === "quest") {
+     
+      // check if there is atleast one user answer as a flag for the user having done the quest
+      const atleastOneAnswer = await pool.query(
+        `
+          SELECT a.*, q.* FROM user_answers as a LEFT JOIN questions as q ON a.question_id = q.question_id WHERE user_id = $1 AND quest_id = $2
+        `,
+        [userId, unit.quest_id]
+      );
+
+      if (atleastOneAnswer.rows.length > 0) {
+        hasAnsweredThisQuiz = true;
+      }
+
       // Get the questionnaire but without the answers
       const questResult = await pool.query(
         `
@@ -66,10 +80,12 @@ export async function GET(request: NextRequest) {
         [unit.quest_id, userId]
       );
 
-      questResult.rows.forEach((question: any) => {
-        delete question.checked_answers;
-        delete question.correct_answer;
-      });
+      if (!hasAnsweredThisQuiz) {
+        questResult.rows.forEach((question: any) => {
+          delete question.checked_answers;
+          delete question.correct_answer;
+        });
+      }
 
       unit.questionnaire = questResult.rows;
     }
@@ -78,6 +94,7 @@ export async function GET(request: NextRequest) {
       success: true,
       unit,
       wasInserted,
+      hasDoneQuest: hasAnsweredThisQuiz,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

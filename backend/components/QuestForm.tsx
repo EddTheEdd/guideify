@@ -100,6 +100,7 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
         );
       } else {
         updatedItem.checked_answers.push(answerIndex);
+        updatedItem.checked_answers.sort((a: number, b: number) => a - b);
       }
       updatedQuest[index] = updatedItem;
       return updatedQuest;

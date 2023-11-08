@@ -2,18 +2,27 @@ import React, { useEffect, useState } from "react";
 import { Form, Select, Input, Button, message, Checkbox, Divider } from "antd";
 import axios from "axios";
 import TextEditor from "./TextEditor";
+import { CheckCircleFilled, ExclamationCircleFilled } from "@ant-design/icons";
 
 const { Option } = Select;
 
 interface QuestFormProps {
   quest: array;
   setQuest({}): any;
+  unitId?: number;
+  completed: boolean;
 }
 
-const AnswerForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
+const AnswerForm: React.FC<QuestFormProps> = ({
+  quest,
+  setQuest,
+  unitId,
+  completed,
+}) => {
   const [answerData, setAnswerData] = useState<any>({});
   const [submittedData, setSubmittedData] = useState<any>({});
   console.log(quest);
+  console.log(completed);
 
   useEffect(() => {
     console.log("fettch stuff:");
@@ -24,9 +33,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
         if (data.success) {
           setSubmittedData(data.answers);
         }
-      } catch (error) {
-
-      }
+      } catch (error) {}
     };
 
     fetchSubmittedData();
@@ -36,6 +43,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
     try {
       const res = await axios.post("/api/user-answers", {
         answers: answerData,
+        unitId: unitId,
       });
       const data = await res.data;
       if (data.success) {
@@ -89,7 +97,13 @@ const AnswerForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
               console.log(question),
               (
                 <div key={index}>
-                <p>{question.is_correct != null ? question.is_correct ? "YAY" : "NAY" : ""}</p>
+                  <p>
+                    {question.is_correct != null
+                      ? question.is_correct
+                        ? <CheckCircleFilled className="answer_block_correct_icon"/>
+                        : <ExclamationCircleFilled className="answer_block_incorrect_icon"/>
+                      : ""}
+                  </p>
                   <div className="questform_question_answer_block">
                     <Form.Item
                       label="Question"
@@ -105,29 +119,55 @@ const AnswerForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
                       />
                     </Form.Item>
                     {question.type === "text" ? (
-                      <Form.Item
-                        label="Answer"
-                        name={`${question.question_id}-correct_answer`}
-                      >
-                        <Input
-                          placeholder="Enter your answer"
-                          name="correct_answer"
-                          onChange={(e: any) =>
-                            handleAnswerChange(
-                              e.target.value,
-                              question.question_id
-                            )
-                          }
-                        />
-                      </Form.Item>
+                      <>
+                        <Form.Item
+                          label="Answer"
+                          name={`${question.question_id}-correct_answer`}
+                          initialValue={question?.answer}
+                        >
+                          <Input
+                            style={{color: "black"}}
+                            placeholder="Enter your answer"
+                            name="correct_answer"
+                            disabled={completed}
+                            onChange={(e: any) =>
+                              handleAnswerChange(
+                                e.target.value,
+                                question.question_id
+                              )
+                            }
+                          />
+                        </Form.Item>
+                        {completed && <p className={`answer_block_correct_answer ${question.is_correct ? "correct" : "incorrect"}`}>Pareizā atbilde: {question.correct_answer}</p>}
+                      </>
                     ) : (
                       <div className="questform_answer_block">
-                        {question.answers.map(
+                        {question?.answers.map(
                           (answer: any, answerIndex: number) => (
+                            console.log(answerIndex),
+                            console.log(question.checked_answers),
+                            console.log(completed && ((question.checked_answers.includes(answerIndex)) || (question?.answer.includes(answerIndex)))),
                             <div
                               key={answerIndex}
                               style={{ display: "flex", alignItems: "center" }}
                             >
+                              { completed ? 
+                              <Checkbox
+                                className={
+                                  completed && (question.checked_answers.includes(answerIndex)
+                                  ? "answer_block_checkbox_basic_check" + (!question?.answer.includes(answerIndex) ? " missed" : ""
+                                  + (question?.answer.includes(answerIndex) ? " correct" : ""))
+                                  : (question?.answer.includes(answerIndex) ? "answer_block_checkbox_basic_check incorrect" : ""))
+                                }
+                                checked={completed && ((question.checked_answers.includes(answerIndex)) || (question?.answer.includes(answerIndex)))}
+                                disabled={completed}
+                                onChange={() => {
+                                  selectAnswer(
+                                    question.question_id,
+                                    answerIndex
+                                  );
+                                }}
+                              /> :
                               <Checkbox
                                 onChange={() => {
                                   selectAnswer(
@@ -136,6 +176,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
                                   );
                                 }}
                               />
+                              }
                               <Input
                                 defaultValue={answer}
                                 disabled={true}
@@ -152,13 +193,15 @@ const AnswerForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
               )
             )
           )}
-          <Button
-            type="primary"
-            onClick={submitAnswers}
-            style={{ marginTop: "13px", width: "100%" }}
-          >
-            Submit
-          </Button>
+          {!completed && (
+            <Button
+              type="primary"
+              onClick={submitAnswers}
+              style={{ marginTop: "13px", width: "100%" }}
+            >
+              Submit
+            </Button>
+          )}
         </Form>
       </>
     )

@@ -15,7 +15,6 @@ interface Progress {
   finishedAt?: Date;
 }
 
-
 interface Unit {
   unit_id: number;
   title: string;
@@ -68,11 +67,19 @@ const UnitPage: React.FC = ({ params }: any) => {
         setUnit(response.data.unit);
 
         // extract answers, json decode and put back in:
-        const quest = response.data.unit.questionnaire;
-        quest.forEach((quest: any) => {
-          quest.answers = JSON.parse(quest.answers);
-        });
-        setQuest(quest);
+        if (response.data.unit.questionnaire) {
+          const quest = response.data.unit.questionnaire;
+          quest.forEach((quest: any) => {
+            quest.answers = JSON.parse(quest.answers);
+            if (quest.type === "multi_choice") {
+              quest.answer = JSON.parse(quest.answer);
+            }
+            if (response.data.unit.progress.completed) {
+              quest.checked_answers = JSON.parse(quest.checked_answers);
+            }
+          });
+          setQuest(quest);
+        }
 
         setCompleted(response.data.unit.progress.completed);
         console.log(response.data.unit);
@@ -98,7 +105,7 @@ const UnitPage: React.FC = ({ params }: any) => {
     } catch (error) {
       console.error("Error marking unit as complete", error);
     }
-  }
+  };
 
   const safeContent = unit ? DOMPurify.sanitize(unit.content) : "";
 
@@ -118,18 +125,31 @@ const UnitPage: React.FC = ({ params }: any) => {
                 </p>
                 <Tag
                   color={`${
-                    tagColors[
-                      completed ? "Completed" : "In Progress"
-                    ]
+                    tagColors[completed ? "Completed" : "In Progress"]
                   }`}
                 >
                   {completed ? "Completed" : "In Progress"}
                 </Tag>
                 <Divider></Divider>
-                <div className="unitpage_main_body" dangerouslySetInnerHTML={{ __html: safeContent }}></div>
+                <div
+                  className="unitpage_main_body"
+                  dangerouslySetInnerHTML={{ __html: safeContent }}
+                ></div>
               </div>
-              <AnswerForm quest={quest} setQuest={setQuest} />
-              <Button className="unitpage_main_button" disabled={completed} onClick={() => {markAsComplete()}}>Mark as Completed</Button>
+              {quest.length > 0 && (
+                <AnswerForm quest={quest} setQuest={setQuest} unitId={unit?.unit_id} completed={completed} />
+              )}
+              {quest.length === 0 && (
+                <Button
+                  className="unitpage_main_button"
+                  disabled={completed}
+                  onClick={() => {
+                    markAsComplete();
+                  }}
+                >
+                  Mark as Completed
+                </Button>
+              )}
             </>
           )}
         </Layout>

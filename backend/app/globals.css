@@ -139,4 +139,45 @@ body {
   text-align: justify;
 }
 
+.answer_block_correct_answer.correct {
+  border: solid 2px rgb(97, 116, 97);
+  background: rgb(150, 181, 150);
+  padding: 5px;
+  border-radius: 5px;
+}
 
+.answer_block_correct_answer.incorrect {
+  border: solid 2px rgb(108, 55, 55);
+  background: rgb(244, 150, 150);
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.answer_block_checkbox_basic_check.missed .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: rgb(225, 136, 58);
+  border-color: rgb(181, 88, 33);
+}
+
+.answer_block_checkbox_basic_check.correct .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: rgb(75, 172, 72);
+    border-color: #008100;
+}
+
+.answer_block_checkbox_basic_check.incorrect .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: rgb(232, 27, 27);
+  border-color: rgb(106, 6, 6);
+}
+
+.answer_block_checkbox_basic_check .ant-checkbox-checked .ant-checkbox-inner:after {
+  border-color: rgb(255, 255, 255) !important;
+}
+
+.answer_block_incorrect_icon {
+  color: rgb(227, 16, 16);
+  font-size: 26px;
+}
+
+.answer_block_correct_icon {
+  color: rgb(36, 161, 50);
+  font-size: 26px;
+}
