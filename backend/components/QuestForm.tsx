@@ -163,6 +163,24 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
                   <Option value="multi_choice">Multiple Choice</Option>
                 </Select>
               </Form.Item>
+              <Form.Item
+                label="Requires Review"
+                name={`${index}-requires_review`}
+                initialValue={question.requires_review}
+              >
+                <Checkbox
+                  checked={question.requires_review}
+                  onChange={(e: any) => {
+                    setQuest((prev: any) => {
+                      const updatedQuest = [...prev];
+                      const updatedItem = { ...updatedQuest[index] };
+                      updatedItem.requires_review = e.target.checked;
+                      updatedQuest[index] = updatedItem;
+                      return updatedQuest;
+                    });
+                  }}
+                />
+              </Form.Item>
               <div className="questform_question_answer_block">
                 <Form.Item
                   label="Question"

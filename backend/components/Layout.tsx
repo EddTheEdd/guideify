@@ -11,7 +11,7 @@ const menuItems = [
     { label: 'Home', link: '/' },
     { label: 'Roles', link: '/roles' },
     { label: 'Courses', link: '/courses' },
-    { label: 'Portfolio', link: '/portfolio' },
+    { label: 'Wages', link: '/wages' },
     { label: 'Contact', link: '/contact' },
 ];
 

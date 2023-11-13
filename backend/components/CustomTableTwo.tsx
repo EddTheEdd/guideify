@@ -4,23 +4,42 @@ import React from 'react';
 import {useRouter} from "next/navigation";
 
 interface Props {
+  sideModalFeature?: boolean;
+  showModal: (data: any) => void;
   data: any[];
   columns?: any[];
 }
 
-const CustomTableTwo: React.FC<Props> = ({ data, columns }) => {
+const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, showModal }) => {
   const router = useRouter();
 
+  data = data.map((item) => {
+    item.key = item.id;
+    return item;
+  });
 
-  return <Table 
-    dataSource={data} 
-    columns={columns} 
-    onRow={(record: any) => ({
-      style: {
-        borderLeft: record.rgb_value ? `4px solid ${record.rgb_value}` : undefined
-      }
-    })}
-  />
+  return (
+    sideModalFeature ? 
+      <Table 
+        dataSource={data} 
+        columns={columns} 
+        onRow={(record: any) => ({
+          onClick: () => {
+            showModal(record.id);
+          }
+        })}
+      />
+    :
+      <Table 
+        dataSource={data} 
+        columns={columns} 
+        onRow={(record: any) => ({
+          style: {
+            borderLeft: record.rgb_value ? `4px solid ${record.rgb_value}` : undefined
+          }
+        })}
+      />
+  );
 };
 
 export default CustomTableTwo;
