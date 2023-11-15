@@ -23,6 +23,7 @@ interface Unit {
   type: string;
   content: string;
   progress: Progress;
+  hasDoneQuest?: boolean;
 }
 
 const tags = [
@@ -55,6 +56,8 @@ const UnitPage: React.FC = ({ params }: any) => {
   const id = params.id;
   const [unit, setUnit] = useState<Unit | null>(null);
   const [completed, setCompleted] = useState(false);
+  const [hasDoneQuest, setHasDoneQuest] = useState(false);
+  const [courseId, setCourseId] = useState(0);
   const [quest, setQuest] = useState([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -82,6 +85,8 @@ const UnitPage: React.FC = ({ params }: any) => {
         }
 
         setCompleted(response.data.unit.progress.completed);
+        setHasDoneQuest(response.data.hasDoneQuest);
+        setCourseId(response.data.unit.course_id);
         console.log(response.data.unit);
         setLoading(false);
       } catch (error) {
@@ -111,6 +116,7 @@ const UnitPage: React.FC = ({ params }: any) => {
 
   return (
     console.log(unit),
+    console.log(courseId),
     (
       <>
         <Layout>
@@ -137,7 +143,7 @@ const UnitPage: React.FC = ({ params }: any) => {
                 ></div>
               </div>
               {quest.length > 0 && (
-                <AnswerForm quest={quest} setQuest={setQuest} unitId={unit?.unit_id} completed={completed} />
+                <AnswerForm courseId={courseId} hasDoneQuest={hasDoneQuest} quest={quest} setQuest={setQuest} unitId={unit?.unit_id} completed={completed} />
               )}
               {quest.length === 0 && (
                 <Button

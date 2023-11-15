@@ -3,6 +3,7 @@ import { Form, Select, Input, Button, message, Checkbox, Divider } from "antd";
 import axios from "axios";
 import TextEditor from "./TextEditor";
 import { CheckCircleFilled, ExclamationCircleFilled } from "@ant-design/icons";
+import Link from "next/link";
 
 const { Option } = Select;
 
@@ -11,9 +12,13 @@ interface QuestFormProps {
   setQuest({}): any;
   unitId?: number;
   completed: boolean;
+  hasDoneQuest: boolean;
+  courseId: number;
 }
 
 const AnswerForm: React.FC<QuestFormProps> = ({
+  courseId,
+  hasDoneQuest,
   quest,
   setQuest,
   unitId,
@@ -89,20 +94,26 @@ const AnswerForm: React.FC<QuestFormProps> = ({
 
   return (
     console.log(answerData),
+    console.log(hasDoneQuest),
     (
-      <>
-        <Form className="questform_quest_block">
+        (hasDoneQuest && !completed) ? (
+          <div style={{textAlign: "center"}}>
+          <p>You have submitted your answers! Wait for someone to review them and then they will be available here!</p>
+          <Link href={`/courses/view/${courseId}`}>Return to course menu</Link>
+          </div>
+          ) : (
+          <Form className="questform_quest_block">
           {quest.map(
             (question: any, index: number) => (
               console.log(question),
               (
                 <div key={index}>
                   <p>
-                    {question.is_correct != null
+                    {completed ? question.is_correct != null
                       ? question.is_correct
                         ? <CheckCircleFilled className="answer_block_correct_icon"/>
                         : <ExclamationCircleFilled className="answer_block_incorrect_icon"/>
-                      : ""}
+                      : "" : ""}
                   </p>
                   <div className="questform_question_answer_block">
                     <Form.Item
@@ -203,7 +214,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({
             </Button>
           )}
         </Form>
-      </>
+        )
     )
   );
 };

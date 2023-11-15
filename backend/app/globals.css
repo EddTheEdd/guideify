@@ -26,7 +26,11 @@ body {
     rgb(var(--background-start-rgb));
 } */
 
-
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
 
 .unitform-unitname {
   text-align: center;
@@ -211,4 +215,56 @@ hr.rounded {
 hr.rounded_grey {
   border-top: 2px solid rgb(176, 176, 176);
   border-radius: 5px;
+}
+
+.role_dropdown_main span:nth-child(2) {
+  transition: transform 0.5s cubic-bezier(.68,-0.55,.27,1.55) !important;
+}
+
+.dropdown-hover:hover .down-icon {
+  transform: rotate(-180deg);
+}
+
+.dropdown-hover:hover .down-icon,
+.role_dropdown_main:hover .down-icon {
+  transform: rotate(-180deg);
+}
+
+.role_dropdown_main.ant-dropdown-open .down-icon {
+  transform: rotate(-180deg);
+}
+
+.login-container {
+  position: relative;
+  height: 100vh;
+  background-image: url('https://i.imgur.com/f08hRLF.png');
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(219, 219, 219, 0.5); /* Adjust the RGBA values as needed */
+  z-index: 0;
+}
+
+.login-form {
+  position: relative;
+  z-index: 1;
+  background: white;
+  padding: 30px;
+  border-radius: 2px;
+}
+
+.logout_button:hover {
+  color: red;
+  border-bottom: solid 2px red;
 }
