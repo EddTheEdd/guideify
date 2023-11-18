@@ -17,6 +17,17 @@ const roleMenu = (
   </Menu>
 );
 
+const coursesMenu = (
+  <Menu>
+    <Menu.Item key="courses:1">
+      <Link href="/courses">View Courses</Link>
+    </Menu.Item>
+    <Menu.Item key="courses:2">
+      <Link href="/courses/submissions">View Course Progress</Link>
+    </Menu.Item>
+  </Menu>
+);
+
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const router = useRouter();
 
@@ -75,7 +86,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       key: 'wages',
     },
     {
-      label: <Link href="/courses"><ReadOutlined /> Courses</Link>,
+      label: (
+        <Dropdown overlay={coursesMenu} trigger={['hover']} className="role_dropdown_main">
+          <a className="dropdown-hover" onClick={e => e.preventDefault()}>
+            <TeamOutlined /> Courses <DownOutlined className="down-icon" />
+          </a>
+        </Dropdown>
+      ),
       key: 'courses',
     },
   ];

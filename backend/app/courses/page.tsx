@@ -127,7 +127,7 @@ export default function Courses() {
 
   return (
     <Layout>
-      <CustomTableTwo data={courses} columns={courseColumns} />
+      <CustomTableTwo data={courses} columns={courseColumns} sideModalFeature={false} showModal={() => {}}/>
       <Button onClick={showModal}>Create a Course</Button>
 
       <Modal

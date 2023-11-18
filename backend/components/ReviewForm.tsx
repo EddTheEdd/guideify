@@ -132,8 +132,6 @@ const ReviewForm: React.FC<QuestFormProps> = ({
                   ) : (
                     ""
                   )}
-                  {question.requires_review != null ? (
-                    question.requires_review === true ? (
                       <div
                         style={{
                           display: "flex",
@@ -148,12 +146,6 @@ const ReviewForm: React.FC<QuestFormProps> = ({
                           onChange={(e: any) => {handleAnswerCorrectChange(e.target.checked, question.question_id)}}
                         />
                       </div>
-                    ) : (
-                      ""
-                    )
-                  ) : (
-                    ""
-                  )}
                 </p>
                 <div className="questform_question_answer_block">
                   <Form.Item

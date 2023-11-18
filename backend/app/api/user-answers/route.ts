@@ -61,10 +61,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (completeQuizAfterSubmit) {
-      console.log("HUMBO");
       const completeQuiz = await pool.query(
         `
         UPDATE user_course_progress SET completed = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
+        [userId, unitId]
+      );
+
+      if (completeQuiz.rowCount === 0) {
+        return NextResponse.json(
+          { error: "Could not complete quiz." },
+          { status: 500 }
+        );
+      }
+    } else {
+      const completeQuiz = await pool.query(
+        `
+        UPDATE user_course_progress SET submitted = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
         [userId, unitId]
       );
 
