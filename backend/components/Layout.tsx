@@ -17,16 +17,17 @@ const roleMenu = (
   </Menu>
 );
 
-const coursesMenu = (
-  <Menu>
-    <Menu.Item key="courses:1">
-      <Link href="/courses">View Courses</Link>
-    </Menu.Item>
-    <Menu.Item key="courses:2">
-      <Link href="/courses/submissions">View Course Progress</Link>
-    </Menu.Item>
-  </Menu>
-);
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const menuItems = [
+    { label: 'Home', link: '/' },
+    { label: 'Roles', link: '/roles' },
+    { label: 'Courses', link: '/courses' },
+    { label: 'Wages', link: '/wages' },
+    { label: 'Contact', link: '/contact' },
+];
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const router = useRouter();

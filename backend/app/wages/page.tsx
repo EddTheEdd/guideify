@@ -40,37 +40,19 @@ interface Salary {
   deductibles: any[];
 }
 
-const SalaryModal = ({
-  handleCancel,
-  isModalVisible,
-  selectedSalaryData,
-  setSelectedSalaryData,
-  deductibles,
-  amountDed,
-}) => {
-  const calculateDeductions = (baseSalary: any, deductions: any) => {
-    let remainingSalary = baseSalary;
-    deductions.forEach((d: any) => {
-      if (d?.amount === null) {
-        const deductionAmount = remainingSalary * (d.percentage / 100);
-        remainingSalary -= deductionAmount;
-      }
-    });
-    return remainingSalary;
-  };
-
-  const handleSubmit = async () => {
-    console.log(selectedSalaryData);
-    try {
-      await axios.post(`/api/salary/${selectedSalaryData?.user_id}`, selectedSalaryData);
-      toast.success("Course created successfully");
-    } catch (error) {
-      toast.error("Error creating course");
-      console.error("Error creating course", error);
-    }
-  };
-
-  return (
+const SalaryModal = ({ handleCancel, isModalVisible, selectedSalaryData, setSelectedSalaryData, deductibles, amountDed }) => {
+    const calculateDeductions = (baseSalary: any, deductions: any) => {
+      let remainingSalary = baseSalary;
+      deductions.forEach((d: any) => {
+        if (d?.amount === null) {
+          const deductionAmount = remainingSalary * (d.percentage / 100);
+          remainingSalary -= deductionAmount;
+        }
+      });
+      return remainingSalary;
+    };
+    
+    return (
     <Drawer
       title="Salary Details"
       placement="right"
@@ -79,58 +61,41 @@ const SalaryModal = ({
       visible={isModalVisible}
       width={720}
     >
+
       {/* Modal content here */}
-      <Form
-        layout="vertical"
-        data={selectedSalaryData}
-        onFinish={() => {
-          handleSubmit();
-        }}
-      >
+      <Form layout="vertical" data={selectedSalaryData}>
         <Form.Item label="Base Salary">
-          <Input
-            value={selectedSalaryData?.base_salary}
-            onChange={(e: any) => {
-              setSelectedSalaryData((prev: any) => {
-                const updatedSalary = { ...prev };
-                updatedSalary.base_salary = e.target.value;
-                return updatedSalary;
-              });
-            }}
-          />
+          <Input value={selectedSalaryData?.base_salary} onChange={(e: any) => {
+                setSelectedSalaryData((prev: any) => {
+                    const updatedSalary = {...prev};
+                    updatedSalary.base_salary = e.target.value;
+                    return updatedSalary;
+                })
+          }}/>
         </Form.Item>
         <Form.Item label="Bonus">
-          <Input
-            value={selectedSalaryData?.bonus}
-            onChange={(e: any) => {
-              setSelectedSalaryData((prev: any) => {
-                const updatedSalary = { ...prev };
-                updatedSalary.bonus = e.target.value;
-                return updatedSalary;
-              });
-            }}
-          />
+          <Input value={selectedSalaryData?.bonus} onChange={(e:any) => {
+                setSelectedSalaryData((prev: any) => {
+                    const updatedSalary = {...prev};
+                    updatedSalary.bonus = e.target.value;
+                    return updatedSalary;
+                })
+          }}/>
         </Form.Item>
         <Form.Item label="Allowance">
-          <Input
-            value={selectedSalaryData?.allowance}
-            onChange={(e: any) => {
-              setSelectedSalaryData((prev: any) => {
-                const updatedSalary = { ...prev };
-                updatedSalary.allowance = e.target.value;
-                return updatedSalary;
-              });
-            }}
-          />
+          <Input value={selectedSalaryData?.allowance} onChange={(e:any) => {
+                setSelectedSalaryData((prev: any) => {
+                    const updatedSalary = {...prev};
+                    updatedSalary.allowance = e.target.value;
+                    return updatedSalary;
+                })
+          }}/>
         </Form.Item>
         <Divider>Deductibles:</Divider>
         {deductibles.map((deductible: any) => (
-          <div
-            key={deductible.deductible_id}
-            className="wages_page_deductible_row"
-          >
+          <div key={deductible.deductible_id} className="wages_page_deductible_row">
             <Form.Item
-              key={deductible.deductible_id}
+                key={deductible.deductible_id}
               label={
                 deductible.name +
                 " (" +
@@ -139,70 +104,48 @@ const SalaryModal = ({
                   : deductible?.percentage + " %)")
               }
             >
-              <Checkbox
-                key={deductible.deductible_id}
+              <Checkbox key={deductible.deductible_id}
                 checked={selectedSalaryData?.deductibles.some(
                   (d: any) => d.deductible_id === deductible.deductible_id
                 )}
                 onChange={() => {
-                  setSelectedSalaryData((prev: any) => {
-                    const updatedSalary = { ...prev };
-                    const deductibleIndex = updatedSalary.deductibles.findIndex(
-                      (d: any) => d.deductible_id === deductible.deductible_id
-                    );
-                    if (deductibleIndex === -1) {
-                      updatedSalary.deductibles.push(deductible);
-                    } else {
-                      updatedSalary.deductibles.splice(deductibleIndex, 1);
-                    }
-                    return updatedSalary;
-                  });
+                    setSelectedSalaryData((prev: any) => {
+                        const updatedSalary = { ...prev };
+                        const deductibleIndex = updatedSalary.deductibles.findIndex(
+                        (d: any) => d.deductible_id === deductible.deductible_id
+                        );
+                        if (deductibleIndex === -1) {
+                        updatedSalary.deductibles.push(deductible);
+                        } else {
+                        updatedSalary.deductibles.splice(deductibleIndex, 1);
+                        }
+                        return updatedSalary;
+                    });
                 }}
               />
             </Form.Item>
           </div>
         ))}
         <Divider>Payslip:</Divider>
-        <p>Base: +{selectedSalaryData?.base_salary} €</p>
-        <p>Bonus: +{selectedSalaryData?.bonus} €</p>
-        <p>Allowance: +{selectedSalaryData?.allowance} €</p>
-        <hr className="rounded_grey" />
-        {selectedSalaryData?.deductibles.map((deductible: any) => {
-          if (deductible.amount != null) {
-            return (
-              <p>
-                {deductible.name}: -{deductible.amount} €
-              </p>
-            );
-          } else {
-            return (
-              <p>
-                {deductible.name}: -{deductible.percentage}%
-              </p>
-            );
-          }
-        })}
-        <hr className="rounded" />
-        <p>
-          Total:{" "}
-          {calculateDeductions(
-            Number(selectedSalaryData?.base_salary) +
-              Number(selectedSalaryData?.bonus) +
-              Number(selectedSalaryData?.allowance) -
-              Number(amountDed),
-            selectedSalaryData?.deductibles
-          )}{" "}
-          €
-        </p>
-        <Form.Item>
-          <Button type="primary" htmlType="submit">
-            Save
-          </Button>
-        </Form.Item>
+                    <p>Base: +{selectedSalaryData?.base_salary} €</p>
+                    <p>Bonus: +{selectedSalaryData?.bonus} €</p>
+                    <p>Allowance: +{selectedSalaryData?.allowance} €</p>
+                    <hr className="rounded_grey"/>
+                    {selectedSalaryData?.deductibles.map((deductible: any) => {
+                            if (deductible.amount != null) {
+                                return (<p>{deductible.name}: -{deductible.amount} €</p>)
+                            } else {
+                                return (<p>{deductible.name}: -{deductible.percentage}%</p>)
+                            }
+                        })}
+                    <hr className="rounded"/>
+                    <p>Total: {calculateDeductions(Number(selectedSalaryData?.base_salary) + Number(selectedSalaryData?.bonus) + Number(selectedSalaryData?.allowance) - Number(amountDed), selectedSalaryData?.deductibles)} €</p>
+
       </Form>
     </Drawer>
-  );
+    );
 };
+
 
 export default function Wages() {
   const [users, setUsers] = useState<User[]>([]);
@@ -222,11 +165,11 @@ export default function Wages() {
         setSelectedSalaryData(data.salary);
         let amountDeductible = 0;
         data.salary.deductibles.forEach((d: any) => {
-          if (d.amount != null) {
-            amountDeductible += d.amount;
-          }
+            if (d.amount != null) {
+                amountDeductible += d.amount;
+            }
         });
-        setAmountDed(amountDeductible);
+        setAmountDed(amountDeductible)
         setIsModalVisible(true);
       } else {
         toast.error("Error fetching salary data");
@@ -297,16 +240,7 @@ export default function Wages() {
         sideModalFeature={true}
         showModal={showModal}
       />
-      {isModalVisible && (
-        <SalaryModal
-          handleCancel={handleCancel}
-          isModalVisible={isModalVisible}
-          selectedSalaryData={selectedSalaryData}
-          setSelectedSalaryData={setSelectedSalaryData}
-          deductibles={deductibles}
-          amountDed={amountDed}
-        />
-      )}
+      {isModalVisible && <SalaryModal handleCancel={handleCancel} isModalVisible={isModalVisible} selectedSalaryData={selectedSalaryData} setSelectedSalaryData={setSelectedSalaryData} deductibles={deductibles} amountDed={amountDed}/>}
     </Layout>
   );
 }
