@@ -19,7 +19,7 @@ passport.use(new GithubStrategy({
         username: profile.username,
         githubId: profile.id,
         email: profile.emails ? profile.emails[0].value : ''
-      }).save().then((newUser) => {
+      }).save().then((newUser: any) => {
         done(null, newUser);
       });
     }
