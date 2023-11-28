@@ -124,13 +124,13 @@ const SalaryModal = ({
           />
         </Form.Item>
         <Divider>Deductibles:</Divider>
-        {deductibles.map((deductible: any) => (
+        {deductibles.map((deductible: any, index: number) => (
           <div
             key={deductible.deductible_id}
             className="wages_page_deductible_row"
           >
             <Form.Item
-              key={deductible.deductible_id}
+              key={index}
               label={
                 deductible.name +
                 " (" +
