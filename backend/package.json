@@ -33,6 +33,7 @@
     "next": "13.4.12",
     "oracledb": "^6.2.0",
     "passport": "^0.6.0",
+    "passport-github2": "^0.1.12",
     "pg": "^8.11.3",
     "pg-query-stream": "^4.5.3",
     "postcss": "8.4.27",
