@@ -28,7 +28,7 @@ const CoursePage: React.FC = ({params}: any) => {
     const [editableDescription, setEditableDescription] = useState<string>('');
 
 
-    const [colorRgb, setColorRgb] = useState<Color | string>('rgb(22, 119, 255)');
+    const [colorRgb, setColorRgb] = useState<any>('rgb(22, 119, 255)');
     const [formatRgb, setFormatRgb] = useState<'rgb'>('rgb');
     const [textColor, setTextColor] = useState<string>('#000');
 
@@ -138,7 +138,6 @@ const CoursePage: React.FC = ({params}: any) => {
                                 format={formatRgb}
                                 value={colorRgb}
                                 onChange={setColorRgb}
-                                onFormatChange={setFormatRgb}
                             />
                             RGB: <span>{rgbString}</span>
                         </div>

@@ -3,6 +3,12 @@ import { Button, Divider } from 'antd';
 import UnitForm from './UnitForm';
 import axios from 'axios';
 
+interface Props {
+  courseId: number;
+  rgbString?: string;
+  textColor?: string;
+}
+
 interface Unit {
     id: number;
     name: string;
@@ -12,7 +18,7 @@ interface Unit {
     questionnaire: any;
   }
 
-const UnitsBox: React.FC = ({courseId, rgbString, textColor}) => {
+const UnitsBox: React.FC<Props> = ({courseId, rgbString, textColor}) => {
   const [units, setUnits] = useState<Unit[]>([]);
   const [unitTempId, setUnitTempId] = useState(100);
 
