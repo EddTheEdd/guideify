@@ -273,3 +273,7 @@ hr.rounded_grey {
   color: red;
   border-bottom: solid 2px red;
 }
+
+.tower_element {
+  margin-top: 13px;
+}

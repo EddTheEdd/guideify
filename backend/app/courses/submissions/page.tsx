@@ -48,7 +48,7 @@ export default function CourseSubmissions() {
   });
   const [modalVisible, setModalVisible] = useState(false);
 
- const handleFilterChange = (filters: any, sorter: any) => {
+ const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
   console.log(filters);
     setUserFilter(filters);
     setUserSort({
@@ -188,7 +188,10 @@ export default function CourseSubmissions() {
           <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
             Search
           </Button>
-          <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
+          <Button onClick={() => {
+          clearFilters && clearFilters();
+          confirm();
+          }}  size="small" style={{ width: 90 }}>
             Reset
           </Button>
         </div>

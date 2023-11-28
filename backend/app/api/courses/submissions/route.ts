@@ -9,8 +9,10 @@ export async function GET(req: NextRequest) {
 
     if (req.nextUrl.searchParams.get("view") === "users") {
       const page = parseInt(req.nextUrl.searchParams.get("page") || '1', 10);
-      const limit = parseInt(req.nextUrl.searchParams.get("limit") || '5', 10);
+      const limit = parseInt(req.nextUrl.searchParams.get("limit") || '10', 10);
       const offset = (page - 1) * limit;
+      const sortColumn = req.nextUrl.searchParams.get("sortColumn") || 'id';
+      const sortOrder = req.nextUrl.searchParams.get("sortOrder") === 'desc' ? 'desc' : 'asc';
 
       const nameFilter = req.nextUrl.searchParams.get("first_name");
       const surnameFilter = req.nextUrl.searchParams.get("last_name");
@@ -32,7 +34,7 @@ export async function GET(req: NextRequest) {
         query = query.where('phone_number', 'ilike', `%${phoneFilter}%`);
       }
 
-      const users = await query.orderBy('id').limit(limit).offset(offset);
+      const users = await query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset);
 
       if (users.length === 0) {
         return NextResponse.json({
@@ -44,6 +46,7 @@ export async function GET(req: NextRequest) {
       const userIds = users.map((user) => user.id);
 
       for (const user of users) {
+        console.log(user);
         const userCourses = await knex('user_course_progress')
                                    .select(
                                      'courses.course_id as course_id',
@@ -57,15 +60,18 @@ export async function GET(req: NextRequest) {
                                    )
                                    .innerJoin('course_units', 'user_course_progress.unit_id', 'course_units.unit_id')
                                    .innerJoin('courses', 'courses.course_id', 'course_units.course_id')
-                                   .where('user_course_progress.user_id', userIds);
+                                   .where('user_course_progress.user_id', user.id);
 
         user.courses = userCourses;
       }
 
+      const totalUsersCount = await knex('users').count('* as total').first();
+      const totalUsers = totalUsersCount ? totalUsersCount.total : 0;
+
       return NextResponse.json({
         success: true,
         currentPage: page,
-        totalUsers: users.length,
+        totalUsers: totalUsers,
         users: users,
       });
     }
