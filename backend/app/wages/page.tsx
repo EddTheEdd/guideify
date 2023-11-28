@@ -167,16 +167,16 @@ const SalaryModal = ({
         <p>Bonus: +{selectedSalaryData?.bonus} €</p>
         <p>Allowance: +{selectedSalaryData?.allowance} €</p>
         <hr className="rounded_grey" />
-        {selectedSalaryData?.deductibles.map((deductible: any) => {
+        {selectedSalaryData?.deductibles.map((deductible: any, index: number) => {
           if (deductible.amount != null) {
             return (
-              <p>
+              <p key={index}>
                 {deductible.name}: -{deductible.amount} €
               </p>
             );
           } else {
             return (
-              <p>
+              <p key={index}>
                 {deductible.name}: -{deductible.percentage}%
               </p>
             );
