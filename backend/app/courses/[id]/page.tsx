@@ -6,7 +6,6 @@ import Layout from '@/components/Layout';
 import { Typography, Card, Space, Modal, ColorPicker, Input } from 'antd';
 import { Content } from 'antd/lib/layout/layout';
 import UnitsBox from '@/components/UnitsBox';
-import { SketchPicker } from 'react-color'; 
 import {
     SettingOutlined,
   } from '@ant-design/icons';
