@@ -26,6 +26,16 @@ interface Unit {
   progress: string;
 }
 
+interface CardProps {
+  title: string;
+  unitId: number;
+  contentType: string;
+  description: string;
+  progress: any;
+}
+
+
+
 const tags = [
   {
     text: "Not Started",
@@ -52,7 +62,7 @@ const tagColors = {
   Withdrawn: "gray",
 };
 
-const Card = ({ title, unitId, contentType, description, progress }) => {
+const Card: React.FC<CardProps> = ({ title, unitId, contentType, description, progress }) => {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -116,7 +126,7 @@ export default function CourceView({ params }: any) {
   const id = params.id;
   console.log(id);
   const [course, setCourse] = useState<Course | null>(null);
-  const [colorRgb, setColorRgb] = useState<Color | string>("rgb(22, 119, 255)");
+  const [colorRgb, setColorRgb] = useState<string>("rgb(22, 119, 255)");
   const [units, setUnits] = useState<Unit[]>([]);
   const [newCourse, setNewCourse] = useState<Course>({
     name: "",
