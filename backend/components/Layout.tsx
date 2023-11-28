@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const roleMenu = (
   <Menu>
@@ -30,6 +30,7 @@ const coursesMenu = (
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const router = useRouter();
+  const currentPath = usePathname();
 
   const [selectedKey, setSelectedKey] = useState('home');
 
@@ -50,12 +51,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const currentPath = window.location.pathname;
-      console.log(currentPath);
-      // Modify or expand this logic to suit your specific routing
-      setSelectedKey(currentPath.includes('/roles') ? 'roles' : currentPath.substring(1));
+      const pathKey = currentPath.split('/')[1];
+      console.log(pathKey);
+      setSelectedKey(pathKey)
     }
-  }, []);
+  }, [currentPath]);
 
   const menuItems = [
     {
