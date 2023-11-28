@@ -36,7 +36,7 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
   const [paginationStates, setPaginationStates] = useState<any>({});
 
   const handleSubtablePageChange = (recordId: number, page: number, pageSize: number) => {
-    setPaginationStates(prev => ({
+    setPaginationStates((prev: any) => ({
       ...prev,
       [recordId]: { currentPage: page, pageSize }
     }));

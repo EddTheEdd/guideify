@@ -28,7 +28,7 @@ const coursesMenu = (
   </Menu>
 );
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<any> = ({ children }) => {
   const router = useRouter();
   const currentPath = usePathname();
 

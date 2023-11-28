@@ -40,7 +40,32 @@ interface Salary {
   deductibles: any[];
 }
 
-const SalaryModal = ({
+interface Deductible {
+  deductible_id: number;
+  name: string;
+  amount?: number;
+  percentage?: number;
+}
+
+interface SalaryData {
+  user_id?: number;
+  base_salary: number;
+  bonus: number;
+  allowance: number;
+  deductibles: Deductible[];
+}
+
+interface SalaryModalProps {
+  handleCancel: () => void;
+  isModalVisible: boolean;
+  selectedSalaryData:any;
+  setSelectedSalaryData: any;
+  deductibles: Deductible[];
+  amountDed: number;
+}
+
+
+const SalaryModal: React.FC<SalaryModalProps> = ({
   handleCancel,
   isModalVisible,
   selectedSalaryData,
@@ -82,7 +107,6 @@ const SalaryModal = ({
       {/* Modal content here */}
       <Form
         layout="vertical"
-        data={selectedSalaryData}
         onFinish={() => {
           handleSubmit();
         }}
