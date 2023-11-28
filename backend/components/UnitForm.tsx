@@ -21,10 +21,14 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
     question: unit.content_type === "quest" ? unit.content : "",
   });
   const [unitName, setUnitName] = useState<string>(unit.title);
-  const [unitDescription, setUnitDescription] = useState<string>(unit.description);
+  const [unitDescription, setUnitDescription] = useState<string>(
+    unit.description
+  );
   const [order, setOrder] = useState(unit.order);
   const [quest, setQuest] = useState(unit?.questionnaire || []);
-  const [questTitle, setQuestTitle] = useState(unit?.questionnaire[0] ? unit.questionnaire[0].title : "");
+  const [questTitle, setQuestTitle] = useState(
+    unit?.questionnaire[0] ? unit.questionnaire[0].title : ""
+  );
 
   useEffect(() => {
     setUnitType(unit.content_type);
@@ -48,7 +52,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
 
   const handleQuestionTitleChance = (value: string) => {
     setQuestTitle(value);
-  }
+  };
 
   const handleEditorChange = (content: string) => {
     setFormData({
@@ -88,7 +92,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
     quest: "Questionnaire",
     text: "Reading Material",
     video: "Video Content",
-  }
+  };
 
   return (
     console.log(formData),
@@ -155,7 +159,9 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
               >
                 <TextEditor
                   placeholder="Start spreading your knowledge!"
+                  value={unit.content}
                   onChange={handleEditorChange}
+                  readOnly={false}
                 />
               </Form.Item>
             </>
@@ -177,7 +183,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
 
           {unitType === "quest" && (
             <>
-              <Form.Item label="Questionnaire Title" tooltip="You can reuse this questionnaire in different units!" name={`${index}-quest_title`} initialValue={questTitle}>
+              <Form.Item
+                label="Questionnaire Title"
+                tooltip="You can reuse this questionnaire in different units!"
+                name={`${index}-quest_title`}
+                initialValue={questTitle}
+              >
                 <Input
                   placeholder="The capitals of the world!"
                   name="text"

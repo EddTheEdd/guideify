@@ -12,7 +12,7 @@ import Link from "next/link";
 const { Option } = Select;
 
 interface QuestFormProps {
-  quest: array;
+  quest: any;
   setQuest({}): any;
   unitId?: number;
   completed: boolean;
@@ -210,22 +210,19 @@ const ReviewForm: React.FC<QuestFormProps> = ({
                               {
                                 <Checkbox
                                   className={
-                                    completed &&
-                                    (question.checked_answers.includes(
-                                      answerIndex
-                                    )
-                                      ? "answer_block_checkbox_basic_check" +
-                                        (!question?.answer.includes(answerIndex)
-                                          ? " missed"
-                                          : "" +
-                                            (question?.answer.includes(
-                                              answerIndex
-                                            )
-                                              ? " correct"
-                                              : ""))
-                                      : question?.answer.includes(answerIndex)
-                                      ? "answer_block_checkbox_basic_check incorrect"
-                                      : "")
+                                    completed
+                                      ? (question.checked_answers.includes(answerIndex)
+                                          ? "answer_block_checkbox_basic_check" +
+                                            (!question?.answer.includes(answerIndex)
+                                              ? " missed"
+                                              : "" +
+                                                (question?.answer.includes(answerIndex)
+                                                  ? " correct"
+                                                  : ""))
+                                          : question?.answer.includes(answerIndex)
+                                            ? "answer_block_checkbox_basic_check incorrect"
+                                            : "")
+                                      : undefined // Ensures that if not completed, className receives 'undefined'
                                   }
                                   checked={
                                     question.checked_answers.includes(

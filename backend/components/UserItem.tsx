@@ -1,6 +1,6 @@
 import { useDrag } from "react-dnd";
 
-const UserItem: React.FC<User> = ({ id, username, currentRole }) => {
+const UserItem: React.FC<any> = ({ id, username, currentRole }) => {
     const [, ref] = useDrag({
       type: "USER",
       item: { id, currentRole },

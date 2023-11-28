@@ -6,7 +6,7 @@ import TextEditor from "./TextEditor";
 const { Option } = Select;
 
 interface QuestFormProps {
-  quest: array;
+  quest: any;
   setQuest({}): any;
 }
 
