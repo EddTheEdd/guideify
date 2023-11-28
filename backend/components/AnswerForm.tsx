@@ -8,7 +8,7 @@ import Link from "next/link";
 const { Option } = Select;
 
 interface QuestFormProps {
-  quest: array;
+  quest: any;
   setQuest({}): any;
   unitId?: number;
   completed: boolean;
