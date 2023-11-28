@@ -5,11 +5,12 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "../../../components/Layout";
 import CustomTable from "@/components/CustomTable";
-import { Button, Checkbox, Input, Modal, Select } from "antd";
+import { Button, Checkbox, Input, Modal, Pagination, Select } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import CustomTableThree from "@/components/CustomTableThree";
 import { FilterDropdownProps } from 'antd/lib/table/interface';
+import { SearchOutlined } from "@ant-design/icons";
 
 interface Course {
   id: number;
@@ -36,6 +37,9 @@ export default function CourseSubmissions() {
   const [userFilter, setUserFilter] = useState<UserFilter>({});
   const [userSort, setUserSort] = useState<UserSort>({});
   const [users, setUsers] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [pageSize, setPageSize] = useState(1);
   const [newCourse, setNewCourse] = useState<Course>({
     name: "",
     description: "",
@@ -44,7 +48,7 @@ export default function CourseSubmissions() {
   });
   const [modalVisible, setModalVisible] = useState(false);
 
- const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
+ const handleFilterChange = (filters: any, sorter: any) => {
   console.log(filters);
     setUserFilter(filters);
     setUserSort({
@@ -70,12 +74,13 @@ export default function CourseSubmissions() {
 
   const fetchUsersAndTheirCourses = async () => {
     try {
-      const queryParams = buildQueryString();
+      const queryParams = `${buildQueryString()}&page=${currentPage}&limit=${pageSize}`;
       const res = await fetch(`/api/courses/submissions?view=users&${queryParams}`);
       const data = await res.json();
 
       if (data.success) {
         setUsers(data.users);
+        setTotalUsers(data.totalUsers)
       } else {
         console.error("Failed to fetch users", data.error);
       }
@@ -85,29 +90,21 @@ export default function CourseSubmissions() {
   };
 
   useEffect(() => {
-
     fetchUsersAndTheirCourses();
-  }, [userFilter, userSort]);
+  }, [userFilter, userSort, currentPage, pageSize]);
 
-  const showModal = () => {
-    setModalVisible(true);
+
+  const handlePageChange = (page: number) => {
+    console.log(page);
+    setCurrentPage(page);
   };
 
-  const handleOk = async () => {
-    try {
-      await axios.post("/api/courses", newCourse);
-      toast.success("Course created successfully");
-      fetchUsersAndTheirCourses();
-    } catch (error) {
-      toast.error("Error creating course");
-      console.error("Error creating course", error);
-    }
-    setModalVisible(false);
+  const handlePageSizeChange = (current: number, size: number) => {
+    console.log(size);
+    setPageSize(size);
+    setCurrentPage(1);
   };
-
-  const handleCancel = () => {
-    setModalVisible(false);
-  };
+  
 
   const courseColumns = [
     {
@@ -115,6 +112,7 @@ export default function CourseSubmissions() {
       dataIndex: "first_name",
       key: "first_name",
       sorter: true,
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
       filterDropdown: ({
         setSelectedKeys,
         selectedKeys,
@@ -142,22 +140,104 @@ export default function CourseSubmissions() {
       title: "Surname",
       dataIndex: "last_name",
       key: "last_name",
+      sorter: true,
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }: FilterDropdownProps) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search Surname"
+            value={selectedKeys[0]}
+            onChange={(e: any) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
+            Search
+          </Button>
+          <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
+            Reset
+          </Button>
+        </div>
+      ),
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      sorter: true,
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }: FilterDropdownProps) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search Email"
+            value={selectedKeys[0]}
+            onChange={(e: any) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
+            Search
+          </Button>
+          <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
+            Reset
+          </Button>
+        </div>
+      ),
     },
     {
       title: "Phone number",
       dataIndex: "phone_number",
       key: "phone_number",
+      sorter: true,
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+      }: FilterDropdownProps) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Search Phone Number"
+            value={selectedKeys[0]}
+            onChange={(e: any) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+          <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
+            Search
+          </Button>
+          <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
+            Reset
+          </Button>
+        </div>
+      ),  
     },
   ];
 
   return (
     <Layout>
       <CustomTableThree data={users} columns={courseColumns} onChange={handleFilterChange} />
+      <Pagination
+        className="tower_element"
+        current={currentPage}
+        total={totalUsers}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+        onShowSizeChange={handlePageSizeChange}
+        showSizeChanger
+        showQuickJumper
+      />
     </Layout>
   );
 }
