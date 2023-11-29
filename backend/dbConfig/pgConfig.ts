@@ -2,11 +2,11 @@ import { Pool } from "pg";
 
 // Initialize the PostgreSQL pool
 const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost', // or your PostgreSQL host
-  database: 'postgres',
-  password: 'qazxswedc123',
-  port: 5432, // Default PostgreSQL port
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: 5432,
 });
 
 export async function pgConnect() {

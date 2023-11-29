@@ -1,17 +1,21 @@
 // Import Knex
 import Knex from "knex";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const knex = Knex({
-  client: "pg",
+  client: 'pg',
   connection: {
-    user: "postgres",
-    host: "localhost",
-    database: "postgres",
-    password: "qazxswedc123",
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
     port: 5432,
   },
   pool: { min: 0, max: 7 },
 });
+
 
 export async function knexConnect() {
   try {
