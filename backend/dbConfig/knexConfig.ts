@@ -1,8 +1,5 @@
 // Import Knex
 import Knex from "knex";
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const knex = Knex({
   client: 'pg',
