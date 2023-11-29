@@ -34,6 +34,93 @@ type DataIndex = keyof DataType;
 const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
 
   const [paginationStates, setPaginationStates] = useState<any>({});
+  const [searchText, setSearchText] = useState("");
+  const [searchedColumn, setSearchedColumn] = useState("");
+  const searchInput = useRef<any>(null);
+  const [subTableData, setSubTableData] = useState(new Map()); // New state for storing processed sub-table data
+  const [subTableFilters, setSubTableFilters] = useState(new Map());
+  const [subTableSorters, setSubTableSorters] = useState(new Map());
+
+  const filterData = (data: any[], filters: any) => {
+    return data.filter((item: any) => {
+      return Object.keys(filters).every(key => {
+        if (!filters[key]) {
+          return true; 
+        }
+  
+        if (key === 'course_status') {
+          let status = 'in progress';
+          if (item.completed) {
+            status = 'completed';
+          } else if (item.submitted) {
+            status = 'submitted';
+          }
+          return status === filters[key].toString().toLowerCase();
+        }
+  
+        const itemValue = item[key]?.toString().toLowerCase();
+        const filterValue = filters[key].toString().toLowerCase();
+        return itemValue.includes(filterValue);
+      });
+    });
+  };
+
+  const sortData = (data: any[], sorter: any) => {
+    if (!sorter || !sorter.columnKey || !sorter.order) {
+      return data;
+    }
+  
+    return [...data].sort((a, b) => {
+      const valueA = a[sorter.columnKey];
+      const valueB = b[sorter.columnKey];
+  
+      if (typeof valueA === 'string' && typeof valueB === 'string') {
+        return sorter.order === 'ascend' 
+          ? valueA.localeCompare(valueB, undefined, { sensitivity: 'base' })
+          : valueB.localeCompare(valueA, undefined, { sensitivity: 'base' });
+      }
+  
+      if (valueA < valueB) {
+        return sorter.order === 'ascend' ? -1 : 1;
+      } else if (valueA > valueB) {
+        return sorter.order === 'ascend' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
+  const onSubTableFilterChange = (recordKey: any, filters: any) => {
+    console.log(recordKey);
+    console.log(filters);
+    setSubTableFilters(prev => new Map(prev).set(recordKey, filters));
+  };
+
+  const onSubTableSorterChange = (recordKey: any, sorter: any) => {
+    setSubTableSorters(prev => new Map(prev).set(recordKey, sorter));
+  };
+
+
+  const applyFilterAndSortToSubTables = () => {
+    const newSubTableData = new Map();
+
+    data.forEach(mainRecord => {
+      let subData = mainRecord.courses;
+      const filters = subTableFilters.get(mainRecord.key) || {};
+      const sorter = subTableSorters.get(mainRecord.key) || {};
+      console.log(filters);
+      console.log(subData);
+      subData = filterData(subData, filters);
+      subData = sortData(subData, sorter);
+
+      newSubTableData.set(mainRecord.key, subData);
+    });
+    console.log(newSubTableData);
+    setSubTableData(newSubTableData);
+  };
+
+  useEffect(() => {
+    applyFilterAndSortToSubTables();
+  }, [data, subTableFilters, subTableSorters]);
 
   const handleSubtablePageChange = (recordId: number, page: number, pageSize: number) => {
     setPaginationStates((prev: any) => ({
@@ -171,22 +258,21 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
       title: "Course Name",
       dataIndex: "course_name",
       key: "course_name",
-      sorter: (a: any, b: any) => alphabeticalSort(a, b, "course_name"),
+      sorter: true,
       ...getColumnSearchProps("course_name"),
     },
     {
       title: "Unit Title",
       dataIndex: "unit_title",
       key: "unit_title",
-      sorter: (a: any, b: any) => alphabeticalSort(a, b, "unit_title"),
+      sorter: true,
       ...getColumnSearchProps("unit_title"),
     },
     {
       title: "User Course Status",
       dataIndex: "course_status",
       key: "course_status",
-      sorter: (a: any, b: any) =>
-        alphabeticalSort(a, b, "course_status"),
+      sorter: false,
       render: (_: any, record: any) => (
         <>
           {(record.completed && <Tag color="green">Completed</Tag>) ||
@@ -217,19 +303,22 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
   ];
 
   const expandedRowRender = (record: any) => {
-    const pagState = paginationStates[record.key] || { currentPage: 1, pageSize: 10 };
-    const indexOfLastItem = pagState.currentPage * pagState.pageSize;
-    const indexOfFirstItem = indexOfLastItem - pagState.pageSize;
-    const currentData = record.courses.slice(indexOfFirstItem, indexOfLastItem);
+    const processedData = subTableData.get(record.key) || [];
+    console.log(processedData);
+    const pageState = paginationStates[record.key] || { currentPage: 1, pageSize: 3 };
+    const indexOfLastItem = pageState.currentPage * pageState.pageSize;
+    const indexOfFirstItem = indexOfLastItem - pageState.pageSize;
+    const currentData = processedData.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
       <>
-        <CustomTableFour data={currentData} columns={subColumns} />
+        <CustomTableFour data={currentData} fullData={processedData} columns={subColumns} onFilterChange={(filters) => onSubTableFilterChange(record.key, filters)}
+          onSorterChange={(sorter) => onSubTableSorterChange(record.key, sorter)}/>
         <Pagination
-          current={pagState.currentPage}
-          pageSize={pagState.pageSize}
-          total={record.courses.length}
-          onChange={(page: number, pageSize: number) => handleSubtablePageChange(record.key, page, pageSize)}
+          current={pageState.currentPage}
+          pageSize={pageState.pageSize}
+          total={processedData.length}
+          onChange={(page, pageSize) => handleSubtablePageChange(record.key, page, pageSize)}
           showSizeChanger
           showQuickJumper
         />
@@ -237,10 +326,6 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
     );
   };
 
-
-  const [searchText, setSearchText] = useState("");
-  const [searchedColumn, setSearchedColumn] = useState("");
-  const searchInput = useRef<any>(null);
 
   data = data.map((item) => {
     item.key = item.id;

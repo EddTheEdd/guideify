@@ -1,4 +1,4 @@
-import { HomeOutlined, TeamOutlined, SolutionOutlined, ReadOutlined, DollarOutlined, DownOutlined, LogoutOutlined } from '@ant-design/icons';
+import { HomeOutlined, TeamOutlined, SolutionOutlined, ReadOutlined, DollarOutlined, DownOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons';
 import { Menu, Dropdown } from 'antd';
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -25,6 +25,19 @@ const coursesMenu = (
     <Menu.Item key="courses:2">
       <Link href="/courses/submissions">View Course Progress</Link>
     </Menu.Item>
+  </Menu>
+);
+
+const userProfileMenu = (
+  <Menu>
+    <Menu.Item key="profile:1">
+      <Link href="/profile">Profile Details</Link>
+    </Menu.Item>
+    {true && (
+      <Menu.Item key="profile:2">
+        <Link href="/admin">Admin Page</Link>
+      </Menu.Item>
+    )}
   </Menu>
 );
 
@@ -82,7 +95,7 @@ const Layout: React.FC<any> = ({ children }) => {
       key: 'roles',
     },
     {
-      label: <Link href="/wages"><DollarOutlined /> Wages</Link>,
+      label: <Link href="/wages"><DollarOutlined /> Salaries</Link>,
       key: 'wages',
     },
     {
@@ -94,17 +107,40 @@ const Layout: React.FC<any> = ({ children }) => {
         </Dropdown>
       ),
       key: 'courses',
+    }
+  ];
+
+  const userMenuItems = [
+    {
+      label: (
+        <Dropdown overlay={userProfileMenu} trigger={['hover']} className="role_dropdown_main">
+          <a className="dropdown-hover" onClick={e => e.preventDefault()}>
+            <UserOutlined /> Profile <DownOutlined className="down-icon"/>
+          </a>
+        </Dropdown>
+      ),
+      key: 'profile',
+    },
+    {
+      label: (
+        <div onClick={logout} style={{cursor: 'pointer'}} className="logout_menu_item">
+          <LogoutOutlined /> Log Out
+        </div>
+      ),
+      key: 'logout',
     },
   ];
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '10vh' }}>
-        <Menu style={{ marginTop: '2vh' }} className="guideify_navbar" mode="horizontal" items={menuItems} selectedKeys={[selectedKey]} />
-        <div className="logout_button" onClick={logout} style={{display: 'flex', gap: '3px', marginRight: '10px', cursor: 'pointer'}}>
-          <LogoutOutlined style={{ fontSize: '18px' }} />
-          <p>Log Out</p>
-        </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', height: '6rem' }}>
+        
+        {/* Main Menu */}
+        <Menu style={{ width: '86%', paddingTop: '15px', height: '5rem' }} className="guideify_navbar" mode="horizontal" items={menuItems} selectedKeys={[selectedKey]} />
+
+        {/* User Menu */}
+        <Menu className="navbar_user_menu" style={{ width: '14%', paddingTop: '15px', height: '5rem' }} mode="horizontal" items={userMenuItems} />
+      
       </div>
       <div style={{ margin: "30px" }}>
         {children}

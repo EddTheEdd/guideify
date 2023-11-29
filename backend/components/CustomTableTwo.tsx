@@ -21,6 +21,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
   return (
     sideModalFeature ? 
       <Table 
+        className="side_modal_table"
         dataSource={data} 
         columns={columns} 
         onRow={(record: any) => ({

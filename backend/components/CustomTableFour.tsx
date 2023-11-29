@@ -6,7 +6,10 @@ import type { ColumnsType, TableProps } from 'antd/es/table';
 
 interface Props {
   data: any[];
+  fullData: any[];
   columns?: any[];
+  onFilterChange?: (filters: any) => void;
+  onSorterChange?: (sorter: any) => void;
 }
 
 interface DataType {
@@ -16,8 +19,7 @@ interface DataType {
   address: string;
 }
 
-const CustomTableFour: React.FC<Props> = ({ data, columns }) => {
-
+const CustomTableFour: React.FC<Props> = ({ data, fullData, columns, onFilterChange, onSorterChange }) => {
   data = data.map((item) => {
     item.key = item.progress_id;
     return item;
@@ -25,6 +27,11 @@ const CustomTableFour: React.FC<Props> = ({ data, columns }) => {
 
   const onChange: TableProps<DataType>['onChange'] = (pagination, filters, sorter, extra) => {
     console.log('params', pagination, filters, sorter, extra);
+    if (extra.action === 'filter' && onFilterChange) {
+      onFilterChange(filters);
+    } else if (extra.action === 'sort' && onSorterChange) {
+      onSorterChange(sorter);
+    }
   };
 
   return (

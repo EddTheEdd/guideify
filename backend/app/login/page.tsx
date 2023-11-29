@@ -18,7 +18,10 @@ export default function LoginPage() {
     console.log(1);
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/login", {email, password});
+      const response = await axios.post("/api/users/login", {
+        email,
+        password,
+      });
       console.log("Login success", response.data);
       toast.success("Login success");
       router.push("/profile");
@@ -49,9 +52,17 @@ export default function LoginPage() {
       <div className="login-container">
         <div className="login-form">
           <Form onFinish={onLogin}>
+            <h1 style={{textAlign: "center"}}>EMAG</h1>
+            <h2 style={{textAlign: "center"}}>Employee Management System</h2>
             <h1>Login</h1>
             <Form.Item label="Email">
-              <Input placeholder="Enter your email" name="email" onChange={(e:any) => {setEmail(e.target.value)}}/>
+              <Input
+                placeholder="Enter your email"
+                name="email"
+                onChange={(e: any) => {
+                  setEmail(e.target.value);
+                }}
+              />
             </Form.Item>
             <Form.Item label="Password">
               <Input
@@ -59,14 +70,21 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 name="password"
                 type="password"
-                onChange={(e:any) => {setPassword(e.target.value)}}
+                onChange={(e: any) => {
+                  setPassword(e.target.value);
+                }}
               />
             </Form.Item>
             <Button type="primary" htmlType="submit">
-            Login
-          </Button>
+              Login
+            </Button>
           </Form>
+          <p>Forgot your password? Contact the administrator for a reset here!</p>
         </div>
+      </div>
+      {/* CREATE A FOOTER WITH CURRENT VERSION BELLOW: */}
+      <div className="footer">
+        <p>Current version: 0.1.0.0, 29.11.2023 version</p>
       </div>
     </>
   );
