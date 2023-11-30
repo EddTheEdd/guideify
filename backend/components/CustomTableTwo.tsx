@@ -2,15 +2,16 @@
 import { Table } from 'antd';
 import React from 'react';
 import {useRouter} from "next/navigation";
-
+import { renderHighlightText } from '@/helpers/renderHighlightText';
 interface Props {
   sideModalFeature?: boolean;
   showModal: (data: any) => void;
   data: any[];
   columns?: any[];
+  onChange?: any;
 }
 
-const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, showModal }) => {
+const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, showModal, onChange }) => {
   const router = useRouter();
 
   data = data.map((item) => {
@@ -19,6 +20,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
   });
 
   return (
+    console.log(data),
     sideModalFeature ? 
       <Table 
         className="side_modal_table"
@@ -29,6 +31,8 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
             showModal(record.id);
           }
         })}
+        onChange={onChange}
+        pagination={false}
       />
     :
       <Table 
@@ -39,6 +43,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
             borderLeft: record.rgb_value ? `4px solid ${record.rgb_value}` : undefined
           }
         })}
+        onChange={onChange}
       />
   );
 };

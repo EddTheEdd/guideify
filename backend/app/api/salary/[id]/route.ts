@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const reqBody = await request.json();
-    const { salary_id, base_salary, bonus, allowance, user_id, deductibles } =
-      reqBody;
+    let { salary_id } = reqBody;
+    const { base_salary, bonus, allowance, user_id, deductibles } = reqBody;
 
     // Checks for existance of entry:
     const checkSalaryQuery = await pool.query(
@@ -31,11 +31,12 @@ export async function POST(request: NextRequest) {
       }
     } else {
       const insertQuery =
-        "INSERT INTO salary_structures (base_salary, bonus, allowance) VALUES ($1, $2, $3) RETURNING *";
+        "INSERT INTO salary_structures (base_salary, bonus, allowance, user_id) VALUES ($1, $2, $3, $4) RETURNING *";
       const insertedSalaryResult = await pool.query(insertQuery, [
         base_salary,
         bonus,
         allowance,
+        user_id,
       ]);
 
       if (insertedSalaryResult.rows.length === 0) {
@@ -44,6 +45,8 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
+
+      salary_id = insertedSalaryResult.rows[0].salary_id;
 
       // const insertSalaryHistoryQuery = "INSERT INTO salary_history (salary_id, user_id) VALUES ($1, $2) RETURNING *";
     }
@@ -54,12 +57,13 @@ export async function POST(request: NextRequest) {
         "DELETE FROM salary_deductibles WHERE salary_id = $1";
       await pool.query(deleteDeductibleQuery, [salary_id]);
     }
-    for (const deductible of deductibles) {
-      // Remove all deductibles
-      const deleteDeductibleQuery =
-        "DELETE FROM salary_deductibles WHERE salary_id = $1";
-      await pool.query(deleteDeductibleQuery, [salary_id]);
 
+    // Remove all deductibles
+    const deleteDeductibleQuery =
+      "DELETE FROM salary_deductibles WHERE salary_id = $1";
+    await pool.query(deleteDeductibleQuery, [salary_id]);
+    
+    for (const deductible of deductibles) {
       const insertDeductibleQuery =
         "INSERT INTO salary_deductibles (salary_id, deductible_id) VALUES ($1, $2) RETURNING *";
       const insertedDeductibleResult = await pool.query(insertDeductibleQuery, [
@@ -94,10 +98,14 @@ export async function GET(_request: NextRequest) {
             SELECT 
                 salary_structures.*,
                 salary_history.*,
-                salary_deductibles.deductible_id
+                salary_deductibles.deductible_id,
+                users.first_name,
+                users.last_name,
+                users.email
             FROM salary_structures
             LEFT JOIN salary_history ON salary_structures.salary_id = salary_history.salary_id
             LEFT JOIN salary_deductibles ON salary_structures.salary_id = salary_deductibles.salary_id
+            LEFT JOIN users ON users.id = salary_structures.user_id
             WHERE salary_structures.user_id = $1
         `,
       [userId]

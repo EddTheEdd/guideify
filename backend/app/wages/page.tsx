@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "../../components/Layout";
@@ -13,10 +13,24 @@ import {
   Form,
   Input,
   Modal,
+  Pagination,
   Select,
+  Space,
 } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
+import {
+  CheckCircleFilled,
+  InfoCircleFilled,
+  SearchOutlined,
+} from "@ant-design/icons";
+import { buildQueryString } from "@/app/helpers/buildQueryString";
+import { FilterDropdownProps } from "antd/es/table/interface";
+import { renderHighlightText } from "@/helpers/renderHighlightText";
+import type { FilterConfirmProps } from "antd/es/table/interface";
+import type { ColumnType, ColumnsType } from "antd/es/table";
+import { set } from "mongoose";
+import { generatePayslip } from "@/helpers/generatePaylsip";
 
 interface User {
   id: number;
@@ -28,6 +42,7 @@ interface User {
 }
 
 interface Salary {
+  user_id: number;
   base_salary: number;
   bonus: number;
   allowance: number;
@@ -55,15 +70,22 @@ interface SalaryData {
   deductibles: Deductible[];
 }
 
+interface DataType {
+  key: string;
+  name: string;
+  age: number;
+  address: string;
+}
+
 interface SalaryModalProps {
   handleCancel: () => void;
   isModalVisible: boolean;
-  selectedSalaryData:any;
+  selectedSalaryData: any;
   setSelectedSalaryData: any;
   deductibles: Deductible[];
   amountDed: number;
+  setCurrentPage: (page: number) => void;
 }
-
 
 const SalaryModal: React.FC<SalaryModalProps> = ({
   handleCancel,
@@ -72,6 +94,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   setSelectedSalaryData,
   deductibles,
   amountDed,
+  setCurrentPage
 }) => {
   const calculateDeductions = (baseSalary: any, deductions: any) => {
     let remainingSalary = baseSalary;
@@ -87,8 +110,12 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   const handleSubmit = async () => {
     console.log(selectedSalaryData);
     try {
-      await axios.post(`/api/salary/${selectedSalaryData?.user_id}`, selectedSalaryData);
-      toast.success("Course created successfully");
+      await axios.post(
+        `/api/salary/${selectedSalaryData?.user_id}`,
+        selectedSalaryData
+      );
+      toast.success("Salary created successfully");
+      setCurrentPage(1);
     } catch (error) {
       toast.error("Error creating course");
       console.error("Error creating course", error);
@@ -191,21 +218,23 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
         <p>Bonus: +{selectedSalaryData?.bonus} €</p>
         <p>Allowance: +{selectedSalaryData?.allowance} €</p>
         <hr className="rounded_grey" />
-        {selectedSalaryData?.deductibles.map((deductible: any, index: number) => {
-          if (deductible.amount != null) {
-            return (
-              <p key={index}>
-                {deductible.name}: -{deductible.amount} €
-              </p>
-            );
-          } else {
-            return (
-              <p key={index}>
-                {deductible.name}: -{deductible.percentage}%
-              </p>
-            );
+        {selectedSalaryData?.deductibles.map(
+          (deductible: any, index: number) => {
+            if (deductible.amount != null) {
+              return (
+                <p key={index}>
+                  {deductible.name}: -{deductible.amount} €
+                </p>
+              );
+            } else {
+              return (
+                <p key={index}>
+                  {deductible.name}: -{deductible.percentage}%
+                </p>
+              );
+            }
           }
-        })}
+        )}
         <hr className="rounded" />
         <p>
           Total:{" "}
@@ -222,18 +251,156 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
           <Button type="primary" htmlType="submit">
             Save
           </Button>
+          <Button type="primary" onClick={() => {generatePayslip(selectedSalaryData)}}>
+            Download PDF
+          </Button>
         </Form.Item>
       </Form>
     </Drawer>
   );
 };
 
+interface UserFilter {
+  [key: string]: any;
+}
+
+interface UserSort {
+  [column: string]: string;
+}
+
 export default function Wages() {
   const [users, setUsers] = useState<User[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedSalaryData, setSelectedSalaryData] = useState<Salary>();
   const [deductibles, setDeductibles] = useState([]);
   const [amountDed, setAmountDed] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  const [userFilter, setUserFilter] = useState<UserFilter>({});
+  const [userSort, setUserSort] = useState<UserSort>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(1);
+
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [positions, setPositions] = useState<any[]>([]);
+
+  const searchInput = useRef<any>(null);
+
+  const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
+    console.log(filters);
+    setUserFilter(filters);
+    setUserSort({
+      column: sorter.field,
+      order: sorter.order,
+    });
+  };
+
+  const handlePageChange = (page: number) => {
+    console.log(page);
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (current: number, size: number) => {
+    console.log(size);
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  useEffect(() => {
+    // Update the time every second
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    // Clear the interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatDateTime = (date: any) => {
+    const daySuffix = (day: any) => {
+      if (day > 3 && day < 21) return "th";
+      switch (day % 10) {
+        case 1:
+          return "st";
+        case 2:
+          return "nd";
+        case 3:
+          return "rd";
+        default:
+          return "th";
+      }
+    };
+
+    const day = date.getDate();
+    const month = date.toLocaleString("default", { month: "long" });
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `This is the ${day}${daySuffix(
+      day
+    )} of ${month}, ${year}, ${hours}:${minutes}`;
+  };
+
+  const calculateMonthEndInfo = () => {
+    const now = new Date();
+    const lastDayOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    ); // Set to end of the day
+    const remainingTime = lastDayOfMonth.getTime() - now.getTime();
+
+    if (remainingTime < 0) {
+      return "The month has ended.";
+    }
+
+    const daysRemaining = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+    const hoursRemaining = Math.floor((remainingTime / (1000 * 60 * 60)) % 24);
+
+    if (daysRemaining === 0 && hoursRemaining === 0)
+      return `This is the last hour of the month!`;
+    if (daysRemaining === 0)
+      return `There are ${hoursRemaining} hours left until the end of the month.`;
+    if (hoursRemaining === 0)
+      return `There is ${daysRemaining} day left until the end of the month.`;
+    if (daysRemaining === 1)
+      return `There is ${daysRemaining} day and ${hoursRemaining} hours left until the end of the month.`;
+    if (hoursRemaining === 1)
+      return `There are ${daysRemaining} days and ${hoursRemaining} hour left until the end of the month.`;
+    return `There are ${daysRemaining} days and ${hoursRemaining} hours left until the end of the month.`;
+  };
+
+  const showCreateSalaryWarning = (userId: number) => {
+    Modal.confirm({
+      title: "This employee does not yet have a salary.",
+      content: "Would you like to create a salary?",
+      okText: "Create salary!",
+      cancelText: "Cancel",
+      onOk: () => {
+        setAmountDed(0);
+        setSelectedSalaryData({
+          user_id: userId,
+          base_salary: 0,
+          bonus: 0,
+          allowance: 0,
+          salary_id: 0,
+          deduction_type: '',
+          deduction_amount: 0,
+          effective_date: '',
+          old_salary: 0,
+          new_salary: 0,
+          deductibles: []
+        });
+        setIsModalVisible(true);
+      },
+    });
+  }
 
   const showModal = async (userId: number) => {
     try {
@@ -253,7 +420,7 @@ export default function Wages() {
         setAmountDed(amountDeductible);
         setIsModalVisible(true);
       } else {
-        toast.error("Error fetching salary data");
+        showCreateSalaryWarning(userId);
       }
 
       if (deductiblesData.success) {
@@ -271,66 +438,308 @@ export default function Wages() {
     setIsModalVisible(false);
   };
 
+  const handleReset = (
+    clearFilters: () => void,
+    confirm: (param?: FilterConfirmProps) => void
+  ) => {
+    clearFilters();
+    confirm();
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchUsersAndTheirCourses = async () => {
       try {
-        const res = await fetch("/api/users");
+        const queryParams = `${buildQueryString(
+          userFilter,
+          userSort
+        )}&page=${currentPage}&limit=${pageSize}`;
+        const res = await fetch(`/api/user-salaries?${queryParams}`);
         const data = await res.json();
 
         if (data.success) {
           setUsers(data.users);
+          setTotalUsers(data.totalUsers);
         } else {
-          console.error("Failed to fetch courses", data.error);
+          console.error("Failed to fetch users", data.error);
         }
       } catch (error) {
         console.error("Error fetching courses", error);
       }
     };
 
-    fetchUsers();
-  }, []);
+    const fetchDepartment = async () => {
+      try {
+        const res = await fetch(`/api/departments`);
+        const data = await res.json();
+
+        if (data.success) {
+          console.log(data.departments);
+          setDepartments(data.departments);
+        } else {
+          console.error("Failed to fetch departments", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching departments", error);
+      }
+    };
+
+    const fetchPositions = async () => {
+      try {
+        const res = await fetch(`/api/positions`);
+        const data = await res.json();
+
+        if (data.success) {
+          console.log(data.positions);
+          setPositions(data.positions);
+        } else {
+          console.error("Failed to fetch positions", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching positions", error);
+      }
+    };
+
+    fetchUsersAndTheirCourses();
+    fetchDepartment();
+    fetchPositions();
+  }, [userFilter, userSort, currentPage, pageSize]);
+
+  const getColumnSearchProps = (dataIndex: any): ColumnType<DataType> => {
+    if (["department_name", "position_title", "salary_status"].includes(dataIndex)) {
+      return {
+        filterDropdown: ({
+          setSelectedKeys,
+          selectedKeys,
+          confirm,
+          clearFilters,
+          close,
+        }: FilterDropdownProps) => (
+          <div style={{ padding: 8 }}>
+            <Select
+              placeholder={`Select a status`}
+              value={selectedKeys[0]}
+              onChange={(value: any) => setSelectedKeys(value ? [value] : [])}
+              style={{ marginBottom: 8, width: 120 }}
+              allowClear
+            >
+              {dataIndex === "department_name" && departments.map((department: any, index: number) => (
+                <Select.Option key={index} value={department.department_name}>
+                  {department.department_name}
+                </Select.Option>
+              ))}
+              {dataIndex === "position_title" && positions.map((position: any, index: number) => (
+                <Select.Option key={index} value={position.position_title}>
+                  {position.position_title}
+                </Select.Option>
+              ))}
+              {dataIndex === "salary_status" && 
+                <>
+                  <Select.Option key={'salary_ok'} value={'salary_ok'}>
+                   <CheckCircleFilled style={{ color: "#4CAF50", fontSize: "20px" }} />
+                  </Select.Option>
+                  <Select.Option key={'salary_nok'} value={'salary_nok'}>
+                    <InfoCircleFilled style={{ color: "#FFC107", fontSize: "20px" }} />
+                  </Select.Option>
+                </>
+              }
+            </Select>
+            <br></br>
+            <Space>
+              <Button
+                type="primary"
+                onClick={() => confirm()}
+                size="small"
+                style={{ width: 90 }}
+              >
+                Filter
+              </Button>
+              <Button
+                onClick={() =>
+                  clearFilters && handleReset(clearFilters, confirm)
+                }
+                size="small"
+                style={{ width: 90 }}
+              >
+                Reset
+              </Button>
+            </Space>
+          </div>
+        ),
+        filterIcon: (filtered: boolean) => (
+          <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+        ),
+        onFilter: (dataIndex === "salary_status" ? 
+        ((value: any, record: any) => 
+          value === 'salary_ok' ?
+          record.base_salary != null ? true : false
+          :
+          record.base_salary != null ? false : true)
+        :
+        (value: any, record: any) =>
+          record[dataIndex]
+            ? record[dataIndex]
+                .toString()
+                .toLowerCase()
+                .includes((value as string).toLowerCase())
+            : false),
+      };
+    } else {
+      return {
+        filterDropdown: ({
+          setSelectedKeys,
+          selectedKeys,
+          confirm,
+          clearFilters,
+          close,
+        }: FilterDropdownProps) => (
+          <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+            <Input
+              ref={searchInput}
+              placeholder={`Search ${dataIndex}`}
+              value={selectedKeys[0]}
+              onChange={(e: any) =>
+                setSelectedKeys(e.target.value ? [e.target.value] : [])
+              }
+              onPressEnter={() => confirm()}
+              style={{ marginBottom: 8, display: "block" }}
+            />
+            <Space>
+              <Button
+                type="primary"
+                onClick={() => confirm()}
+                icon={<SearchOutlined />}
+                size="small"
+                style={{ width: 90 }}
+              >
+                Search
+              </Button>
+              <Button
+                onClick={() =>
+                  clearFilters && handleReset(clearFilters, confirm)
+                }
+                size="small"
+                style={{ width: 90 }}
+              >
+                Reset
+              </Button>
+            </Space>
+          </div>
+        ),
+        filterIcon: (filtered: boolean) => (
+          <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+        ),
+        onFilter: (value: any, record: any) =>
+          record[dataIndex]
+            ? record[dataIndex]
+                .toString()
+                .toLowerCase()
+                .includes((value as string).toLowerCase())
+            : false,
+        onFilterDropdownOpenChange: (visible) => {
+          if (visible) {
+            setTimeout(() => searchInput.current?.select(), 100);
+          }
+        },
+        render: (text: string) =>
+          userFilter[dataIndex]
+            ? renderHighlightText(
+                text ? text.toString() : "",
+                userFilter[dataIndex][0]
+              )
+            : text,
+      };
+    }
+  };
 
   const userColumns = [
     {
-      title: "Vārds",
+      title: "Name",
       dataIndex: "first_name",
       key: "first_name",
+      sorter: true,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      ...getColumnSearchProps("first_name"),
     },
     {
-      title: "Uzvārds",
+      title: "Surname",
       dataIndex: "last_name",
       key: "last_name",
+      sorter: true,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      ...getColumnSearchProps("last_name"),
     },
     {
       title: "Department",
       dataIndex: "department_name",
       key: "department_name",
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      ...getColumnSearchProps("department_name"),
     },
     {
       title: "Position",
       dataIndex: "position_title",
       key: "position_title",
+      ...getColumnSearchProps("position_title"),
+    },
+    {
+      title: "Salary status",
+      dataIndex: "salary_status",
+      key: "salary_status",
+      render: (_: any, record: any) => (
+        <>
+          {record.base_salary != null ? (
+            <CheckCircleFilled style={{ color: "#4CAF50", fontSize: "25px" }} />
+          ) : (
+            <InfoCircleFilled style={{ color: "#FFC107", fontSize: "25px" }} />
+          )}
+        </>
+      ),
+      ...getColumnSearchProps("salary_status"),
     },
   ];
 
   return (
-    <Layout>
-      <CustomTableTwo
-        data={users}
-        columns={userColumns}
-        sideModalFeature={true}
-        showModal={showModal}
-      />
-      {isModalVisible && (
-        <SalaryModal
-          handleCancel={handleCancel}
-          isModalVisible={isModalVisible}
-          selectedSalaryData={selectedSalaryData}
-          setSelectedSalaryData={setSelectedSalaryData}
-          deductibles={deductibles}
-          amountDed={amountDed}
+    console.log(users),
+    (
+      <Layout>
+        <h2>{formatDateTime(currentTime)}</h2>
+        <p>{calculateMonthEndInfo()}</p>
+
+        <CustomTableTwo
+          data={users}
+          columns={userColumns}
+          sideModalFeature={true}
+          showModal={showModal}
+          onChange={handleFilterChange}
         />
-      )}
-    </Layout>
+        <Pagination
+          className="tower_element"
+          current={currentPage}
+          total={totalUsers}
+          pageSize={pageSize}
+          onChange={handlePageChange}
+          onShowSizeChange={handlePageSizeChange}
+          showSizeChanger
+          showQuickJumper
+        />
+        {isModalVisible && (
+          <SalaryModal
+            handleCancel={handleCancel}
+            isModalVisible={isModalVisible}
+            selectedSalaryData={selectedSalaryData}
+            setSelectedSalaryData={setSelectedSalaryData}
+            deductibles={deductibles}
+            amountDed={amountDed}
+            setCurrentPage={setCurrentPage}
+          />
+        )}
+      </Layout>
+    )
   );
 }
