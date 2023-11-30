@@ -84,7 +84,7 @@ export default function LoginPage() {
       </div>
       {/* CREATE A FOOTER WITH CURRENT VERSION BELLOW: */}
       <div className="footer">
-        <p>Current version: 0.1.0.3, 30.11.2023 version</p>
+        <p>Current version: 0.1.0.6, 30.11.2023 version</p>
       </div>
     </>
   );

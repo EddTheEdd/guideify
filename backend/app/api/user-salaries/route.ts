@@ -33,7 +33,11 @@ export async function GET(req: NextRequest) {
       query = query.where('position_title', 'ilike', `%${positionFilter}%`);
     }
 
-    const data = await query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset);
+    // if the user_id matches get the entry with the latest created_at
+    const data = await query.where((builder) => 
+    builder.where('salary_structures.signed', true)
+    .orWhereNull('salary_structures.signed')
+    ).orderBy(sortColumn, sortOrder).limit(limit).offset(offset);
 
     if (data.length === 0) {
       return NextResponse.json({
@@ -42,9 +46,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    const totalUsersCount = await knex('users').count('* as total').first();
+    const totalUsers = totalUsersCount ? totalUsersCount.total : 0;
+
     return NextResponse.json({
       success: true,
-      users: data
+      users: data,
+      totalUsers
     });
   } catch (error: any) {
     return NextResponse.json(

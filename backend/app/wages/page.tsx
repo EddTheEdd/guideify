@@ -16,12 +16,15 @@ import {
   Pagination,
   Select,
   Space,
+  Switch,
+  message,
 } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import {
   CheckCircleFilled,
-  InfoCircleFilled,
+  ClockCircleFilled,
+  ExclamationCircleFilled,
   SearchOutlined,
 } from "@ant-design/icons";
 import { buildQueryString } from "@/app/helpers/buildQueryString";
@@ -30,7 +33,7 @@ import { renderHighlightText } from "@/helpers/renderHighlightText";
 import type { FilterConfirmProps } from "antd/es/table/interface";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import { set } from "mongoose";
-import { generatePayslip } from "@/helpers/generatePaylsip";
+import { generatePayslip } from "@/helpers/generatePayslip";
 
 interface User {
   id: number;
@@ -53,6 +56,7 @@ interface Salary {
   old_salary: number;
   new_salary: number;
   deductibles: any[];
+  agreed: boolean;
 }
 
 interface Deductible {
@@ -84,7 +88,9 @@ interface SalaryModalProps {
   setSelectedSalaryData: any;
   deductibles: Deductible[];
   amountDed: number;
-  setCurrentPage: (page: number) => void;
+  setRefetch: (refetch: boolean) => void;
+  refetch: boolean;
+  setIsModalVisible: (isModalVisible: boolean) => void;
 }
 
 const SalaryModal: React.FC<SalaryModalProps> = ({
@@ -94,8 +100,12 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   setSelectedSalaryData,
   deductibles,
   amountDed,
-  setCurrentPage
+  setRefetch,
+  refetch,
+  setIsModalVisible,
 }) => {
+  const [disableForm, setDisableForm] = useState(false);
+
   const calculateDeductions = (baseSalary: any, deductions: any) => {
     let remainingSalary = baseSalary;
     deductions.forEach((d: any) => {
@@ -108,155 +118,199 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    console.log(selectedSalaryData);
-    try {
-      await axios.post(
-        `/api/salary/${selectedSalaryData?.user_id}`,
-        selectedSalaryData
-      );
-      toast.success("Salary created successfully");
-      setCurrentPage(1);
-    } catch (error) {
-      toast.error("Error creating course");
-      console.error("Error creating course", error);
+    const createSalary = async () => {
+      console.log(selectedSalaryData);
+      try {
+        await axios.post(`/api/salary/${selectedSalaryData?.user_id}`, {
+          ...selectedSalaryData,
+          agreed: false,
+        });
+        toast.success("Salary created successfully");
+        message.success("Salary offer sent to employee!");
+        setRefetch(!refetch);
+        setIsModalVisible(false);
+      } catch (error) {
+        toast.error("Error creating salary");
+        console.error("Error creating salary", error);
+      }
+    };
+
+    if (selectedSalaryData.agreed) {
+      Modal.confirm({
+        title: "This employee already has a salary.",
+        content:
+          "Would you like to offer the employee a new salary? If the employee accepts the new salary, the previous salary will be invalidated!",
+        okText: "Make offer!",
+        cancelText: "Cancel",
+        onOk: () => {
+          createSalary();
+        },
+      });
+    } else {
+      createSalary();
     }
   };
 
   return (
-    <Drawer
-      title="Salary Details"
-      placement="right"
-      closable={true}
-      onClose={handleCancel}
-      visible={isModalVisible}
-      width={720}
-    >
-      {/* Modal content here */}
-      <Form
-        layout="vertical"
-        onFinish={() => {
-          handleSubmit();
-        }}
+    console.log(disableForm),
+    (
+      <Drawer
+        title="Salary Details"
+        placement="right"
+        closable={true}
+        onClose={handleCancel}
+        visible={isModalVisible}
+        width={720}
       >
-        <Form.Item label="Base Salary">
-          <Input
-            value={selectedSalaryData?.base_salary}
-            onChange={(e: any) => {
-              setSelectedSalaryData((prev: any) => {
-                const updatedSalary = { ...prev };
-                updatedSalary.base_salary = e.target.value;
-                return updatedSalary;
-              });
-            }}
-          />
-        </Form.Item>
-        <Form.Item label="Bonus">
-          <Input
-            value={selectedSalaryData?.bonus}
-            onChange={(e: any) => {
-              setSelectedSalaryData((prev: any) => {
-                const updatedSalary = { ...prev };
-                updatedSalary.bonus = e.target.value;
-                return updatedSalary;
-              });
-            }}
-          />
-        </Form.Item>
-        <Form.Item label="Allowance">
-          <Input
-            value={selectedSalaryData?.allowance}
-            onChange={(e: any) => {
-              setSelectedSalaryData((prev: any) => {
-                const updatedSalary = { ...prev };
-                updatedSalary.allowance = e.target.value;
-                return updatedSalary;
-              });
-            }}
-          />
-        </Form.Item>
-        <Divider>Deductibles:</Divider>
-        {deductibles.map((deductible: any, index: number) => (
-          <div
-            key={deductible.deductible_id}
-            className="wages_page_deductible_row"
-          >
-            <Form.Item
-              key={index}
-              label={
-                deductible.name +
-                " (" +
-                (deductible?.amount
-                  ? deductible?.amount + " EUR)"
-                  : deductible?.percentage + " %)")
-              }
-            >
-              <Checkbox
-                key={deductible.deductible_id}
-                checked={selectedSalaryData?.deductibles.some(
-                  (d: any) => d.deductible_id === deductible.deductible_id
-                )}
-                onChange={() => {
-                  setSelectedSalaryData((prev: any) => {
-                    const updatedSalary = { ...prev };
-                    const deductibleIndex = updatedSalary.deductibles.findIndex(
-                      (d: any) => d.deductible_id === deductible.deductible_id
-                    );
-                    if (deductibleIndex === -1) {
-                      updatedSalary.deductibles.push(deductible);
-                    } else {
-                      updatedSalary.deductibles.splice(deductibleIndex, 1);
-                    }
-                    return updatedSalary;
-                  });
-                }}
-              />
-            </Form.Item>
-          </div>
-        ))}
-        <Divider>Payslip:</Divider>
-        <p>Base: +{selectedSalaryData?.base_salary} €</p>
-        <p>Bonus: +{selectedSalaryData?.bonus} €</p>
-        <p>Allowance: +{selectedSalaryData?.allowance} €</p>
-        <hr className="rounded_grey" />
-        {selectedSalaryData?.deductibles.map(
-          (deductible: any, index: number) => {
-            if (deductible.amount != null) {
-              return (
-                <p key={index}>
-                  {deductible.name}: -{deductible.amount} €
-                </p>
-              );
-            } else {
-              return (
-                <p key={index}>
-                  {deductible.name}: -{deductible.percentage}%
-                </p>
-              );
-            }
-          }
+        {selectedSalaryData.agreed && (
+          <>
+            <span>Locked: </span>
+            <Switch
+              defaultChecked
+              onChange={() => {
+                setDisableForm(!disableForm);
+              }}
+            />
+          </>
         )}
-        <hr className="rounded" />
-        <p>
-          Total:{" "}
-          {calculateDeductions(
-            Number(selectedSalaryData?.base_salary) +
-              Number(selectedSalaryData?.bonus) +
-              Number(selectedSalaryData?.allowance) -
-              Number(amountDed),
-            selectedSalaryData?.deductibles
-          )}{" "}
-          €
-        </p>
-        <Form.Item>
-          <Button type="primary" htmlType="submit">
-            Save
-          </Button>
-          <Button type="primary" onClick={() => {generatePayslip(selectedSalaryData)}}>
-            Download PDF
-          </Button>
-        </Form.Item>
-      </Form>
-    </Drawer>
+        {/* Modal content here */}
+
+        <Form
+          disabled={selectedSalaryData?.agreed && !disableForm}
+          layout="vertical"
+          onFinish={() => {
+            handleSubmit();
+          }}
+        >
+          <Form.Item label="Base Salary">
+            <Input
+              value={selectedSalaryData?.base_salary}
+              onChange={(e: any) => {
+                setSelectedSalaryData((prev: any) => {
+                  const updatedSalary = { ...prev };
+                  updatedSalary.base_salary = e.target.value;
+                  return updatedSalary;
+                });
+              }}
+            />
+          </Form.Item>
+          <Form.Item label="Bonus">
+            <Input
+              value={selectedSalaryData?.bonus}
+              onChange={(e: any) => {
+                setSelectedSalaryData((prev: any) => {
+                  const updatedSalary = { ...prev };
+                  updatedSalary.bonus = e.target.value;
+                  return updatedSalary;
+                });
+              }}
+            />
+          </Form.Item>
+          <Form.Item label="Allowance">
+            <Input
+              value={selectedSalaryData?.allowance}
+              onChange={(e: any) => {
+                setSelectedSalaryData((prev: any) => {
+                  const updatedSalary = { ...prev };
+                  updatedSalary.allowance = e.target.value;
+                  return updatedSalary;
+                });
+              }}
+            />
+          </Form.Item>
+          <Divider>Deductibles:</Divider>
+          {deductibles.map((deductible: any, index: number) => (
+            <div
+              key={deductible.deductible_id}
+              className="wages_page_deductible_row"
+            >
+              <Form.Item
+                key={index}
+                label={
+                  deductible.name +
+                  " (" +
+                  (deductible?.amount
+                    ? deductible?.amount + " EUR)"
+                    : deductible?.percentage + " %)")
+                }
+              >
+                <Checkbox
+                  key={deductible.deductible_id}
+                  checked={selectedSalaryData?.deductibles.some(
+                    (d: any) => d.deductible_id === deductible.deductible_id
+                  )}
+                  onChange={() => {
+                    setSelectedSalaryData((prev: any) => {
+                      const updatedSalary = { ...prev };
+                      const deductibleIndex =
+                        updatedSalary.deductibles.findIndex(
+                          (d: any) =>
+                            d.deductible_id === deductible.deductible_id
+                        );
+                      if (deductibleIndex === -1) {
+                        updatedSalary.deductibles.push(deductible);
+                      } else {
+                        updatedSalary.deductibles.splice(deductibleIndex, 1);
+                      }
+                      return updatedSalary;
+                    });
+                  }}
+                />
+              </Form.Item>
+            </div>
+          ))}
+          <Divider>Payslip:</Divider>
+          <p>Base: +{selectedSalaryData?.base_salary} €</p>
+          <p>Bonus: +{selectedSalaryData?.bonus} €</p>
+          <p>Allowance: +{selectedSalaryData?.allowance} €</p>
+          <hr className="rounded_grey" />
+          {selectedSalaryData?.deductibles.map(
+            (deductible: any, index: number) => {
+              if (deductible.amount != null) {
+                return (
+                  <p key={index}>
+                    {deductible.name}: -{deductible.amount} €
+                  </p>
+                );
+              } else {
+                return (
+                  <p key={index}>
+                    {deductible.name}: -{deductible.percentage}%
+                  </p>
+                );
+              }
+            }
+          )}
+          <hr className="rounded" />
+          <p>
+            Total:{" "}
+            {calculateDeductions(
+              Number(selectedSalaryData?.base_salary) +
+                Number(selectedSalaryData?.bonus) +
+                Number(selectedSalaryData?.allowance) -
+                Number(amountDed),
+              selectedSalaryData?.deductibles
+            )}{" "}
+            €
+          </p>
+          <Form.Item>
+            <Button type="primary" htmlType="submit">
+              Offer
+            </Button>
+            <Button
+              disabled={false}
+              style={{ marginLeft: "10px" }}
+              type="default"
+              onClick={() => {
+                generatePayslip(selectedSalaryData);
+              }}
+            >
+              Download PDF
+            </Button>
+          </Form.Item>
+        </Form>
+      </Drawer>
+    )
   );
 };
 
@@ -281,6 +335,7 @@ export default function Wages() {
   const [userSort, setUserSort] = useState<UserSort>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(1);
+  const [refetch, setRefetch] = useState(false);
 
   const [departments, setDepartments] = useState<any[]>([]);
   const [positions, setPositions] = useState<any[]>([]);
@@ -390,17 +445,18 @@ export default function Wages() {
           bonus: 0,
           allowance: 0,
           salary_id: 0,
-          deduction_type: '',
+          deduction_type: "",
           deduction_amount: 0,
-          effective_date: '',
+          effective_date: "",
           old_salary: 0,
           new_salary: 0,
-          deductibles: []
+          deductibles: [],
+          agreed: false,
         });
         setIsModalVisible(true);
       },
     });
-  }
+  };
 
   const showModal = async (userId: number) => {
     try {
@@ -502,10 +558,12 @@ export default function Wages() {
     fetchUsersAndTheirCourses();
     fetchDepartment();
     fetchPositions();
-  }, [userFilter, userSort, currentPage, pageSize]);
+  }, [userFilter, userSort, currentPage, pageSize, refetch]);
 
   const getColumnSearchProps = (dataIndex: any): ColumnType<DataType> => {
-    if (["department_name", "position_title", "salary_status"].includes(dataIndex)) {
+    if (
+      ["department_name", "position_title", "salary_status"].includes(dataIndex)
+    ) {
       return {
         filterDropdown: ({
           setSelectedKeys,
@@ -522,26 +580,40 @@ export default function Wages() {
               style={{ marginBottom: 8, width: 120 }}
               allowClear
             >
-              {dataIndex === "department_name" && departments.map((department: any, index: number) => (
-                <Select.Option key={index} value={department.department_name}>
-                  {department.department_name}
-                </Select.Option>
-              ))}
-              {dataIndex === "position_title" && positions.map((position: any, index: number) => (
-                <Select.Option key={index} value={position.position_title}>
-                  {position.position_title}
-                </Select.Option>
-              ))}
-              {dataIndex === "salary_status" && 
-                <>
-                  <Select.Option key={'salary_ok'} value={'salary_ok'}>
-                   <CheckCircleFilled style={{ color: "#4CAF50", fontSize: "20px" }} />
+              {dataIndex === "department_name" &&
+                departments.map((department: any, index: number) => (
+                  <Select.Option key={index} value={department.department_name}>
+                    {department.department_name}
                   </Select.Option>
-                  <Select.Option key={'salary_nok'} value={'salary_nok'}>
-                    <InfoCircleFilled style={{ color: "#FFC107", fontSize: "20px" }} />
+                ))}
+              {dataIndex === "position_title" &&
+                positions.map((position: any, index: number) => (
+                  <Select.Option key={index} value={position.position_title}>
+                    {position.position_title}
+                  </Select.Option>
+                ))}
+              {dataIndex === "salary_status" && (
+                <>
+                  <Select.Option key={"salary_ok"} value={"salary_ok"}>
+                    <CheckCircleFilled
+                      style={{ color: "#4CAF50", fontSize: "20px" }}
+                    />
+                  </Select.Option>
+                  <Select.Option
+                    key={"salary_pending"}
+                    value={"salary_pending"}
+                  >
+                    <ClockCircleFilled
+                      style={{ color: "#FFC107", fontSize: "20px" }}
+                    />
+                  </Select.Option>
+                  <Select.Option key={"salary_nok"} value={"salary_nok"}>
+                    <ExclamationCircleFilled
+                      style={{ color: "#FF5733", fontSize: "20px" }}
+                    />
                   </Select.Option>
                 </>
-              }
+              )}
             </Select>
             <br></br>
             <Space>
@@ -568,20 +640,23 @@ export default function Wages() {
         filterIcon: (filtered: boolean) => (
           <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
         ),
-        onFilter: (dataIndex === "salary_status" ? 
-        ((value: any, record: any) => 
-          value === 'salary_ok' ?
-          record.base_salary != null ? true : false
-          :
-          record.base_salary != null ? false : true)
-        :
-        (value: any, record: any) =>
-          record[dataIndex]
-            ? record[dataIndex]
-                .toString()
-                .toLowerCase()
-                .includes((value as string).toLowerCase())
-            : false),
+        onFilter:
+          dataIndex === "salary_status"
+            ? (value: any, record: any) =>
+                value === "salary_ok"
+                  ? record.base_salary != null
+                    ? true
+                    : false
+                  : record.base_salary != null
+                  ? false
+                  : true
+            : (value: any, record: any) =>
+                record[dataIndex]
+                  ? record[dataIndex]
+                      .toString()
+                      .toLowerCase()
+                      .includes((value as string).toLowerCase())
+                  : false,
       };
     } else {
       return {
@@ -691,15 +766,23 @@ export default function Wages() {
       title: "Salary status",
       dataIndex: "salary_status",
       key: "salary_status",
-      render: (_: any, record: any) => (
-        <>
-          {record.base_salary != null ? (
+      render: (_: any, record: any) => {
+        if (record.base_salary == null) {
+          return (
+            <ExclamationCircleFilled
+              style={{ color: "#FF5733", fontSize: "25px" }}
+            />
+          );
+        } else if (!record.agreed) {
+          return (
+            <ClockCircleFilled style={{ color: "#FFC107", fontSize: "25px" }} />
+          );
+        } else {
+          return (
             <CheckCircleFilled style={{ color: "#4CAF50", fontSize: "25px" }} />
-          ) : (
-            <InfoCircleFilled style={{ color: "#FFC107", fontSize: "25px" }} />
-          )}
-        </>
-      ),
+          );
+        }
+      },
       ...getColumnSearchProps("salary_status"),
     },
   ];
@@ -736,7 +819,9 @@ export default function Wages() {
             setSelectedSalaryData={setSelectedSalaryData}
             deductibles={deductibles}
             amountDed={amountDed}
-            setCurrentPage={setCurrentPage}
+            setRefetch={setRefetch}
+            refetch={refetch}
+            setIsModalVisible={setIsModalVisible}
           />
         )}
       </Layout>
