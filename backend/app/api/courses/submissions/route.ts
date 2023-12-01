@@ -1,10 +1,23 @@
 import knex from "@/dbConfig/knexConfig"; // Update this path according to your project structure
+import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { checkUserPermissions } from "@/utils/permissions";
 import { NextApiRequest, NextApiResponse } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
+
+    const userId = getDataFromToken(req);
+
+    const hasPermission = await checkUserPermissions(userId, 'View Course Progress');
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: "You do not have permission to edit user salaries. Permission required: View Course Progress" },
+        { status: 403 }
+      );
+    }
+
     console.log(req.nextUrl.searchParams);
 
     if (req.nextUrl.searchParams.get("view") === "users") {

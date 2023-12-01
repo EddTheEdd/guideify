@@ -8,6 +8,8 @@ import CustomTable from "@/components/CustomTable";
 import { Button, Checkbox, Input, Modal, Select } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
+import { useRouter } from "next/navigation";
+import { useGlobalContext } from "@/contexts/GlobalContext";
 
 interface Course {
   id: number;
@@ -32,6 +34,10 @@ export default function Courses() {
     id: 0,
   });
   const [modalVisible, setModalVisible] = useState(false);
+
+  const { userPermissions, theme } = useGlobalContext();
+  const router = useRouter();
+  const canEditCourses = userPermissions.includes("Edit Courses");
 
   const fetchCourses = async () => {
     try {
@@ -117,9 +123,9 @@ export default function Courses() {
       render: (_: any, record: Unit) => (
         <>
           <Link href={`/courses/view/${record.id}`}>View</Link>
-          <Link style={{ marginLeft: "13px" }} href={`/courses/${record.id}`}>
+          {canEditCourses && <Link style={{ marginLeft: "13px" }} href={`/courses/${record.id}`}>
             Edit
-          </Link>
+          </Link>}
         </>
       ),
     },
@@ -127,7 +133,12 @@ export default function Courses() {
 
   return (
     <Layout>
-      <CustomTableTwo data={courses} columns={courseColumns} sideModalFeature={false} showModal={() => {}}/>
+      <CustomTableTwo
+        data={courses}
+        columns={courseColumns}
+        sideModalFeature={false}
+        showModal={() => {}}
+      />
       <Button onClick={showModal}>Create a Course</Button>
 
       <Modal

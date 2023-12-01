@@ -16,6 +16,7 @@ import {
   Pagination,
   Select,
   Space,
+  Spin,
   Switch,
   message,
 } from "antd";
@@ -25,6 +26,7 @@ import {
   CheckCircleFilled,
   ClockCircleFilled,
   ExclamationCircleFilled,
+  LoadingOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { buildQueryString } from "@/app/helpers/buildQueryString";
@@ -35,6 +37,7 @@ import type { ColumnType, ColumnsType } from "antd/es/table";
 import { set } from "mongoose";
 import { generatePayslip } from "@/helpers/generatePayslip";
 import { useGlobalContext } from '@/contexts/GlobalContext';
+import { useRouter } from "next/navigation";
 
 interface User {
   id: number;
@@ -108,7 +111,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   const [disableForm, setDisableForm] = useState(false);
   const { userPermissions, theme } = useGlobalContext();
   console.log(userPermissions);
-  const canEditSalaries = userPermissions.includes('Edit User Salaries');
+  const canEditSalaries = userPermissions.includes('Edit Salaries');
 
   const calculateDeductions = (baseSalary: any, deductions: any) => {
     let remainingSalary = baseSalary;
@@ -350,6 +353,12 @@ export default function Wages() {
   const [positions, setPositions] = useState<any[]>([]);
 
   const searchInput = useRef<any>(null);
+  const { userPermissions, theme } = useGlobalContext();
+
+  const canViewSalaries = userPermissions.includes('View Salaries');
+  const router = useRouter();
+
+
 
   const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
     console.log(filters);
@@ -528,6 +537,11 @@ export default function Wages() {
         } else {
           console.error("Failed to fetch users", data.error);
         }
+
+        if (!canViewSalaries) {
+          router.push('/forbidden');
+        }
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching courses", error);
@@ -801,6 +815,9 @@ export default function Wages() {
   return (
     console.log(users),
     (
+      !canViewSalaries && <div className="loading_spinner">
+      <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+      </div> ||
       <Layout>
         <h2>{formatDateTime(currentTime)}</h2>
         <p>{calculateMonthEndInfo()}</p>

@@ -5,12 +5,14 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "../../../components/Layout";
 import CustomTable from "@/components/CustomTable";
-import { Button, Checkbox, Input, Modal, Pagination, Select } from "antd";
+import { Button, Checkbox, Input, Modal, Pagination, Select, Spin } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import CustomTableThree from "@/components/CustomTableThree";
-import { FilterDropdownProps } from 'antd/lib/table/interface';
-import { SearchOutlined } from "@ant-design/icons";
+import { FilterDropdownProps } from "antd/lib/table/interface";
+import { LoadingOutlined, SearchOutlined } from "@ant-design/icons";
+import { useGlobalContext } from "@/contexts/GlobalContext";
+import { useRouter } from "next/navigation";
 
 interface Course {
   id: number;
@@ -46,10 +48,14 @@ export default function CourseSubmissions() {
     units: 0,
     id: 0,
   });
-  const [modalVisible, setModalVisible] = useState(false);
+  const { userPermissions, theme } = useGlobalContext();
+  const router = useRouter();
+  const canViewCourseProgress = userPermissions.includes(
+    "View Course Progress"
+  );
 
- const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
-  console.log(filters);
+  const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
+    console.log(filters);
     setUserFilter(filters);
     setUserSort({
       column: sorter.field,
@@ -57,17 +63,19 @@ export default function CourseSubmissions() {
     });
   };
 
-
   const buildQueryString = () => {
     const filterParams = new URLSearchParams();
     for (const key in userFilter) {
       if (userFilter[key]) {
-        filterParams.append(key, userFilter[key].join(','));
+        filterParams.append(key, userFilter[key].join(","));
       }
     }
     if (userSort.column) {
-      filterParams.append('sortColumn', userSort.column);
-      filterParams.append('sortOrder', userSort.order === 'ascend' ? 'asc' : 'desc');
+      filterParams.append("sortColumn", userSort.column);
+      filterParams.append(
+        "sortOrder",
+        userSort.order === "ascend" ? "asc" : "desc"
+      );
     }
     return filterParams.toString();
   };
@@ -75,15 +83,22 @@ export default function CourseSubmissions() {
   const fetchUsersAndTheirCourses = async () => {
     try {
       const queryParams = `${buildQueryString()}&page=${currentPage}&limit=${pageSize}`;
-      const res = await fetch(`/api/courses/submissions?view=users&${queryParams}`);
+      const res = await fetch(
+        `/api/courses/submissions?view=users&${queryParams}`
+      );
       const data = await res.json();
 
       if (data.success) {
         setUsers(data.users);
-        setTotalUsers(data.totalUsers)
+        setTotalUsers(data.totalUsers);
       } else {
         console.error("Failed to fetch users", data.error);
       }
+
+      if (!canViewCourseProgress) {
+        router.push('/forbidden');
+      }
+
     } catch (error) {
       console.error("Error fetching courses", error);
     }
@@ -92,7 +107,6 @@ export default function CourseSubmissions() {
   useEffect(() => {
     fetchUsersAndTheirCourses();
   }, [userFilter, userSort, currentPage, pageSize]);
-
 
   const handlePageChange = (page: number) => {
     console.log(page);
@@ -104,7 +118,6 @@ export default function CourseSubmissions() {
     setPageSize(size);
     setCurrentPage(1);
   };
-  
 
   const courseColumns = [
     {
@@ -112,7 +125,9 @@ export default function CourseSubmissions() {
       dataIndex: "first_name",
       key: "first_name",
       sorter: true,
-      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       filterDropdown: ({
         setSelectedKeys,
         selectedKeys,
@@ -123,11 +138,18 @@ export default function CourseSubmissions() {
           <Input
             placeholder="Search Name"
             value={selectedKeys[0]}
-            onChange={(e: any) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onChange={(e: any) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
             onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block' }}
+            style={{ marginBottom: 8, display: "block" }}
           />
-          <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
+          <Button
+            onClick={() => confirm()}
+            type="primary"
+            size="small"
+            style={{ width: 90, marginRight: 8 }}
+          >
             Search
           </Button>
           <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
@@ -141,7 +163,9 @@ export default function CourseSubmissions() {
       dataIndex: "last_name",
       key: "last_name",
       sorter: true,
-      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       filterDropdown: ({
         setSelectedKeys,
         selectedKeys,
@@ -152,11 +176,18 @@ export default function CourseSubmissions() {
           <Input
             placeholder="Search Surname"
             value={selectedKeys[0]}
-            onChange={(e: any) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onChange={(e: any) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
             onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block' }}
+            style={{ marginBottom: 8, display: "block" }}
           />
-          <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
+          <Button
+            onClick={() => confirm()}
+            type="primary"
+            size="small"
+            style={{ width: 90, marginRight: 8 }}
+          >
             Search
           </Button>
           <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
@@ -170,7 +201,9 @@ export default function CourseSubmissions() {
       dataIndex: "email",
       key: "email",
       sorter: true,
-      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       filterDropdown: ({
         setSelectedKeys,
         selectedKeys,
@@ -181,17 +214,28 @@ export default function CourseSubmissions() {
           <Input
             placeholder="Search Email"
             value={selectedKeys[0]}
-            onChange={(e: any) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onChange={(e: any) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
             onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block' }}
+            style={{ marginBottom: 8, display: "block" }}
           />
-          <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
+          <Button
+            onClick={() => confirm()}
+            type="primary"
+            size="small"
+            style={{ width: 90, marginRight: 8 }}
+          >
             Search
           </Button>
-          <Button onClick={() => {
-          clearFilters && clearFilters();
-          confirm();
-          }}  size="small" style={{ width: 90 }}>
+          <Button
+            onClick={() => {
+              clearFilters && clearFilters();
+              confirm();
+            }}
+            size="small"
+            style={{ width: 90 }}
+          >
             Reset
           </Button>
         </div>
@@ -202,7 +246,9 @@ export default function CourseSubmissions() {
       dataIndex: "phone_number",
       key: "phone_number",
       sorter: true,
-      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />,
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       filterDropdown: ({
         setSelectedKeys,
         selectedKeys,
@@ -213,34 +259,51 @@ export default function CourseSubmissions() {
           <Input
             placeholder="Search Phone Number"
             value={selectedKeys[0]}
-            onChange={(e: any) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+            onChange={(e: any) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
             onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: 'block' }}
+            style={{ marginBottom: 8, display: "block" }}
           />
-          <Button onClick={() => confirm()} type="primary" size="small" style={{ width: 90, marginRight: 8 }}>
+          <Button
+            onClick={() => confirm()}
+            type="primary"
+            size="small"
+            style={{ width: 90, marginRight: 8 }}
+          >
             Search
           </Button>
           <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
             Reset
           </Button>
         </div>
-      ),  
+      ),
     },
   ];
 
   return (
-    <Layout>
-      <CustomTableThree data={users} columns={courseColumns} onChange={handleFilterChange} />
-      <Pagination
-        className="tower_element"
-        current={currentPage}
-        total={totalUsers}
-        pageSize={pageSize}
-        onChange={handlePageChange}
-        onShowSizeChange={handlePageSizeChange}
-        showSizeChanger
-        showQuickJumper
-      />
-    </Layout>
+    (!canViewCourseProgress && (
+      <div className="loading_spinner">
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+      </div>
+    )) || (
+      <Layout>
+        <CustomTableThree
+          data={users}
+          columns={courseColumns}
+          onChange={handleFilterChange}
+        />
+        <Pagination
+          className="tower_element"
+          current={currentPage}
+          total={totalUsers}
+          pageSize={pageSize}
+          onChange={handlePageChange}
+          onShowSizeChange={handlePageSizeChange}
+          showSizeChanger
+          showQuickJumper
+        />
+      </Layout>
+    )
   );
 }

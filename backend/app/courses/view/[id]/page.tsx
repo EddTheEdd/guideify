@@ -5,10 +5,11 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "@/components/Layout";
 import CustomTable from "@/components/CustomTable";
-import { Button, Checkbox, Input, Modal, Select, Tag } from "antd";
+import { Button, Checkbox, Input, Modal, Select, Spin, Tag } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import { useRouter } from "next/navigation";
+import { LoadingOutlined } from "@ant-design/icons";
 
 interface Course {
   id: number;
@@ -128,6 +129,7 @@ export default function CourceView({ params }: any) {
   const [course, setCourse] = useState<Course | null>(null);
   const [colorRgb, setColorRgb] = useState<string>("rgb(22, 119, 255)");
   const [units, setUnits] = useState<Unit[]>([]);
+  const [loading, setLoading] = useState(false);
   const [newCourse, setNewCourse] = useState<Course>({
     name: "",
     description: "",
@@ -135,18 +137,21 @@ export default function CourceView({ params }: any) {
     id: 0,
   });
   const [modalVisible, setModalVisible] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     if (!id) return; // Return if id is not available yet
-
+    setLoading(true);
     const fetchCourse = async () => {
       try {
         const response = await axios.get(`/api/courses/${id}`);
         setCourse(response.data.course);
         setColorRgb(response.data.course.rgb_value);
-      } catch (error) {
+
+      } catch (error: any) {
         console.error("Error fetching the course data", error);
+        router.push("/forbidden");
       }
+      setLoading(false);
     };
 
     const fetchUnits = async () => {
@@ -177,7 +182,13 @@ export default function CourceView({ params }: any) {
   }, [id]);
 
   return (
+    loading ? 
+    <div className="loading_spinner">
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+      </div>
+    :
     <Layout>
+      <>
       <h1>{course?.name || "Course not found"}</h1>
       <h2>{course?.description || "Description not found"}</h2>
       <div className="courses_view_unit_container">
@@ -192,6 +203,7 @@ export default function CourceView({ params }: any) {
           />
         ))}
       </div>
+      </>
     </Layout>
   );
 }

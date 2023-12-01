@@ -10,10 +10,10 @@ export async function POST(request: NextRequest) {
 
     const userId = getDataFromToken(request);
 
-    const hasPermission = await checkUserPermissions(userId, 'Edit User Salaries');
+    const hasPermission = await checkUserPermissions(userId, 'Edit Salaries');
     if (!hasPermission) {
       return NextResponse.json(
-        { error: "You do not have permission to edit user salaries. Permission required: Edit User Salaries" },
+        { error: "You do not have permission to edit user salaries. Permission required: Edit Salaries" },
         { status: 403 }
       );
     }

@@ -1,8 +1,21 @@
 import pool from "@/dbConfig/pgConfig"; 
+import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(request: NextRequest) {
     try {
+
+        const userId = getDataFromToken(request);
+
+        const canEditCourses = await checkUserPermissions(userId, 'Edit Courses');
+        if (!canEditCourses) {
+            return NextResponse.json(
+                { error: "You do not have permission to edit courses. Permission required: Edit Courses" },
+                { status: 403 }
+            );
+        }
+
         const reqBody = await request.json();
         const { id, name, description, color } = reqBody;
 
@@ -42,6 +55,11 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+
+    const userId = getDataFromToken(request);
+
+    const canSeeAllCourses = await checkUserPermissions(userId, 'See All Courses');
+
     const courseId = request.nextUrl.pathname.split('/').pop();  // Extract the last part of the URL as course ID
 
     if (!courseId) {
@@ -49,11 +67,27 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const result = await pool.query(`
-            SELECT * FROM courses WHERE course_id = $1
-        `, [courseId]);
+        let query;
+        if (canSeeAllCourses) {
+            query = pool.query(`
+                SELECT * FROM courses WHERE course_id = $1
+            `, [courseId]);
+        } else {
+            query = pool.query(`
+            SELECT * FROM courses 
+            INNER JOIN roles_courses ON roles_courses.course_id = courses.course_id
+                INNER JOIN roles ON roles_courses.role_id = roles.id
+                INNER JOIN user_roles ON roles.id = user_roles.role_id
+                WHERE user_roles.user_id = $1 AND courses.course_id = $2
+            `, [userId, courseId]);
+        }
+
+        const result = await query;
 
         if (result.rows.length === 0) {
+            if (!canSeeAllCourses) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
             return NextResponse.json({ error: 'Course not found.' }, { status: 404 });
         }
 

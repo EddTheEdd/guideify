@@ -1,8 +1,21 @@
 import knex from "@/dbConfig/knexConfig";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   try {
+
+    const userId = getDataFromToken(req);
+
+    const hasPermission = await checkUserPermissions(userId, 'View Salaries');
+    if (!hasPermission) {
+      return NextResponse.json(
+        { error: "You do not have permission to edit user salaries. Permission required: View Salaries" },
+        { status: 403 }
+      );
+    }
+
     const page = parseInt(req.nextUrl.searchParams.get("page") || '1', 10);
     const limit = parseInt(req.nextUrl.searchParams.get("limit") || '10', 10);
     const offset = (page - 1) * limit;
