@@ -34,6 +34,7 @@ import type { FilterConfirmProps } from "antd/es/table/interface";
 import type { ColumnType, ColumnsType } from "antd/es/table";
 import { set } from "mongoose";
 import { generatePayslip } from "@/helpers/generatePayslip";
+import { useGlobalContext } from '@/contexts/GlobalContext';
 
 interface User {
   id: number;
@@ -105,6 +106,9 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   setIsModalVisible,
 }) => {
   const [disableForm, setDisableForm] = useState(false);
+  const { userPermissions, theme } = useGlobalContext();
+  console.log(userPermissions);
+  const canEditSalaries = userPermissions.includes('Edit User Salaries');
 
   const calculateDeductions = (baseSalary: any, deductions: any) => {
     let remainingSalary = baseSalary;
@@ -125,13 +129,17 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
           ...selectedSalaryData,
           agreed: false,
         });
-        toast.success("Salary created successfully");
         message.success("Salary offer sent to employee!");
         setRefetch(!refetch);
         setIsModalVisible(false);
-      } catch (error) {
-        toast.error("Error creating salary");
-        console.error("Error creating salary", error);
+      } catch (error: any) {
+        console.error("Error:", error.message);
+
+        if (error.response && error.response.status === 403) {
+          message.error("You do not have permission to perform this action.");
+        } else {
+          message.error("An error occurred while processing your request.");
+        }
       }
     };
 
@@ -176,7 +184,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
         {/* Modal content here */}
 
         <Form
-          disabled={selectedSalaryData?.agreed && !disableForm}
+          disabled={selectedSalaryData?.agreed && !disableForm && !canEditSalaries}
           layout="vertical"
           onFinish={() => {
             handleSubmit();
@@ -330,6 +338,7 @@ export default function Wages() {
   const [deductibles, setDeductibles] = useState([]);
   const [amountDed, setAmountDed] = useState(0);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [loading, setLoading] = useState(false);
 
   const [userFilter, setUserFilter] = useState<UserFilter>({});
   const [userSort, setUserSort] = useState<UserSort>({});
@@ -505,6 +514,7 @@ export default function Wages() {
   useEffect(() => {
     const fetchUsersAndTheirCourses = async () => {
       try {
+        setLoading(true);
         const queryParams = `${buildQueryString(
           userFilter,
           userSort
@@ -518,6 +528,7 @@ export default function Wages() {
         } else {
           console.error("Failed to fetch users", data.error);
         }
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching courses", error);
       }
@@ -800,6 +811,7 @@ export default function Wages() {
           sideModalFeature={true}
           showModal={showModal}
           onChange={handleFilterChange}
+          loading={loading}
         />
         <Pagination
           className="tower_element"

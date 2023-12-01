@@ -9,9 +9,10 @@ interface Props {
   data: any[];
   columns?: any[];
   onChange?: any;
+  loading?: boolean;
 }
 
-const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, showModal, onChange }) => {
+const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, showModal, onChange, loading }) => {
   const router = useRouter();
 
   data = data.map((item) => {
@@ -33,6 +34,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
         })}
         onChange={onChange}
         pagination={false}
+        loading={loading}
       />
     :
       <Table 

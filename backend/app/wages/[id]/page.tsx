@@ -5,159 +5,206 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "@/components/Layout";
 import CustomTable from "@/components/CustomTable";
-import { Button, Checkbox, Input, Modal, Select } from "antd";
+import { Button, Pagination, Table, message } from "antd";
 import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
+import { CheckCircleFilled, ClockCircleFilled, MinusCircleFilled } from "@ant-design/icons";
+import { generatePayslip } from "@/helpers/generatePayslip";
+import { buildQueryString } from "@/app/helpers/buildQueryString";
 
-interface Course {
-  id: number;
-  name: string;
-  description: string;
-  units: number;
+interface Salary {
+  salary_id: number;
+  user_id: string;
+  base_salary: string;
+  bonus: number;
+  allowance: number;
+  created_at: string;
+  updated_at: string;
+  agreed: boolean;
+  signed: boolean;
 }
 
-interface Unit {
-  id: number;
-  name: string;
-  type: string; // For instance: 'text', 'video', or 'questionnaire'
+interface SortProps {
+  [column: string]: string;
 }
 
-export default function Courses({ params }: any) {
+export default function UserWages({ params }: any) {
   const id = params.id;
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [newCourse, setNewCourse] = useState<Course>({
-    name: "",
-    description: "",
-    units: 0,
-    id: 0,
-  });
-  const [modalVisible, setModalVisible] = useState(false);
+  const [usersSalaries, setUsersSalaries] = useState<Salary[]>([]);
+  const [refetch, setRefetch] = useState(false);
+  const [salarySort, setSalarySort] = useState<SortProps>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(1);
+  const [totalSalaries, setTotalSalaries] = useState(0);
 
-  const fetchCourses = async () => {
-    try {
-      const res = await fetch(`/api/salary/${id}?getall=true`);
-      const data = await res.json();
 
-      if (data.success) {
-        setCourses(data.courses);
-      } else {
-        console.error("Failed to fetch courses", data.error);
-      }
-    } catch (error) {
-      console.error("Error fetching courses", error);
-    }
-  };
 
   useEffect(() => {
-    const fetchUnits = async () => {
+    const fetchAllUserSalaries = async () => {
       try {
-        const res = await fetch("/api/units");
+        const queryParams = `${buildQueryString(
+          {},
+          salarySort
+        )}&page=${currentPage}&limit=${pageSize}`;
+        const res = await fetch(`/api/salary/${id}?getall=true&${queryParams}`);
         const data = await res.json();
 
         if (data.success) {
-          setUnits(data.units);
+          const salariesWithKeys = data.salary.map((salary: Salary) => ({ ...salary, key: salary.salary_id }));
+          setUsersSalaries(salariesWithKeys);
+          setTotalSalaries(data.totalSalaries);
         } else {
-          console.error("Failed to fetch units", data.error);
+          console.error("Failed to fetch user salary", data.error);
         }
       } catch (error) {
-        console.error("Error fetching units", error);
+        console.error("Error fetching usersalaru", error);
       }
     };
 
-    fetchUnits();
+    fetchAllUserSalaries();
+  }, [refetch, salarySort, currentPage, pageSize]);
 
-    fetchCourses();
-  }, []);
-
-  const showModal = () => {
-    setModalVisible(true);
+  const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
+    setSalarySort({
+      column: sorter.field,
+      order: sorter.order,
+    });
   };
 
-  const handleOk = async () => {
+  const handlePageChange = (page: number) => {
+    console.log(page);
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (current: number, size: number) => {
+    console.log(size);
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  const handleSign = (salary_id: number) => async () => {
     try {
-      await axios.post("/api/courses", newCourse);
-      toast.success("Course created successfully");
-      fetchCourses();
+      await axios.post(`/api/salary/${salary_id}`, { salary_id, agreed: true });
+      setRefetch(!refetch);
+      message.success("Signed successfully");
     } catch (error) {
-      toast.error("Error creating course");
-      console.error("Error creating course", error);
+      message.error("Failed to sign");
     }
-    setModalVisible(false);
   };
 
-  const handleCancel = () => {
-    setModalVisible(false);
-  };
-
-  const courseColumns = [
+  const salaryColumns = [
     {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      render: (text: any, record: any) => ({
-        props: {
-          style: { borderLeft: `6px solid ${record.rgb_value}` },
-        },
-        children: <div>{text}</div>,
-      }),
+      title: "Salary ID",
+      dataIndex: "salary_id",
+      key: "salary_id",
     },
     {
-      title: "Description",
-      dataIndex: "description",
-      key: "description",
+      title: "Base Salary",
+      dataIndex: "base_salary",
+      key: "base_salary",
+      sorter: true
     },
     {
-      title: "Units",
-      dataIndex: "units",
-      key: "units",
+      title: "Bonus",
+      dataIndex: "bonus",
+      key: "bonus",
+      sorter: true
     },
     {
-      title: "Actions",
-      key: "actions",
-      render: (_: any, record: Unit) => (
-        <>
-          <Link href={`/courses/view/${record.id}`}>View</Link>
-          <Link style={{ marginLeft: "13px" }} href={`/courses/${record.id}`}>
-            Edit
-          </Link>
-        </>
-      ),
+      title: "Allowance",
+      dataIndex: "allowance",
+      key: "allowance",
+      sorter: true
+    },
+    {
+      title: "Created At",
+      dataIndex: "created_at",
+      key: "created_at",
+      render: (text: string) => {
+        return new Date(text).toLocaleDateString();
+      },
+      sorter: true
+    },
+    {
+      title: "Updated At",
+      dataIndex: "updated_at",
+      key: "updated_at",
+      render: (text: string) => {
+        return new Date(text).toLocaleDateString();
+      },
+      sorter: true
+    },
+    {
+      title: "Agreed To",
+      key: "agreed",
+      render: (text: string, record: any) => {
+        return (
+          (record.agreed && (
+            <CheckCircleFilled style={{ color: "#4CAF50", fontSize: "20px" }} />
+          )) ||
+          (record.signed && (
+            <ClockCircleFilled style={{ color: "#FFC107", fontSize: "20px" }} />
+          ))
+          ||
+          <MinusCircleFilled style={{ color: "grey", fontSize: "20px" }}  />
+        );
+      },
+    },
+    {
+      title: "View Details",
+      key: "view_details",
+      // button for downloading the pdf:
+      render: (text: string, record: any) => {
+        return (
+          <Button
+            type="default"
+            onClick={() => {
+              generatePayslip(record);
+            }}
+          >
+            Download PDF
+          </Button>
+        );
+      },
+    },
+    {
+      title: "Sign",
+      key: "sign",
+      // button for downloading the pdf:
+      render: (text: string, record: any) => {
+        return (
+          (record.agreed && (
+            <Button type="default" disabled={true}>
+              Signed
+            </Button>
+          )) ||
+          (record.signed && (
+            <Button
+              type="default"
+              disabled={false}
+              onClick={handleSign(record.salary_id)}
+            >
+              Sign
+            </Button>
+          ))
+        );
+      },
     },
   ];
 
   return (
     <Layout>
-      <CustomTableTwo
-        data={courses}
-        columns={courseColumns}
-        sideModalFeature={false}
-        showModal={() => {}}
-      />
-      <Button onClick={showModal}>Create a Course</Button>
-
-      <Modal
-        title="Create a Course"
-        visible={modalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <Input
-          placeholder="Course Name"
-          value={newCourse.name}
-          onChange={(e: any) =>
-            setNewCourse({ ...newCourse, name: e.target.value })
-          }
+      <Table dataSource={usersSalaries} columns={salaryColumns} onChange={handleFilterChange} />
+      <Pagination
+          className="tower_element"
+          current={currentPage}
+          total={totalSalaries}
+          pageSize={pageSize}
+          onChange={handlePageChange}
+          onShowSizeChange={handlePageSizeChange}
+          showSizeChanger
+          showQuickJumper
         />
-
-        <Input
-          placeholder="Course Description"
-          value={newCourse.description}
-          onChange={(e: any) =>
-            setNewCourse({ ...newCourse, description: e.target.value })
-          }
-        />
-      </Modal>
     </Layout>
   );
 }

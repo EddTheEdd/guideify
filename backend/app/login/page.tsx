@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { Button, Form, Input } from "antd";
+import { Button, Form, Input, Spin } from "antd";
+import { LoadingOutlined } from "@ant-design/icons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,7 +24,6 @@ export default function LoginPage() {
         password,
       });
       console.log("Login success", response.data);
-      toast.success("Login success");
       router.push("/profile");
     } catch (error: any) {
       console.log("Login failed", error.message);
@@ -46,7 +46,10 @@ export default function LoginPage() {
   }, [user]);
 
   return loading ? (
-    <p>Loading...</p>
+    // center the loading icon
+    <div className="loading_spinner">
+      <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+    </div>
   ) : (
     <>
       <div className="login-container">
@@ -84,7 +87,7 @@ export default function LoginPage() {
       </div>
       {/* CREATE A FOOTER WITH CURRENT VERSION BELLOW: */}
       <div className="footer">
-        <p>Current version: 0.1.0.6, 30.11.2023 version</p>
+        <p>Current version: 0.1.0.9, 01.12.2023 version</p>
       </div>
     </>
   );
