@@ -14,6 +14,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isEmailValid, setIsEmailValid] = useState(false);
+  const [isPasswordValid, setIsPasswordValid] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  const validateEmail = (email: string) => {
+    const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    return re.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    return /[A-Z]/.test(password);
+  };
+
+  useEffect(() => {
+    setIsEmailValid(emailTouched && validateEmail(email));
+    setIsPasswordValid(passwordTouched && validatePassword(password));
+  }, [email, password, emailTouched, passwordTouched]);
 
   const onLogin = async () => {
     console.log(1);
@@ -46,7 +64,6 @@ export default function LoginPage() {
   }, [user]);
 
   return loading ? (
-    // center the loading icon
     <div className="loading_spinner">
       <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
     </div>
@@ -55,39 +72,60 @@ export default function LoginPage() {
       <div className="login-container">
         <div className="login-form">
           <Form onFinish={onLogin}>
-            <h1 style={{textAlign: "center"}}>EMAG</h1>
-            <h2 style={{textAlign: "center"}}>Employee Management System</h2>
-            <h1>Login</h1>
-            <Form.Item label="Email">
+            <h1 style={{ textAlign: "center" }}>EMAG</h1>
+            <h2 style={{ textAlign: "center" }}>Employee Management System</h2>
+            <Form.Item
+              label="Email"
+              validateStatus={emailTouched && !isEmailValid ? "error" : ""}
+              help={
+                emailTouched && !isEmailValid && "Please enter a valid email"
+              }
+            >
               <Input
                 placeholder="Enter your email"
                 name="email"
-                onChange={(e: any) => {
+                onChange={(e) => {
                   setEmail(e.target.value);
+                  if (!emailTouched) setEmailTouched(true);
                 }}
               />
             </Form.Item>
-            <Form.Item label="Password">
-              <Input
-                style={{ color: "black" }}
+
+            <Form.Item
+              label="Password"
+              validateStatus={
+                passwordTouched && !isPasswordValid ? "error" : ""
+              }
+              help={
+                passwordTouched &&
+                !isPasswordValid &&
+                "Password must contain at least one capital letter"
+              }
+            >
+              <Input.Password
                 placeholder="Enter your password"
                 name="password"
-                type="password"
-                onChange={(e: any) => {
+                onChange={(e) => {
                   setPassword(e.target.value);
+                  if (!passwordTouched) setPasswordTouched(true);
                 }}
               />
             </Form.Item>
-            <Button type="primary" htmlType="submit">
+            <Button
+              type="primary"
+              htmlType="submit"
+              disabled={!isEmailValid || !isPasswordValid}
+            >
               Login
             </Button>
           </Form>
-          <p>Forgot your password? Contact the administrator for a reset here!</p>
+          <p>
+            Forgot your password? Contact the administrator for a reset here!
+          </p>
         </div>
       </div>
-      {/* CREATE A FOOTER WITH CURRENT VERSION BELLOW: */}
       <div className="footer">
-        <p>Current version: 0.1.0.9, 01.12.2023 version</p>
+        <p>Current version: 0.1.1.2, 03.12.2023 version</p>
       </div>
     </>
   );

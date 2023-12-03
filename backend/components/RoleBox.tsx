@@ -1,12 +1,12 @@
 // components/RoleBox.tsx
-import React from 'react';
-import { useDrop } from 'react-dnd';
-import { Button, Tag } from 'antd';
-import UserItem from './UserItem';
+import React from "react";
+import { useDrop } from "react-dnd";
+import { Button, Tag } from "antd";
+import UserItem from "./UserItem";
 
 interface User {
-    id: number;
-    username: string;
+  id: number;
+  username: string;
 }
 
 interface RoleBoxProps {
@@ -18,27 +18,37 @@ interface RoleBoxProps {
 
 const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
   const [, drop] = useDrop({
-    accept: 'USER',
+    accept: "USER",
     drop: (item) => {
-      onDrop(item, role_id);  // Pass the entire item object here
-  },
+      onDrop(item, role_id); // Pass the entire item object here
+    },
   });
 
   return (
     <div
       ref={drop}
       style={{
-        flex: '1',
-        padding: '1rem',
-        border: '1px solid #ccc',
-        minHeight: '100px',
-        position: 'relative',
+        flex: "1",
+        padding: "1rem",
+        border: "2px solid black",
+        borderRadius: "5px",
+        maxWidth: "300px",
+        minHeight: "100px",
+        position: "relative",
       }}
     >
-      <div>{role}</div>
-      {users && users.map((user: User, index) => (
-            <UserItem key={index} id={user.id} currentRole={role_id} username={user.username} />
-        ))}
+      <div style={{ fontWeight: "900" }}>{role}</div>
+      <div style={{ display: "flex", gap: "5px"}}>
+        {users &&
+          users.map((user: User, index) => (
+            <UserItem
+              key={index}
+              id={user.id}
+              currentRole={role_id}
+              username={user.username}
+            />
+          ))}
+      </div>
     </div>
   );
 };

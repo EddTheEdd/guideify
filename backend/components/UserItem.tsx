@@ -7,7 +7,7 @@ const UserItem: React.FC<any> = ({ id, username, currentRole }) => {
     });
   
     return (
-      <div ref={ref} style={{ padding: '0.5rem' }}>
+      <div ref={ref} style={{ border: "solid 2px gray", borderRadius: '5px', marginTop: '5px', width: '40px', padding: '5px', textAlign: 'center' }}>
         {username}
       </div>
     );

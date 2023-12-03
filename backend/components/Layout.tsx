@@ -142,7 +142,7 @@ const Layout: React.FC<any> = ({ children }) => {
         <Menu className="navbar_user_menu" style={{ width: '14%', paddingTop: '15px', height: '5rem' }} mode="horizontal" items={userMenuItems} />
       
       </div>
-      <div style={{ margin: "30px" }}>
+      <div style={{ margin: "30px", height: "80vh" }}>
         {children}
       </div>
     </div>

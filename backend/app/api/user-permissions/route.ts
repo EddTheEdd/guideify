@@ -11,8 +11,17 @@ interface RoleWithPermissions {
 export async function GET(request: NextRequest) {
   try {
     const userId = getDataFromToken(request);
+    console.log("USER ID:")
+    console.log(userId);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "You must be logged in to view your permissions." },
+        { status: 401 }
+      );
+    }
 
     const userRoles = await getUserRolesAndPermissions(userId);
+    console.log(userRoles);
     const returnRoles = userRoles.reduce(
       (acc: string[], role: RoleWithPermissions) => {
         acc.push(...role.permissions);

@@ -7,6 +7,7 @@ import {
   ReactNode,
 } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const GlobalContext = createContext({
   userPermissions: [] as string[],
@@ -23,15 +24,17 @@ interface UserPermissionsResponse {
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
   const [theme, setTheme] = useState("light");
+  const router = useRouter();
 
   useEffect(() => {
+    const url = window.location.pathname;
+    if (url === "/login") { return; }
     const fetchUserPermissions = async () => {
       const response = await axios.get<UserPermissionsResponse>(
         "/api/user-permissions"
       );
       setUserPermissions(response.data.roles ?? []);
     };
-
     fetchUserPermissions();
   }, []);
 
@@ -41,8 +44,8 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-  <GlobalContext.Provider value={{ userPermissions, theme, toggleTheme }}>
-    {children}
-  </GlobalContext.Provider>
-);
+    <GlobalContext.Provider value={{ userPermissions, theme, toggleTheme }}>
+      {children}
+    </GlobalContext.Provider>
+  );
 };

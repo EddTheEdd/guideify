@@ -15,32 +15,10 @@ interface Role {
 
 interface Props {
   data: Role[];
+  columns: any;
 }
 
-const CustomTable: React.FC<Props> = ({ data }) => {
-  const columns: ColumnsType<Role> = [
-    {
-      title: 'Role',
-      dataIndex: 'role_name',
-      key: 'role_name',
-      render: (text) => <a>{text}</a>, // Or just <>{text}</> if you don't need a link
-    },
-    {
-      title: 'Permissions',
-      dataIndex: 'permissions',
-      key: 'permissions',
-      render: (permissions) => (
-        <>
-          {permissions.map((permission: any) => (
-            <Tag color="blue" key={permission.id}>
-              {permission.name}
-            </Tag>
-          ))}
-        </>
-      ),
-    },
-  ];
-
+const CustomTable: React.FC<Props> = ({ data, columns }) => {
   // Convert roles data to a format compatible with the Table component
   const dataSource = data.map((role) => ({
     key: role.role_id.toString(), // Convert to string to avoid warnings

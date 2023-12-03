@@ -354,7 +354,7 @@ export default function Wages() {
 
   const searchInput = useRef<any>(null);
   const { userPermissions, theme } = useGlobalContext();
-
+  console.log(userPermissions);
   const canViewSalaries = userPermissions.includes('View Salaries');
   const router = useRouter();
 
