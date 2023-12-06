@@ -7,10 +7,11 @@ import {
   ReactNode,
 } from "react";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const GlobalContext = createContext({
   userPermissions: [] as string[],
+  finishedFetchingPermissions: false,
   theme: "light",
   toggleTheme: () => {},
 });
@@ -23,8 +24,9 @@ interface UserPermissionsResponse {
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [finishedFetchingPermissions, setFinishedFetchingPermissions] = useState(false);
   const [theme, setTheme] = useState("light");
-  const router = useRouter();
+  const currentPath = usePathname();
 
   useEffect(() => {
     const url = window.location.pathname;
@@ -34,9 +36,10 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         "/api/user-permissions"
       );
       setUserPermissions(response.data.roles ?? []);
+      setFinishedFetchingPermissions(true);
     };
     fetchUserPermissions();
-  }, []);
+  }, [currentPath]);
 
   // Function to toggle theme
   const toggleTheme = () => {
@@ -44,7 +47,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <GlobalContext.Provider value={{ userPermissions, theme, toggleTheme }}>
+    <GlobalContext.Provider value={{ userPermissions, finishedFetchingPermissions, theme, toggleTheme }}>
       {children}
     </GlobalContext.Provider>
   );

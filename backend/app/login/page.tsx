@@ -42,7 +42,7 @@ export default function LoginPage() {
         password,
       });
       console.log("Login success", response.data);
-      router.push("/profile");
+      router.push("/home");
     } catch (error: any) {
       console.log("Login failed", error.message);
       toast.error(error.message);
@@ -76,10 +76,6 @@ export default function LoginPage() {
             <h2 style={{ textAlign: "center" }}>Employee Management System</h2>
             <Form.Item
               label="Email"
-              validateStatus={emailTouched && !isEmailValid ? "error" : ""}
-              help={
-                emailTouched && !isEmailValid && "Please enter a valid email"
-              }
             >
               <Input
                 placeholder="Enter your email"
@@ -93,14 +89,6 @@ export default function LoginPage() {
 
             <Form.Item
               label="Password"
-              validateStatus={
-                passwordTouched && !isPasswordValid ? "error" : ""
-              }
-              help={
-                passwordTouched &&
-                !isPasswordValid &&
-                "Password must contain at least one capital letter"
-              }
             >
               <Input.Password
                 placeholder="Enter your password"
@@ -125,7 +113,7 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="footer">
-        <p>Current version: 0.1.1.2, 03.12.2023 version</p>
+        <p>Current version: 0.1.1.6, 06.12.2023 version</p>
       </div>
     </>
   );

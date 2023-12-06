@@ -14,6 +14,7 @@ exports.seed = async function (knex) {
     { name: "Edit Courses" },
     { name: "Edit Roles" },
     { name: "View Roles" },
-    { name: "Assign Roles" }
+    { name: "Assign Roles" },
+    { name: "Admin Panel" },
   ]);
 };
