@@ -8,8 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "NODE_ENV=production knex migrate:latest",
-    "seed": "knex seed:run",
-    "vercel-build": "npm run migrate && npm run seed && npm run build"
+    "vercel-build": "npm run migrate && npm run build"
   },
   "dependencies": {
     "@ant-design/cssinjs": "^1.17.5",
