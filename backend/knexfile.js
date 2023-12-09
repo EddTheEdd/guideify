@@ -1,14 +1,17 @@
 
 console.log(process.env.DB_USER);
 // knexfile.js
+
+let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD } = process.env;
+
 module.exports = {
   development: {
     client: "pg",
     connection: {
-      user: process.env.DB_USER,
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      password: process.env.DB_PASSWORD,
+      host: PGHOST,
+      user: PGUSER,
+      password: PGPASSWORD,
+      database: PGDATABASE,
     },
     migrations: {
       directory: "./db/migrations",
@@ -17,10 +20,10 @@ module.exports = {
   production: {
     client: "pg",
     connection: {
-      user: process.env.DB_USER,
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      password: process.env.DB_PASSWORD,
+      host: PGHOST,
+      user: PGUSER,
+      password: PGPASSWORD,
+      database: PGDATABASE,
       port: process.env.DB_PORT || 5432,
       ssl: { rejectUnauthorized: false }
     },
