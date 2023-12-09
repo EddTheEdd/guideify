@@ -113,7 +113,7 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="footer">
-        <p>Current version: 0.1.1.6, 06.12.2023 version</p>
+        <p>Current version: 0.1.1.7, 09.12.2023 version</p>
       </div>
     </>
   );

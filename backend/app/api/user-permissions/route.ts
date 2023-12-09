@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       []
     );
 
-    return NextResponse.json({ roles: returnRoles });
+    return NextResponse.json({ roles: returnRoles, activeUserId: userId });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

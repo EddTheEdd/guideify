@@ -1,6 +1,31 @@
 import pool from "@/dbConfig/pgConfig";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Handles the POST request for creating or updating course units and associated questionnaires.
+ * 
+ * This asynchronous function processes a Next.js request object, extracting various fields related to 
+ * course units and questionnaires. Depending on the presence of certain fields in the request,
+ * it either inserts a new questionnaire and/or course unit into the database or updates an existing course unit.
+ * 
+ * @param {NextRequest} request - The Next.js request object containing course unit and questionnaire data.
+ * 
+ * @returns {NextResponse} A NextResponse object containing the result of the operation. 
+ * The response includes a message indicating the success of the operation and the details of the created or updated entity.
+ * In case of an error, it returns a JSON response with the error message and a 500 status code.
+ * 
+ * @example
+ * // POST request body should include fields like courseId, title, type, content, videoUrl, order, unitId, etc.
+ * POST(request).then(response => {
+ *   console.log(response); // Logs the server's response
+ * });
+ *
+ * @remarks
+ * - If `quest` array is present and not empty, a new questionnaire is created.
+ * - If `unitId` is present, the existing unit is updated; otherwise, a new unit is created.
+ * - The function utilizes transactions to ensure data consistency during inserts/updates.
+ * - Error handling is implemented to catch and return any database or other operational errors.
+ */
 export async function POST(request: NextRequest) {
   try {
     const reqBody = await request.json();

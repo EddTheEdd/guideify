@@ -14,16 +14,19 @@ const GlobalContext = createContext({
   finishedFetchingPermissions: false,
   theme: "light",
   toggleTheme: () => {},
+  activeUserId: 0,
 });
 
 export const useGlobalContext = () => useContext(GlobalContext);
 
 interface UserPermissionsResponse {
   roles: string[];
+  activeUserId: number;
 }
 
 export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [activeUserId, setActiveUserId] = useState(0);
   const [finishedFetchingPermissions, setFinishedFetchingPermissions] = useState(false);
   const [theme, setTheme] = useState("light");
   const currentPath = usePathname();
@@ -36,6 +39,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
         "/api/user-permissions"
       );
       setUserPermissions(response.data.roles ?? []);
+      setActiveUserId(response.data.activeUserId);
       setFinishedFetchingPermissions(true);
     };
     fetchUserPermissions();
@@ -47,7 +51,7 @@ export const GlobalProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <GlobalContext.Provider value={{ userPermissions, finishedFetchingPermissions, theme, toggleTheme }}>
+    <GlobalContext.Provider value={{ userPermissions, finishedFetchingPermissions, theme, toggleTheme, activeUserId }}>
       {children}
     </GlobalContext.Provider>
   );

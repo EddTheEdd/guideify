@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import { useRouter, usePathname } from 'next/navigation';
+import { useGlobalContext } from '@/contexts/GlobalContext';
 
 const roleMenu = (
   <Menu>
@@ -46,6 +47,19 @@ const Layout: React.FC<any> = ({ children }) => {
   const currentPath = usePathname();
 
   const [selectedKey, setSelectedKey] = useState('home');
+
+  const { userPermissions, finishedFetchingPermissions, activeUserId } = useGlobalContext();
+
+  const wagesMenu = (
+    <Menu>
+      <Menu.Item key="wages:1">
+        <Link href="/wages">Employee Salaries</Link>
+      </Menu.Item>
+      <Menu.Item key="wages:2">
+        <Link href={`/wages/${activeUserId}`}>My Salary</Link>
+      </Menu.Item>
+    </Menu>
+  );
 
   function capitalizeFirstLetter(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -95,7 +109,13 @@ const Layout: React.FC<any> = ({ children }) => {
       key: 'roles',
     },
     {
-      label: <Link href="/wages"><DollarOutlined /> Salaries</Link>,
+      label: (
+        <Dropdown overlay={wagesMenu} trigger={['hover']} className="role_dropdown_main">
+          <a className="dropdown-hover" onClick={e => e.preventDefault()}>
+            <DollarOutlined /> Salaries <DownOutlined className="down-icon" />
+          </a>
+        </Dropdown>
+      ),
       key: 'wages',
     },
     {

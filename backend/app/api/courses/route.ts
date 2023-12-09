@@ -4,6 +4,25 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Handles the POST request to create a new course.
+ * 
+ * This asynchronous function takes a Next.js request object, extracts the 'name' and 'description' 
+ * from the request body, and attempts to insert a new course into the database.
+ * If successful, it returns a JSON response with the details of the newly created course.
+ * In case of any errors during the process, it catches them and returns a JSON response with the error message.
+ *
+ * @param {NextRequest} request - The Next.js request object containing the payload.
+ * @returns {NextResponse} A NextResponse object containing the operation result.
+ * If successful, the response includes a success message and the details of the created course.
+ * On failure, it returns an error message with a 500 status code.
+ * 
+ * @example
+ * // POST request body: { name: "New Course", description: "This is a new course" }
+ * POST(request).then(response => {
+ *   console.log(response); // Logs the response from the server
+ * });
+ */
 export async function POST(request: NextRequest) {
   try {
     const reqBody = await request.json();
