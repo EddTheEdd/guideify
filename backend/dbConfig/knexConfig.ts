@@ -1,16 +1,23 @@
 // Import Knex
 import Knex from "knex";
 
+let { PGHOST, PGDATABASE, PGUSER, PGPASSWORD } = process.env;
+
+// Knex Configuration
 const knex = Knex({
-  client: 'pg',
+  client: "pg", // PostgreSQL client
   connection: {
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
+    host: PGHOST,
+    user: PGUSER,
+    password: PGPASSWORD,
+    database: PGDATABASE,
     port: 5432,
+    ssl: { rejectUnauthorized: false },
   },
-  pool: { min: 0, max: 7 },
+  pool: {
+    min: 2,
+    max: 10,
+  },
 });
 
 
