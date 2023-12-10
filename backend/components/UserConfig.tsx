@@ -1,29 +1,16 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  LoadingOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  SearchOutlined,
-  SettingOutlined,
-  UploadOutlined,
-  UserOutlined,
-  VideoCameraOutlined,
-} from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import {
   Layout,
-  Menu,
   Button,
   theme,
   Table,
   Input,
   Space,
   Pagination,
-  Spin,
   message,
 } from "antd";
-import LayoutTwo from "../../components/Layout";
-import { useGlobalContext } from "@/contexts/GlobalContext";
 import { useRouter } from "next/navigation";
 import {
   FilterConfirmProps,
@@ -31,13 +18,9 @@ import {
 } from "antd/es/table/interface";
 import { ColumnType } from "antd/lib/table";
 import { renderHighlightText } from "@/helpers/renderHighlightText";
-import { buildQueryString } from "../helpers/buildQueryString";
+import { buildQueryString } from "@/app/helpers/buildQueryString";
 import axios from "axios";
 import UserModal from "@/components/UserModal";
-import UserConfig from "@/components/UserConfig";
-import SiteConfig from "@/components/SiteConfig";
-
-const { Header, Sider, Content } = Layout;
 
 interface DataType {
   key: string;
@@ -54,9 +37,8 @@ interface UsersSort {
   [column: string]: string;
 }
 
-const AdminPage: React.FC = () => {
+const UserConfig: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [selectedMenuItem, setSelectedMenuItem] = useState("1");
   const [users, setUsers] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [usersFilter, setUsersFilter] = useState<UsersFilter>({});
@@ -69,11 +51,6 @@ const AdminPage: React.FC = () => {
   const [modalData, setModalData] = useState<any>({});
 
   const searchInput = useRef<any>(null);
-
-  const { userPermissions, finishedFetchingPermissions } = useGlobalContext();
-  console.log(userPermissions);
-  const canAdminPanel = userPermissions.includes("Admin Panel");
-  console.log(canAdminPanel);
 
   const router = useRouter();
 
@@ -195,16 +172,16 @@ const AdminPage: React.FC = () => {
 
   const onFinish = async (values: any) => {
     try {
-    console.log(values);
-    // one call to create user, api will check if he exists via email:
-    await axios.post(`/api/users`, {id: modalData.id ?? 0, values});
-    setModalVisible(false);
-    setCurrentPage(1); // will cause a refresh which is what we need.
-    if (modalData.id) {
-      message.success("User updated successfully");
-    } else {
-      message.success("User created successfully");
-    }
+      console.log(values);
+      // one call to create user, api will check if he exists via email:
+      await axios.post(`/api/users`, { id: modalData.id ?? 0, values });
+      setModalVisible(false);
+      setCurrentPage(1); // will cause a refresh which is what we need.
+      if (modalData.id) {
+        message.success("User updated successfully");
+      } else {
+        message.success("User created successfully");
+      }
     } catch (error) {
       message.error("Error updating user");
       console.error("Error updating user", error);
@@ -220,7 +197,7 @@ const AdminPage: React.FC = () => {
   const handleCancel = () => {
     setModalVisible(false);
   };
-  
+
   const deleteUser = () => {
     // Delete user:
     console.log("DELETE");
@@ -256,13 +233,6 @@ const AdminPage: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    console.log("User permissions:");
-    console.log(userPermissions);
-    console.log("Finished:");
-    console.log(finishedFetchingPermissions);
-    if (!canAdminPanel && finishedFetchingPermissions) {
-      router.push("/forbidden");
-    }
 
     const fetchDepartment = async () => {
       try {
@@ -334,72 +304,49 @@ const AdminPage: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  return loading ? (
-    <div className="loading_spinner">
-      <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+  return (
+    <div>
+      <Table
+        dataSource={users}
+        columns={courseColumns}
+        onRow={(record: any) => ({
+          onClick: () => {
+            showModal(record);
+          },
+        })}
+        onChange={handleFilterChange}
+        pagination={false}
+      />
+      <Pagination
+        className="tower_element"
+        current={currentPage}
+        total={totalUsers}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+        onShowSizeChange={handlePageSizeChange}
+        showSizeChanger
+        showQuickJumper
+      />
+      <UserModal
+        onFinish={onFinish}
+        modalVisible={modalVisible}
+        handleCancel={handleCancel}
+        modalData={modalData}
+        departments={departments}
+        positions={positions}
+        onOk={deleteUser}
+      />
+      <Button
+        type="default"
+        onClick={() => showModal({})}
+        style={{
+          marginTop: "20px",
+        }}
+      >
+        Create User
+      </Button>
     </div>
-  ) : (
-    (!canAdminPanel && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
-      <LayoutTwo style={{ background: "blue" }}>
-        <Layout style={{ height: "100%" }}>
-          <Sider trigger={null} collapsible collapsed={collapsed}>
-            <div className="demo-logo-vertical" />
-            <Menu
-              theme="dark"
-              mode="inline"
-              defaultSelectedKeys={[selectedMenuItem]}
-              onSelect={({ key }) => setSelectedMenuItem(key)}
-              items={[
-                {
-                  key: "1",
-                  icon: <UserOutlined />,
-                  label: "Users",
-                },
-                {
-                  key: "2",
-                  icon: <SettingOutlined />,
-                  label: "Site Configuration",
-                },
-              ]}
-            />
-          </Sider>
-          <Layout>
-            <Header style={{ padding: 0, background: colorBgContainer }}>
-              <Button
-                type="text"
-                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                onClick={() => setCollapsed(!collapsed)}
-                style={{
-                  fontSize: "16px",
-                  width: 64,
-                  height: 64,
-                }}
-              />
-            </Header>
-            <Content
-              style={{
-                margin: "24px 16px",
-                padding: 24,
-                minHeight: 280,
-                background: colorBgContainer,
-              }}
-            >
-              {selectedMenuItem === "1" && (
-                <UserConfig/>
-              )}
-              {selectedMenuItem === "2" && (
-                <SiteConfig/>
-              )}
-            </Content>
-          </Layout>
-        </Layout>
-      </LayoutTwo>
-    )
   );
 };
 
-export default AdminPage;
+export default UserConfig;

@@ -310,3 +310,35 @@ hr.rounded_grey {
 .user_modal .ant-modal-footer button:nth-child(2):hover {
   background-color: rgb(234, 107, 107);
 }
+
+.hover-svg {
+  display: none; /* Hide the hover SVG initially */
+}
+
+.svg-container:hover .default-svg {
+  display: none; /* Hide the default SVG on hover */
+}
+
+.svg-container:hover .hover-svg {
+  display: block; /* Show the hover SVG on hover */
+}
+
+.edit_small_trash:hover {
+  color: rgb(141, 141, 141);
+}
+
+.delete_small_trash:hover {
+  color: red;
+}
+
+.delete_small_trash_disabled {
+  color: rgb(67, 67, 67);
+}
+
+.flip {
+  transition: transform 0.5s cubic-bezier(.68,-0.55,.27,1.55) !important;
+}
+
+.flipped {
+  transform: rotate(-180deg);
+}
