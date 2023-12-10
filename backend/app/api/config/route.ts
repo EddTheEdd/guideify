@@ -37,12 +37,12 @@ export async function POST(req: NextRequest) {
       const data: any = await knex("site_config")
         .select("*")
         .where("config_name", "currency")
-        .where("config_value", currency);
+        .where("value", currency);
 
       if (data.length === 0) {
         await knex("site_config")
           .where("config_name", "currency")
-          .update({ config_value: currency });
+          .update({ value: currency });
         updatedConfig = "currency";
       }
     }
@@ -52,12 +52,12 @@ export async function POST(req: NextRequest) {
       const data2: any = await knex("site_config")
         .select("*")
         .where("config_name", "defaultEntriesPerPage")
-        .where("config_value", defaultEntriesPerPage);
+        .where("value", defaultEntriesPerPage);
 
       if (data2.length === 0) {
         await knex("site_config")
           .where("config_name", "defaultEntriesPerPage")
-          .update({ config_value: defaultEntriesPerPage });
+          .update({ value: defaultEntriesPerPage });
         updatedConfig = "pagination";
       }
     }

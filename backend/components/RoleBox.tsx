@@ -32,7 +32,7 @@ const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
         padding: "1rem",
         border: "2px solid black",
         borderRadius: "5px",
-        maxWidth: "300px",
+        width: "300px",
         minHeight: "100px",
         position: "relative",
       }}

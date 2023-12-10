@@ -194,7 +194,7 @@ export default function AssignRoles() {
                 <UserItem key={index} id={user.id} username={user.username} />
               ))}
             </div>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", width: "100rem" }}>
               {roles.map((role, index) => (
                 <RoleBox
                   key={index}
