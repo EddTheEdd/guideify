@@ -188,7 +188,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
         {/* Modal content here */}
 
         <Form
-          disabled={selectedSalaryData?.agreed && !disableForm && !canEditSalaries}
+          disabled={(selectedSalaryData?.agreed && !disableForm) || !canEditSalaries}
           layout="vertical"
           onFinish={() => {
             handleSubmit();
