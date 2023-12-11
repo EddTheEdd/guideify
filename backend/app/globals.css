@@ -184,12 +184,12 @@ html, body {
 }
 
 .answer_block_incorrect_icon {
-  color: rgb(227, 16, 16);
+  color: rgb(227, 16, 16) !important;
   font-size: 26px;
 }
 
 .answer_block_correct_icon {
-  color: rgb(36, 161, 50);
+  color: rgb(36, 161, 50) !important;
   font-size: 26px;
 }
 

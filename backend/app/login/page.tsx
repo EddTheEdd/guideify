@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
+  const [loginFail, setLoginFail] = useState(false);
 
   const validateEmail = (email: string) => {
     const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
@@ -34,6 +35,7 @@ export default function LoginPage() {
   }, [email, password, emailTouched, passwordTouched]);
 
   const onLogin = async () => {
+    setLoginFail(false);
     console.log(1);
     try {
       setLoading(true);
@@ -44,6 +46,7 @@ export default function LoginPage() {
       console.log("Login success", response.data);
       router.push("/home");
     } catch (error: any) {
+      setLoginFail(true);
       console.log("Login failed", error.message);
       toast.error(error.message);
     } finally {
@@ -63,53 +66,65 @@ export default function LoginPage() {
     }
   }, [user]);
 
-  return loading ? (
-    <div className="loading_spinner">
-      <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-    </div>
-  ) : (
+  return (
     <>
       <div className="login-container">
-        <div className="login-form">
-          <Form onFinish={onLogin}>
-            <h1 style={{ textAlign: "center" }}>EMAG</h1>
-            <h2 style={{ textAlign: "center" }}>Employee Management System</h2>
-            <Form.Item
-              label="Email"
-            >
-              <Input
-                placeholder="Enter your email"
-                name="email"
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (!emailTouched) setEmailTouched(true);
-                }}
-              />
-            </Form.Item>
+        <div
+          className={`login-form ${loading && "loading"}`}
+          style={{ display: "flex", flexDirection: "column" }}
+        >
+          {!loading && (
+            <>
+              <Form onFinish={onLogin}>
+                <h1 style={{ textAlign: "center" }}>EMAG</h1>
+                <h2 style={{ textAlign: "center" }}>
+                  Employee Management System
+                </h2>
+                {loginFail && (
+                  <p style={{ color: "red", textAlign: "center" }}>
+                    Email or password is incorrect!
+                  </p>
+                )}
+                {!loading && (
+                  <>
+                    <Form.Item label="Email">
+                      <Input
+                        placeholder="Enter your email"
+                        name="email"
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (!emailTouched) setEmailTouched(true);
+                        }}
+                      />
+                    </Form.Item>
 
-            <Form.Item
-              label="Password"
-            >
-              <Input.Password
-                placeholder="Enter your password"
-                name="password"
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (!passwordTouched) setPasswordTouched(true);
-                }}
+                    <Form.Item label="Password">
+                      <Input.Password
+                        placeholder="Enter your password"
+                        name="password"
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (!passwordTouched) setPasswordTouched(true);
+                        }}
+                      />
+                    </Form.Item>
+                    <Button type="primary" htmlType="submit">
+                      Login
+                    </Button>
+                  </>
+                )}
+              </Form>
+              <p>
+                Forgot your password? Contact the administrator for a reset
+                here!
+              </p>
+            </>
+          )}
+          {loading && (
+              <Spin
+                indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />}
               />
-            </Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              disabled={!isEmailValid || !isPasswordValid}
-            >
-              Login
-            </Button>
-          </Form>
-          <p>
-            Forgot your password? Contact the administrator for a reset here!
-          </p>
+          )}
         </div>
       </div>
       <div className="footer">

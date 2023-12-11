@@ -126,10 +126,11 @@ const UserModal: React.FC<Props> = ({
         key={modalData.id}
       >
         <Divider>Account Data:</Divider>
-        <Form.Item name="username" label="Username">
+        <Form.Item required={true} name="username" label="Username">
           <Input placeholder="Username" />
         </Form.Item>
         <Form.Item
+          required={true}
           name="email"
           label={`Email ${modalData?.username ? "(not editable)" : ""}`}
           validateStatus={emailTouched && !isEmailValid ? "error" : ""}
@@ -145,6 +146,7 @@ const UserModal: React.FC<Props> = ({
           />
         </Form.Item>
         <Form.Item
+          required={true}
           name="password"
           label="Password"
           validateStatus={passwordTouched && !isPasswordValid ? "error" : ""}
@@ -172,19 +174,23 @@ const UserModal: React.FC<Props> = ({
           />
         </Form.Item>
         <Divider>User Profile:</Divider>
-        <Form.Item name="first_name" label="First Name">
+        <Form.Item required={true} name="first_name" label="First Name">
           <Input placeholder="First Name" />
         </Form.Item>
-        <Form.Item name="last_name" label="Last Name">
+        <Form.Item required={true} name="last_name" label="Last Name">
           <Input placeholder="Last Name" />
         </Form.Item>
-        <Form.Item name="date_of_birth" label="Date Of Birth">
+        <Form.Item required={true} name="date_of_birth" label="Date Of Birth">
           <DatePicker placeholder="Date of Birth" />
         </Form.Item>
-        <Form.Item name="phone_number" label="Phone Number">
+        <Form.Item required={true} name="phone_number" label="Phone Number">
           <Input placeholder="Phone Number" />
         </Form.Item>
-        <Form.Item name={"department_name"} label="Department Name">
+        <Form.Item
+          name={"department_name"}
+          required={true}
+          label="Department Name"
+        >
           <Select>
             {departments.map((department: any, index: number) => (
               <Select.Option value={department.department_name} key={index}>
@@ -193,7 +199,7 @@ const UserModal: React.FC<Props> = ({
             ))}
           </Select>
         </Form.Item>
-        <Form.Item name={"position_title"} label="Position">
+        <Form.Item name={"position_title"} required={true} label="Position">
           <Select>
             {positions.map((position: any, index: number) => (
               <Select.Option value={position.position_title} key={index}>

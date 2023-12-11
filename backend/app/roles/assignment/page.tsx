@@ -36,13 +36,13 @@ export default function AssignRoles() {
   const [users, setUsers] = useState<User[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const { userPermissions, theme } = useGlobalContext();
+  const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
   const canAssignRoles = userPermissions.includes("Assign Roles");
   const router = useRouter();
 
   useEffect(() => {
-    if (!canAssignRoles) {
+    if (!canAssignRoles && finishedFetchingPermissions) {
       router.push("/forbidden");
     }
 

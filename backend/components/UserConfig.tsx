@@ -38,7 +38,7 @@ interface UsersSort {
 }
 
 const UserConfig: React.FC = () => {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [usersFilter, setUsersFilter] = useState<UsersFilter>({});
@@ -274,6 +274,7 @@ const UserConfig: React.FC = () => {
       try {
         const res = await fetch(`/api/users?${queryParams}`);
         const data = await res.json();
+        setLoading(false);
 
         if (data.success) {
           data.users = data.users.map((user: any) => {
@@ -296,7 +297,6 @@ const UserConfig: React.FC = () => {
     fetchDepartment();
     fetchPositions();
 
-    setLoading(false);
   }, [usersFilter, usersSort, currentPage, pageSize]);
 
   const [collapsed, setCollapsed] = useState(false);
@@ -307,6 +307,7 @@ const UserConfig: React.FC = () => {
   return (
     <div>
       <Table
+        loading={loading}
         dataSource={users}
         columns={courseColumns}
         onRow={(record: any) => ({

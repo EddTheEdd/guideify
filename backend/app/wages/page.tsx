@@ -38,6 +38,7 @@ import { set } from "mongoose";
 import { generatePayslip } from "@/helpers/generatePayslip";
 import { useGlobalContext } from '@/contexts/GlobalContext';
 import { useRouter } from "next/navigation";
+import { finished } from "stream";
 
 interface User {
   id: number;
@@ -353,7 +354,7 @@ export default function Wages() {
   const [positions, setPositions] = useState<any[]>([]);
 
   const searchInput = useRef<any>(null);
-  const { userPermissions, theme } = useGlobalContext();
+  const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
   const canViewSalaries = userPermissions.includes('View Salaries');
   const router = useRouter();
@@ -538,7 +539,7 @@ export default function Wages() {
           console.error("Failed to fetch users", data.error);
         }
 
-        if (!canViewSalaries) {
+        if (!canViewSalaries && finishedFetchingPermissions) {
           router.push('/forbidden');
         }
 

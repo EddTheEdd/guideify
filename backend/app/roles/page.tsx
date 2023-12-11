@@ -43,7 +43,7 @@ export default function Roles() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedRole, setSelectedRole] = useState<any>(null);
 
-  const { userPermissions, theme } = useGlobalContext();
+  const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
   const canViewRoles = userPermissions.includes("View Roles");
 
@@ -65,7 +65,7 @@ export default function Roles() {
 
   useEffect(() => {
     setLoading(true);
-    if (!canViewRoles) {
+    if (!canViewRoles && finishedFetchingPermissions) {
       router.push("/forbidden");
     }
     const fetchPermissions = async () => {

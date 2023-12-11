@@ -61,6 +61,7 @@ const SiteConfig: React.FC = () => {
   const [refetch, setRefetch] = useState(false);
   const [depsExpanded, setDepsExpanded] = useState(false);
   const [posExpanded, setPosExpanded] = useState(false);
+  const [deductibles, setDeductibles] = useState<any>([]);
   const [currency, setCurrency] = useState("USD");
   const [defaultEntriesPerPage, setDefaultEntriesPerPage] = useState(10);
 
@@ -110,6 +111,26 @@ const SiteConfig: React.FC = () => {
       }
     };
 
+    const fetchDeductibles = async () => {
+      try {
+        const res = await fetch(`/api/deductibles`);
+        const data = await res.json();
+
+        if (data.success) {
+          const tempDeductibles = data.deductibles;
+          tempDeductibles.map((ded: any) => {
+            ded.inputLocked = true;
+            ded.forDeletion = false;
+          });
+          setDeductibles(tempDeductibles);
+        } else {
+          console.error("Failed to fetch positions", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching positions", error);
+      }
+    };
+
     const fetchConfig = async () => {
       try {
         const res = await fetch(`/api/config`);
@@ -128,6 +149,7 @@ const SiteConfig: React.FC = () => {
 
     fetchDepartment();
     fetchPositions();
+    fetchDeductibles();
     fetchConfig();
 
     setLoading(false);
@@ -157,6 +179,7 @@ const SiteConfig: React.FC = () => {
 
   return (
     console.log(departments),
+    console.log(deductibles),
     (
       <div>
         <Divider orientation="left">Positions and Departments</Divider>
@@ -195,6 +218,8 @@ const SiteConfig: React.FC = () => {
             setRefetch={setRefetch}
           />
         )}
+        <Divider orientation="left">Deductibles</Divider>
+
         <Divider orientation="left">Currency Settings</Divider>
         <Select
           style={{ width: "100px" }}

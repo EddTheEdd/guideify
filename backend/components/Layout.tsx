@@ -97,7 +97,7 @@ const Layout: React.FC<any> = ({ children }) => {
   const menuItems = [
     {
       label: (
-        <Link className="svg-container" href="/">
+        <Link className="svg-container" href="/home">
           <div>
             <img
               src="../Union.svg"
