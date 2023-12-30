@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
     try {
         const result = await pool.query(`
-            SELECT * FROM course_units WHERE course_id = $1
+            SELECT * FROM units WHERE course_id = $1
         `, [courseId]);
 
         if (result.rows.length === 0) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
             }
 
             const progressResult = await pool.query(`
-                SELECT * FROM user_course_progress WHERE unit_id = $1 AND user_id = $2`, [unit.unit_id, userId]);
+                SELECT * FROM user_unit_progress WHERE unit_id = $1 AND user_id = $2`, [unit.unit_id, userId]);
             unit.progress = progressResult.rows[0];
         }
 

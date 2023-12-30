@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       console.log("UPDATING UNIT");
       // Update the existing unit
       query = `
-                UPDATE course_units 
+                UPDATE units 
                 SET course_id = $1, title = $2, content_type = $3, content = $4, "order" = $5, "quest_id" = $6, description = $7
                 WHERE unit_id = $8
                 RETURNING *;
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       console.log("SAVING UNIT");
       // Insert a new unit
       query = `
-                INSERT INTO course_units (course_id, title, content_type, content, "order", quest_id, description) 
+                INSERT INTO units (course_id, title, content_type, content, "order", quest_id, description) 
                 VALUES ($1, $2, $3, $4, $5, $6, $7) 
                 RETURNING *;
             `;

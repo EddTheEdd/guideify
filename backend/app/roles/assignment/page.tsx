@@ -38,13 +38,13 @@ export default function AssignRoles() {
   const [refresh, setRefresh] = useState(false);
   const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
-  const canAssignRoles = userPermissions.includes("Assign Roles");
+  // const canAssignRoles = userPermissions.includes("Assign Roles");
   const router = useRouter();
 
   useEffect(() => {
-    if (!canAssignRoles && finishedFetchingPermissions) {
-      router.push("/forbidden");
-    }
+    // if (!canAssignRoles && finishedFetchingPermissions) {
+    //   router.push("/forbidden");
+    // }
 
     const fetchUsers = async () => {
       const res = await fetch("/api/users");
@@ -174,11 +174,7 @@ export default function AssignRoles() {
     console.log(roles),
     console.log(users),
     console.log(userRoles),
-    (!canAssignRoles && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
+    (
       <DndProvider backend={HTML5Backend}>
         <Layout>
           <div style={{ display: "flex", gap: "10px" }}>

@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest) {
     const offset = (page - 1) * limit;
 
     const sortColumn =
-      _request.nextUrl.searchParams.get("sortColumn") || "users.id";
+      _request.nextUrl.searchParams.get("sortColumn") || "users.user_id";
 
     const sortOrder = _request.nextUrl.searchParams.get("sortOrder")
       ? _request.nextUrl.searchParams.get("sortOrder") === "desc"

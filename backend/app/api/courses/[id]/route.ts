@@ -76,8 +76,8 @@ export async function GET(request: NextRequest) {
             query = pool.query(`
             SELECT * FROM courses 
             INNER JOIN roles_courses ON roles_courses.course_id = courses.course_id
-                INNER JOIN roles ON roles_courses.role_id = roles.id
-                INNER JOIN user_roles ON roles.id = user_roles.role_id
+                INNER JOIN roles ON roles_courses.role_id = roles.role_id
+                INNER JOIN user_roles ON roles.role_id = user_roles.role_id
                 WHERE user_roles.user_id = $1 AND courses.course_id = $2
             `, [userId, courseId]);
         }

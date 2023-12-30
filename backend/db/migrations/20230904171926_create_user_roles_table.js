@@ -4,9 +4,9 @@
  */
 exports.up = function (knex) {
     return knex.schema.createTable('user_roles', (table) => {
-      table.increments('id').primary();
-      table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE');
-      table.integer('role_id').unsigned().references('id').inTable('roles').onDelete('CASCADE');
+      table.increments('user_role_id').primary();
+      table.integer('user_id').unsigned().references('user_id').inTable('users').onDelete('CASCADE');
+      table.integer('role_id').unsigned().references('role_id').inTable('roles').onDelete('CASCADE');
       table.timestamps(true, true);
       // Add any other columns you need for user-role relations
     });

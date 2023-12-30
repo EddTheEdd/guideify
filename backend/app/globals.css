@@ -342,3 +342,7 @@ hr.rounded_grey {
 .flipped {
   transform: rotate(-180deg);
 }
+
+.type_icon:hover {
+  cursor: pointer;
+}

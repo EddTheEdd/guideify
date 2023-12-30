@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const { review, unitId } = reqBody;
 
     const submissionResponse = await pool.query(
-      `SELECT * FROM user_course_progress WHERE progress_id = $1`,
+      `SELECT * FROM user_unit_progress WHERE progress_id = $1`,
       [submissionId]
     );
 
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     const completeQuiz = await pool.query(
-      `UPDATE user_course_progress SET completed = true WHERE progress_id = $1`,
+      `UPDATE user_unit_progress SET completed = true WHERE progress_id = $1`,
       [submissionId]
     );
 

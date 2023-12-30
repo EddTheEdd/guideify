@@ -5,7 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable("departments", (table) => {
     table.increments("department_id").primary();
-    table.string("department_name", 255).notNullable();
+    table.string("department_name", 255).notNullable().unique();
     table.timestamps(true, true);
   });
 };

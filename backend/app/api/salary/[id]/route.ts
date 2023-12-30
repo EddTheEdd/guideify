@@ -10,8 +10,11 @@ export async function POST(request: NextRequest) {
 
     const userId = getDataFromToken(request);
 
+    const { base_salary, bonus, allowance, user_id, deductibles, agreed } =
+      reqBody;
+
     const hasPermission = await checkUserPermissions(userId, 'Edit Salaries');
-    if (!hasPermission) {
+    if (!hasPermission && !agreed) {
       return NextResponse.json(
         { error: "You do not have permission to edit user salaries. Permission required: Edit Salaries" },
         { status: 403 }
@@ -19,23 +22,24 @@ export async function POST(request: NextRequest) {
     }
 
     let { salary_id } = reqBody;
-    const { base_salary, bonus, allowance, user_id, deductibles, agreed } =
-      reqBody;
+
 
     // only the owner of the salary can agree to it:
     if (agreed) {
-      const removeAgreedQuery = 
-      "UPDATE salary_structures SET agreed = false WHERE agreed = true RETURNING *";
-      await pool.query(removeAgreedQuery);
+      const removeAgreedQuery = knex("salary_structures").update({ agreed: false }).where({ agreed: true, user_id: userId }).returning('*');
+      const responseRemoveAgreedQuery = await removeAgreedQuery;
 
-      const updateSalaryQuery =
-        "UPDATE salary_structures SET agreed = $1 WHERE salary_id = $2 RETURNING *";
-      const updatedSalaryResult = await pool.query(updateSalaryQuery, [
-        agreed,
-        salary_id,
-      ]);
+      if (responseRemoveAgreedQuery.length === 0) {
+        return NextResponse.json(
+          { error: "Salary not found." },
+          { status: 404 }
+        );
+      }
 
-      if (updatedSalaryResult.rows.length === 0) {
+      const updateSalaryQuery = knex("salary_structures").update({ agreed }).where({ salary_id, user_id: userId }).returning('*');
+      const responseUpdateSalaryQuery = await updateSalaryQuery;
+
+      if (responseUpdateSalaryQuery.length === 0) {
         return NextResponse.json(
           { error: "Salary not found." },
           { status: 404 }
@@ -107,6 +111,7 @@ export async function POST(request: NextRequest) {
             { status: 404 }
           );
         }
+        salary_id = updatedSalaryResult.rows[0].salary_id;
       }
     } else {
       const insertQuery =
@@ -126,13 +131,6 @@ export async function POST(request: NextRequest) {
       }
 
       salary_id = insertedSalaryResult.rows[0].salary_id;
-    }
-
-    // Deductibles:
-    if (deductibles.length === 0) {
-      const deleteDeductibleQuery =
-        "DELETE FROM salary_deductibles WHERE salary_id = $1";
-      await pool.query(deleteDeductibleQuery, [salary_id]);
     }
 
     // Remove all deductibles
@@ -187,8 +185,8 @@ export async function GET(_request: NextRequest) {
           "users.last_name",
           "users.email"
         )
-        .leftJoin("users", "users.id", "salary_structures.user_id")
-        .where("user_id", userId)
+        .leftJoin("users", "users.user_id", "salary_structures.user_id")
+        .where("users.user_id", userId)
         .orderBy(sortColumn, sortOrder).limit(limit).offset(offset);
 
       if (salaryResultKnex.length === 0) {
@@ -238,8 +236,8 @@ export async function GET(_request: NextRequest) {
                   users.email
               FROM salary_structures
               LEFT JOIN salary_deductibles ON salary_structures.salary_id = salary_deductibles.salary_id
-              LEFT JOIN users ON users.id = salary_structures.user_id
-              WHERE salary_structures.created_at = (SELECT MAX(created_at) FROM salary_structures WHERE user_id = $1)
+              LEFT JOIN users ON users.user_id = salary_structures.user_id
+              WHERE salary_structures.created_at = (SELECT MAX(created_at) FROM salary_structures WHERE users.user_id = $1)
           `,
         [userId]
       );

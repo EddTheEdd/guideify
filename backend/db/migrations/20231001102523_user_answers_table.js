@@ -1,8 +1,8 @@
 exports.up = function(knex) {
     return knex.schema.createTable('user_answers', table => {
-        table.increments('id').primary();
+        table.increments('user_answer_id').primary();
         table.integer('user_id').unsigned().notNullable();
-        table.foreign('user_id').references('id').inTable('users').onDelete('CASCADE');
+        table.foreign('user_id').references('user_id').inTable('users').onDelete('CASCADE');
         table.integer('question_id').unsigned().notNullable();
         table.foreign('question_id').references('question_id').inTable('questions').onDelete('CASCADE');
         table.text('answer').notNullable();

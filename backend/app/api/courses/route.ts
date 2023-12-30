@@ -78,9 +78,9 @@ export async function GET(_request: NextRequest) {
         .select("courses.*", "courses.course_id as id")
         .from("courses")
         .leftJoin(
-          "course_units",
+          "units",
           "courses.course_id",
-          "course_units.course_id"
+          "units.course_id"
         );
 
       if (nameFilter) {
@@ -94,20 +94,20 @@ export async function GET(_request: NextRequest) {
         );
       }
 
-      query = query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset).groupBy("courses.course_id").count("course_units.unit_id as units");
+      query = query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset).groupBy("courses.course_id").count("units.unit_id as units");
     } else {
       query = knex
         .select("courses.*", "courses.course_id as id")
         .from("courses")
-        .count("course_units.unit_id as units")
-        .leftJoin("course_units", "courses.course_id", "course_units.course_id")
+        .count("units.unit_id as units")
+        .leftJoin("units", "courses.course_id", "units.course_id")
         .innerJoin(
           "roles_courses",
           "roles_courses.course_id",
           "courses.course_id"
         )
-        .innerJoin("roles", "roles_courses.role_id", "roles.id")
-        .innerJoin("user_roles", "roles.id", "user_roles.role_id")
+        .innerJoin("roles", "roles_courses.role_id", "roles.role_id")
+        .innerJoin("user_roles", "roles.role_id", "user_roles.role_id")
         .where("user_roles.user_id", userId);
 
       if (nameFilter) {

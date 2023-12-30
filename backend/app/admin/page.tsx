@@ -260,9 +260,6 @@ const AdminPage: React.FC = () => {
     console.log(userPermissions);
     console.log("Finished:");
     console.log(finishedFetchingPermissions);
-    if (!canAdminPanel && finishedFetchingPermissions) {
-      router.push("/forbidden");
-    }
 
     const fetchDepartment = async () => {
       try {
@@ -339,11 +336,7 @@ const AdminPage: React.FC = () => {
       <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
     </div>
   ) : (
-    (!canAdminPanel && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
+    (
       <LayoutTwo style={{ background: "blue" }}>
         <Layout style={{ height: "100%" }}>
           <Sider trigger={null} collapsible collapsed={collapsed}>
