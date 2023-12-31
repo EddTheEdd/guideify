@@ -27,6 +27,27 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
     ]);
   };
 
+  // Makes a quest deletable, on request to database it will be deleted.
+  const removeQuestion = (index: any) => {
+    // if the quest doesnt have a question_id just remove it, because we dont need to delete it from the database:
+    if (!quest[index].question_id) {
+      setQuest((prev: any) => {
+        const updatedQuest = [...prev];
+        updatedQuest.splice(index, 1);
+        return updatedQuest;
+      });
+      return;
+    }
+    // else mark it as deletable because the database has to delete it
+    setQuest((prev: any) => {
+      const updatedQuest = [...prev];
+      const updatedItem = { ...updatedQuest[index] };
+      updatedItem.deletable = true;
+      updatedQuest[index] = updatedItem;
+      return updatedQuest;
+    });
+  };
+
   const handleQuestionTypeChange = (value: string, index: number) => {
     console.log(value);
     console.log(index);
@@ -149,6 +170,7 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
         <Form.Item className="questform_quest_block">
           {quest.map((question: any, index: number) => (
             console.log(question),
+            question.deletable ? null : (
             <div key={index}>
               <Form.Item
                 label="Question Type"
@@ -251,17 +273,27 @@ const QuestForm: React.FC<QuestFormProps> = ({ quest, setQuest }) => {
                       Add Answer
                     </Button>
                   </div>
-                )}
+                )
+                }
               </div>
-            </div>
+              <Button danger
+              type="primary"
+              onClick={() => {removeQuestion(index)}}
+              style={{ marginTop: "13px", width: "100%" }}
+              >
+                Remove Question
+              </Button>
+            </div>)
           ))}
-          <Button
-            type="primary"
-            onClick={addQuestion}
-            style={{ marginTop: "13px", width: "100%" }}
-          >
-            Add Question
-          </Button>
+          <div className="question_control_buttons">
+            <Button
+              type="primary"
+              onClick={addQuestion}
+              style={{ marginTop: "13px", width: "100%" }}
+            >
+              Add Question
+            </Button>
+          </div>
         </Form.Item>
       </>
     )

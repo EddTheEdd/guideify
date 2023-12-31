@@ -342,3 +342,21 @@ hr.rounded_grey {
 .flipped {
   transform: rotate(-180deg);
 }
+
+.type_icon:hover {
+  cursor: pointer;
+}
+
+.unit_buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.question_control_buttons{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}

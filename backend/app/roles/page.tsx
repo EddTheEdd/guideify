@@ -45,7 +45,7 @@ export default function Roles() {
 
   const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
-  const canViewRoles = userPermissions.includes("View Roles");
+  // const canViewRoles = userPermissions.includes("View Roles");
 
   const fetchRoles = async () => {
     try {
@@ -65,9 +65,9 @@ export default function Roles() {
 
   useEffect(() => {
     setLoading(true);
-    if (!canViewRoles && finishedFetchingPermissions) {
-      router.push("/forbidden");
-    }
+    // if (!canViewRoles && finishedFetchingPermissions) {
+    //   router.push("/forbidden");
+    // }
     const fetchPermissions = async () => {
       try {
         const res = await fetch("/api/permissions");
@@ -203,13 +203,7 @@ export default function Roles() {
         <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
       </div>
     ) : (
-      (!canViewRoles && (
-        <div className="loading_spinner">
-          <Spin
-            indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />}
-          />
-        </div>
-      )) || (
+      (
         <Layout>
           <CustomTable data={tableData} columns={columns} />
           <Button onClick={showModal}>Create a Role</Button>

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       const page = parseInt(req.nextUrl.searchParams.get("page") || '1', 10);
       const limit = parseInt(req.nextUrl.searchParams.get("limit") || '10', 10);
       const offset = (page - 1) * limit;
-      const sortColumn = req.nextUrl.searchParams.get("sortColumn") || 'id';
+      const sortColumn = req.nextUrl.searchParams.get("sortColumn") || 'users.user_id';
       const sortOrder = req.nextUrl.searchParams.get("sortOrder") === 'desc' ? 'desc' : 'asc';
 
       const nameFilter = req.nextUrl.searchParams.get("first_name");
@@ -56,24 +56,24 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      const userIds = users.map((user) => user.id);
+      const userIds = users.map((user) => user.user_id);
 
       for (const user of users) {
         console.log(user);
-        const userCourses = await knex('user_course_progress')
+        const userCourses = await knex('user_unit_progress')
                                    .select(
                                      'courses.course_id as course_id',
                                      'courses.name as course_name',
-                                     'user_course_progress.completed',
-                                     'user_course_progress.assigned',
-                                     'user_course_progress.submitted',
-                                     'course_units.title as unit_title',
-                                     'course_units.content_type as unit_content_type',
-                                     'user_course_progress.progress_id as progress_id'
+                                     'user_unit_progress.completed',
+                                     'user_unit_progress.assigned',
+                                     'user_unit_progress.submitted',
+                                     'units.title as unit_title',
+                                     'units.content_type as unit_content_type',
+                                     'user_unit_progress.progress_id as progress_id'
                                    )
-                                   .innerJoin('course_units', 'user_course_progress.unit_id', 'course_units.unit_id')
-                                   .innerJoin('courses', 'courses.course_id', 'course_units.course_id')
-                                   .where('user_course_progress.user_id', user.id);
+                                   .innerJoin('units', 'user_unit_progress.unit_id', 'units.unit_id')
+                                   .innerJoin('courses', 'courses.course_id', 'units.course_id')
+                                   .where('user_unit_progress.user_id', user.user_id);
 
         user.courses = userCourses;
       }

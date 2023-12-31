@@ -33,7 +33,7 @@ const CoursePage: React.FC = ({ params }: any) => {
 
   const { userPermissions, theme } = useGlobalContext();
   const router = useRouter();
-  const canEditCourses = userPermissions.includes("Edit Courses");
+  // const canEditCourses = userPermissions.includes("Edit Courses");
 
   const rgbString = useMemo(() => {
     if (colorRgb) {
@@ -59,9 +59,9 @@ const CoursePage: React.FC = ({ params }: any) => {
         setCourse(response.data.course);
         setColorRgb(response.data.course.rgb_value);
 
-        if (!canEditCourses) {
-            router.push('/forbidden');
-        }
+        // if (!canEditCourses) {
+        //     router.push('/forbidden');
+        // }
       } catch (error) {
         console.error("Error fetching the course data", error);
       }
@@ -105,11 +105,7 @@ const CoursePage: React.FC = ({ params }: any) => {
 
   return (
     console.log(id),
-    (!canEditCourses && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
+    (
       <>
         <Layout>
           {course ? (
