@@ -8,7 +8,7 @@ exports.up = function (knex) {
     table
       .integer("user_id")
       .unsigned()
-      .references("id")
+      .references("user_id")
       .inTable("users");
     table.decimal("base_salary", 14, 2);
     table.decimal("bonus", 14, 2).defaultTo(0);

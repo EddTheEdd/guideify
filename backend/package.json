@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "NODE_ENV=production knex migrate:rollback --all",
+    "jsdoc": "jsdoc -c jsdoc.json",
+    "migrate": "NODE_ENV=production knex migrate:latest",
     "vercel-build": "npm run migrate && npm run build"
   },
   "dependencies": {
@@ -64,6 +65,7 @@
     "@types/mongoose": "^5.11.97",
     "@types/passport": "^1.0.16",
     "@types/passport-github2": "^1.2.9",
-    "@types/pg": "^8.10.2"
+    "@types/pg": "^8.10.2",
+    "typedoc": "^0.25.4"
   }
 }

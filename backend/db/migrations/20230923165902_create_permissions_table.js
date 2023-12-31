@@ -1,6 +1,6 @@
 exports.up = function(knex) {
     return knex.schema.createTable('permissions', table => {
-        table.increments('id').primary();
+        table.increments('permission_id').primary();
         table.string('name').notNullable().unique();
         table.timestamps(true, true);
     });

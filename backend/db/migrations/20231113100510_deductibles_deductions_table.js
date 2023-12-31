@@ -4,7 +4,7 @@
  */
 exports.up = function (knex) {
   return knex.schema.createTable("salary_deductibles", (table) => {
-    table.increments("id").primary();
+    table.increments("salary_deductible_id").primary();
     table
       .integer("salary_id")
       .unsigned()

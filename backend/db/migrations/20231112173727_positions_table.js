@@ -5,7 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable("positions", (table) => {
     table.increments("position_id").primary();
-    table.string("position_title", 255).notNullable();
+    table.string("position_title", 255).notNullable().unique();
     table.timestamps(true, true);
   });
 };
