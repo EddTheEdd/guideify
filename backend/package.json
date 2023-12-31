@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "NODE_ENV=production knex migrate:latest",
+    "migrate": "NODE_ENV=production knex migrate:rollback --all",
     "vercel-build": "npm run migrate && npm run build"
   },
   "dependencies": {
