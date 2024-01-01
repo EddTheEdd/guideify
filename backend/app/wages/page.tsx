@@ -142,7 +142,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
         if (error.response && error.response.status === 403) {
           message.error("You do not have permission to perform this action.");
         } else {
-          message.error("An error occurred while processing your request.");
+          message.error("Error offering salary to employee.");
         }
       }
     };
@@ -194,7 +194,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
             handleSubmit();
           }}
         >
-          <Form.Item label="Base Salary">
+          <Form.Item label="Base Salary" required={true}>
             <Input
               value={selectedSalaryData?.base_salary}
               onChange={(e: any) => {
@@ -356,7 +356,7 @@ export default function Wages() {
   const searchInput = useRef<any>(null);
   const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
-  const canViewSalaries = userPermissions.includes('View Salaries');
+  // const canViewSalaries = userPermissions.includes('View Salaries');
   const router = useRouter();
 
 
@@ -539,9 +539,9 @@ export default function Wages() {
           console.error("Failed to fetch users", data.error);
         }
 
-        if (!canViewSalaries && finishedFetchingPermissions) {
-          router.push('/forbidden');
-        }
+        // if (!canViewSalaries && finishedFetchingPermissions) {
+        //   router.push('/forbidden');
+        // }
 
         setLoading(false);
       } catch (error) {
@@ -816,9 +816,6 @@ export default function Wages() {
   return (
     console.log(users),
     (
-      !canViewSalaries && <div className="loading_spinner">
-      <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div> ||
       <Layout>
         <h2>{formatDateTime(currentTime)}</h2>
         <p>{calculateMonthEndInfo()}</p>

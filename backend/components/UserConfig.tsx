@@ -10,6 +10,7 @@ import {
   Space,
   Pagination,
   message,
+  Modal,
 } from "antd";
 import { useRouter } from "next/navigation";
 import {
@@ -21,6 +22,7 @@ import { renderHighlightText } from "@/helpers/renderHighlightText";
 import { buildQueryString } from "@/app/helpers/buildQueryString";
 import axios from "axios";
 import UserModal from "@/components/UserModal";
+import { formatDate } from "@/helpers/formatDate";
 
 interface DataType {
   key: string;
@@ -49,6 +51,7 @@ const UserConfig: React.FC = () => {
   const [positions, setPositions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState<any>({});
+  const [refetch, setRefetch] = useState(false);
 
   const searchInput = useRef<any>(null);
 
@@ -109,13 +112,17 @@ const UserConfig: React.FC = () => {
           setTimeout(() => searchInput.current?.select(), 100);
         }
       },
-      render: (text: string) =>
-        usersFilter[dataIndex]
-          ? renderHighlightText(
-              text ? text.toString() : "",
-              usersFilter[dataIndex][0]
-            )
-          : text,
+      render: (text: string, record, index) => {
+        // Function to format the date
+      
+        // Check if the text is a date and format it
+        const formattedText = (dataIndex === 'created_at' || dataIndex === "updated_at") ? formatDate(new Date(text)) : text;
+      
+        // Apply highlighting
+        return usersFilter[dataIndex]
+          ? renderHighlightText(formattedText, usersFilter[dataIndex][0])
+          : formattedText;
+      },
     };
   };
 
@@ -174,17 +181,24 @@ const UserConfig: React.FC = () => {
     try {
       console.log(values);
       // one call to create user, api will check if he exists via email:
-      await axios.post(`/api/users`, { id: modalData.id ?? 0, values });
+      await axios.post(`/api/users`, { id: modalData.user_id ?? 0, values });
       setModalVisible(false);
-      setCurrentPage(1); // will cause a refresh which is what we need.
-      if (modalData.id) {
+      setRefetch(!refetch); // will cause a refresh which is what we need.
+      if (modalData.user_id) {
         message.success("User updated successfully");
       } else {
         message.success("User created successfully");
       }
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response.data.error;
+      if (errorMsg) {
+        message.error(errorMsg);
+        return;
+      }
+      if (modalData.user_id) {
+        message.error("Error creating user");
+      }
       message.error("Error updating user");
-      console.error("Error updating user", error);
     }
   };
 
@@ -198,10 +212,28 @@ const UserConfig: React.FC = () => {
     setModalVisible(false);
   };
 
+  const callDelete = () => {
+    try {
+      axios.delete(`/api/users/${modalData.user_id}`);
+      setModalVisible(false);
+      setRefetch(!refetch); // will cause a refresh which is what we need.
+      message.success("User deleted successfully");
+    } catch (error) {
+      message.error("Error deleting user");
+    }
+  }
+
   const deleteUser = () => {
-    // Delete user:
-    console.log("DELETE");
-  };
+    Modal.confirm({
+      title: "Are you sure you wish to delete this user?",
+      content:
+        "This action will delete the user and all associated data permanently.",
+      okText: "Confirm Delete",
+      cancelText: "Cancel",
+      onOk: () => {
+        callDelete();
+      }});
+  }
 
   const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
     console.log(filters);
@@ -280,7 +312,7 @@ const UserConfig: React.FC = () => {
           data.users = data.users.map((user: any) => {
             return {
               ...user,
-              key: user.id,
+              key: user.user_id,
             };
           });
           setUsers(data.users);
@@ -297,7 +329,7 @@ const UserConfig: React.FC = () => {
     fetchDepartment();
     fetchPositions();
 
-  }, [usersFilter, usersSort, currentPage, pageSize]);
+  }, [refetch, usersFilter, usersSort, currentPage, pageSize]);
 
   const [collapsed, setCollapsed] = useState(false);
   const {

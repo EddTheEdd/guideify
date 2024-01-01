@@ -50,9 +50,7 @@ export default function CourseSubmissions() {
   });
   const { userPermissions, theme } = useGlobalContext();
   const router = useRouter();
-  const canViewCourseProgress = userPermissions.includes(
-    "View Course Progress"
-  );
+
 
   const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
     console.log(filters);
@@ -93,10 +91,6 @@ export default function CourseSubmissions() {
         setTotalUsers(data.totalUsers);
       } else {
         console.error("Failed to fetch users", data.error);
-      }
-
-      if (!canViewCourseProgress) {
-        router.push('/forbidden');
       }
 
     } catch (error) {
@@ -282,11 +276,6 @@ export default function CourseSubmissions() {
   ];
 
   return (
-    (!canViewCourseProgress && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
       <Layout>
         <CustomTableThree
           data={users}
@@ -304,6 +293,5 @@ export default function CourseSubmissions() {
           showQuickJumper
         />
       </Layout>
-    )
-  );
+    );
 }

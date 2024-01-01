@@ -31,9 +31,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert new role
-    const insertRoleQuery = "INSERT INTO roles (name) VALUES ($1) RETURNING id";
+    const insertRoleQuery = "INSERT INTO roles (name) VALUES ($1) RETURNING role_id";
     const newRole = await pool.query(insertRoleQuery, [name]);
-    const roleId = newRole.rows[0].id; // Assuming id is the column name for the role id
+    const roleId = newRole.rows[0].role_id; // Assuming id is the column name for the role id
 
     // Assign permissions to role
     const insertPermissionQuery =
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest) {
     // Update role:
     const updateRoleQuery = "UPDATE roles SET name = $1 WHERE name = $2 RETURNING *";
     const updatedRole = await pool.query(updateRoleQuery, [role_name, original_name]);
-    const roleId = updatedRole.rows[0].id;
+    const roleId = updatedRole.rows[0].role_id;
 
     // Update permissions
     // remove all permissions for that role:
@@ -116,13 +116,13 @@ export async function GET(_request: NextRequest) {
 
     const result = await pool.query(`
             SELECT 
-                roles.id as role_id,
+                roles.role_id as role_id,
                 roles.name as role_name,
-                json_agg(json_build_object('id', permissions.id, 'name', permissions.name)) as permissions
+                json_agg(json_build_object('permission_id', permissions.permission_id, 'name', permissions.name)) as permissions
             FROM roles
-            LEFT JOIN role_permissions ON roles.id = role_permissions.role_id
-            LEFT JOIN permissions ON role_permissions.permission_id = permissions.id
-            GROUP BY roles.id;
+            LEFT JOIN role_permissions ON roles.role_id = role_permissions.role_id
+            LEFT JOIN permissions ON role_permissions.permission_id = permissions.permission_id
+            GROUP BY roles.role_id;
         `);
 
     return NextResponse.json({
@@ -130,7 +130,7 @@ export async function GET(_request: NextRequest) {
       roles: result.rows.map((row) => ({
         ...row,
         permissions: row.permissions.filter(
-          (permission: any) => permission.id !== null
+          (permission: any) => permission.permission_id !== null
         ), // remove null permissions (when a role has no permissions)
       })),
     });

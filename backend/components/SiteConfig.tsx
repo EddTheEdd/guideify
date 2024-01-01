@@ -38,6 +38,7 @@ import UserModal from "@/components/UserModal";
 import DepartmentsConfig from "./DepartmentsConfig";
 import PositionsConfig from "./PositionsConfig";
 import currencies from "@/app/config/currencies";
+import DeductiblesConfig from "./DeductiblesConfig";
 
 interface DataType {
   key: string;
@@ -111,25 +112,25 @@ const SiteConfig: React.FC = () => {
       }
     };
 
-    // const fetchDeductibles = async () => {
-    //   try {
-    //     const res = await fetch(`/api/deductibles`);
-    //     const data = await res.json();
+    const fetchDeductibles = async () => {
+      try {
+        const res = await fetch(`/api/deductibles`);
+        const data = await res.json();
 
-    //     if (data.success) {
-    //       const tempDeductibles = data.deductibles;
-    //       tempDeductibles.map((ded: any) => {
-    //         ded.inputLocked = true;
-    //         ded.forDeletion = false;
-    //       });
-    //       setDeductibles(tempDeductibles);
-    //     } else {
-    //       console.error("Failed to fetch positions", data.error);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error fetching positions", error);
-    //   }
-    // };
+        if (data.success) {
+          const tempDeductibles = data.deductibles;
+          tempDeductibles.map((ded: any) => {
+            ded.inputLocked = true;
+            ded.forDeletion = false;
+          });
+          setDeductibles(tempDeductibles);
+        } else {
+          console.error("Failed to fetch positions", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching positions", error);
+      }
+    };
 
     const fetchConfig = async () => {
       try {
@@ -149,7 +150,7 @@ const SiteConfig: React.FC = () => {
 
     fetchDepartment();
     fetchPositions();
-    // fetchDeductibles();
+    fetchDeductibles();
     fetchConfig();
 
     setLoading(false);
@@ -219,7 +220,12 @@ const SiteConfig: React.FC = () => {
           />
         )}
         <Divider orientation="left">Deductibles</Divider>
-
+          <DeductiblesConfig
+          deductibles={deductibles}
+          setDeductibles={setDeductibles}
+          refetch={refetch}
+          setRefetch={setRefetch}
+          />
         <Divider orientation="left">Currency Settings</Divider>
         <Select
           style={{ width: "100px" }}

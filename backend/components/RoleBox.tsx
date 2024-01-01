@@ -5,7 +5,7 @@ import { Button, Tag } from "antd";
 import UserItem from "./UserItem";
 
 interface User {
-  id: number;
+  user_id: number;
   username: string;
 }
 
@@ -43,7 +43,7 @@ const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
           users.map((user: User, index) => (
             <UserItem
               key={index}
-              id={user.id}
+              id={user.user_id}
               currentRole={role_id}
               username={user.username}
             />

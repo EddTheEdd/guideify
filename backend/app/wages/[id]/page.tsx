@@ -84,7 +84,7 @@ export default function UserWages({ params }: any) {
 
   const handleSign = (salary_id: number) => async () => {
     try {
-      await axios.post(`/api/salary/${salary_id}`, { salary_id, agreed: true });
+      await axios.post(`/api/salary/${salary_id}/agree`, { salary_id });
       setRefetch(!refetch);
       message.success("Signed successfully");
     } catch (error) {

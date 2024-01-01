@@ -2,6 +2,12 @@ import pool from "@/dbConfig/pgConfig"; // Importing your pool
 import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { getUserRolesAndPermissions } from "@/utils/permissions";
+
+interface RoleWithPermissions {
+    roleName: string;
+    permissions: string[];
+}
 
 export async function POST(request: NextRequest) {
     try {
@@ -21,9 +27,20 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({error: "Incorrect password!"}, {status: 400});
         }
 
+        const userRoles = await getUserRolesAndPermissions(user.user_id);
+        console.log(userRoles);
+        const returnRoles = userRoles.reduce(
+          (acc: string[], role: RoleWithPermissions) => {
+            acc.push(...role.permissions);
+            return acc;
+          },
+          []
+        );
+    
         // Token data
         const tokenData = {
-            id: user.id,
+            id: user.user_id,
+            permissions: returnRoles,
             username: user.username,
             email: user.email
         };
@@ -36,6 +53,9 @@ export async function POST(request: NextRequest) {
             success: true
         });
 
+        // Set the Cache-Control header to no-cache
+        response.headers.set('Cache-Control', 'no-cache');
+        
         response.cookies.set("token", token, { httpOnly: true });
 
         return response;

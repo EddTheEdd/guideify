@@ -10,9 +10,9 @@ export async function getUserRolesAndPermissions(userId: number): Promise<RoleWi
     try {
         const userRoles = await knex('user_roles')
             .select('roles.name as role_name', 'permissions.name as permission_name')
-            .join('roles', 'user_roles.role_id', 'roles.id')
-            .join('role_permissions', 'roles.id', 'role_permissions.role_id')
-            .join('permissions', 'role_permissions.permission_id', 'permissions.id')
+            .join('roles', 'user_roles.role_id', 'roles.role_id')
+            .join('role_permissions', 'roles.role_id', 'role_permissions.role_id')
+            .join('permissions', 'role_permissions.permission_id', 'permissions.permission_id')
             .where('user_roles.user_id', userId);
         console.log("USER ROLES:");
         console.log(userRoles);
