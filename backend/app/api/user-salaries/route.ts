@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const page = parseInt(req.nextUrl.searchParams.get("page") || '1', 10);
     const limit = parseInt(req.nextUrl.searchParams.get("limit") || '10', 10);
     const offset = (page - 1) * limit;
-    const sortColumn = req.nextUrl.searchParams.get("sortColumn") || 'id';
+    const sortColumn = req.nextUrl.searchParams.get("sortColumn") || 'users.user_id';
     const sortOrder = req.nextUrl.searchParams.get("sortOrder") === 'desc' ? 'desc' : 'asc';
 
     const nameFilter = req.nextUrl.searchParams.get("first_name");
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const positionFilter = req.nextUrl.searchParams.get("position_title");
     
     let query = knex('users')
-    .leftJoin('salary_structures', 'users.id', '=', 'salary_structures.user_id')
+    .leftJoin('salary_structures', 'users.user_id', '=', 'salary_structures.user_id')
     .leftJoin('positions', 'users.position_id', '=', 'positions.position_id')
     .leftJoin('departments', 'users.department_id', '=', 'departments.department_id')
     .select('users.*', 'salary_structures.*', 'positions.*', 'departments.*');

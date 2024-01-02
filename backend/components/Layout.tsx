@@ -100,14 +100,14 @@ const Layout: React.FC<any> = ({ children }) => {
         <Link className="svg-container" href="/home">
           <div>
             <img
-              src="../Union.svg"
+              src="/Union.svg"
               alt="logo"
               className="default-svg"
               style={{ width: "50px", height: "40px" }}
             />
 
             <img
-              src="../Union_hover.svg"
+              src="/Union_hover.svg"
               alt="logo hover"
               className="hover-svg"
               style={{ width: "50px", height: "40px" }}
@@ -116,7 +116,7 @@ const Layout: React.FC<any> = ({ children }) => {
         </Link>
       ),
       key: "logo",
-      disabled: true, // Disable if you don't want it to be clickable
+      disabled: true,
     },
     {
       label: (
@@ -207,7 +207,7 @@ const Layout: React.FC<any> = ({ children }) => {
           justifyContent: "space-between",
           alignItems: "center",
           width: "100%",
-          height: "6rem",
+          height: "5.5rem",
         }}
       >
         {/* Main Menu */}

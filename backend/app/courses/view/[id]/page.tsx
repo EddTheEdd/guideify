@@ -10,6 +10,8 @@ import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import { useRouter } from "next/navigation";
 import { LoadingOutlined } from "@ant-design/icons";
+import { on } from "events";
+import { useGlobalContext } from "@/contexts/GlobalContext";
 
 interface Course {
   id: number;
@@ -130,6 +132,7 @@ export default function CourceView({ params }: any) {
   const [colorRgb, setColorRgb] = useState<string>("rgb(22, 119, 255)");
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(0);
   const [newCourse, setNewCourse] = useState<Course>({
     name: "",
     description: "",
@@ -137,10 +140,27 @@ export default function CourceView({ params }: any) {
     id: 0,
   });
   const [modalVisible, setModalVisible] = useState(false);
+  const [users, setUsers] = useState([]);
   const router = useRouter();
+
+  const { userPermissions, finishedFetchingPermissions } = useGlobalContext();
+  console.log(userPermissions);
+  const canSeeOtherUserDropdown = userPermissions.includes("View Course Progress");
+
   useEffect(() => {
     if (!id) return; // Return if id is not available yet
     setLoading(true);
+
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(`/api/users`);
+        console.log(response.data.users);
+        setUsers(response.data.users);
+      } catch (error) {
+        console.error("Error fetching the users data", error);
+      }
+    }
+
     const fetchCourse = async () => {
       try {
         const response = await axios.get(`/api/courses/${id}`);
@@ -149,14 +169,20 @@ export default function CourceView({ params }: any) {
 
       } catch (error: any) {
         console.error("Error fetching the course data", error);
-        router.push("/forbidden");
+        // router.push("/forbidden");
       }
       setLoading(false);
     };
 
     const fetchUnits = async () => {
       try {
-        const response = await axios.get(`/api/units/${id}`);
+        let queryStrying = "/api/units/" + id;
+        console.log(selectedUserId);
+        if (selectedUserId) {
+          queryStrying += "?user_id=" + selectedUserId;
+        }
+        console.log(queryStrying);
+        const response = await axios.get(queryStrying);
         // extract answers and checked_answers, json decode and put back in:
         response.data.units.forEach((unit: any) => {
           if (unit.content_type === "quest") {
@@ -176,10 +202,12 @@ export default function CourceView({ params }: any) {
       }
     };
 
+    fetchUsers();
+
     fetchUnits();
 
     fetchCourse(); // Call the async function
-  }, [id]);
+  }, [id, selectedUserId]);
 
   return (
     loading ? 
@@ -188,7 +216,31 @@ export default function CourceView({ params }: any) {
       </div>
     :
     <Layout>
+      <h2>Course Unit Progress</h2>
+      {canSeeOtherUserDropdown ?
+        <h4>Check how far you and other people have progressed in a given course</h4>
+        :
+        <h4>Check how far you have progressed in a given course</h4>
+      }
       <>
+      {/* select with users: */}
+      {canSeeOtherUserDropdown &&
+      <>
+      <p>You can view other users progress by selecting them bellow:</p>
+      <Select
+        showSearch
+        value={selectedUserId || undefined}
+        style={{ width: 200 }}
+        placeholder="Select a user"
+        optionFilterProp="children"
+        onSelect={(value: any) => {setSelectedUserId(value)}}
+        filterOption={(input, option: any) =>
+          option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+      }>
+        {users.map((user: any) => (
+          <Select.Option key={user.user_id} value={user.id}>{user.email}</Select.Option>
+        ))}
+      </Select></>}
       <h1>{course?.name || "Course not found"}</h1>
       <h2>{course?.description || "Description not found"}</h2>
       <div className="courses_view_unit_container">

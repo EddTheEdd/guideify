@@ -292,7 +292,7 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
       render: (_: any, record: any) => (
         <>
           <Link href={`/courses/view/${record.course_id}`}>Course</Link>
-          {record.unit_content_type === "quest" && (
+          {record.unit_content_type === "quest" && (record.submitted || record.completed) && (
             <Link
               style={{ marginLeft: "13px" }}
               href={`/unit/submission/${record.progress_id}`}
@@ -307,10 +307,10 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
 
   const expandedRowRender = (record: any) => {
     const processedData = subTableData.get(record.key) || [];
-    console.log(processedData);
+    const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "3");
     const pageState = paginationStates[record.key] || {
       currentPage: 1,
-      pageSize: 3,
+      pageSize: defaultEntriesPerPage || 3,
     };
     const indexOfLastItem = pageState.currentPage * pageState.pageSize;
     const indexOfFirstItem = indexOfLastItem - pageState.pageSize;
@@ -344,7 +344,7 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
   };
 
   data = data.map((item) => {
-    item.key = item.id;
+    item.key = item.user_id;
     return item;
   });
 

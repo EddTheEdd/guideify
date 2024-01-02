@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "../../components/Layout";
 import CustomTable from "@/components/CustomTable";
+import currencyNameValueMap from "../config/currencyNameValueMap";
 import {
   Button,
   Checkbox,
@@ -12,6 +13,7 @@ import {
   Drawer,
   Form,
   Input,
+  InputNumber,
   Modal,
   Pagination,
   Select,
@@ -109,6 +111,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   refetch,
   setIsModalVisible,
 }) => {
+  const currency: string = localStorage.getItem("currency") || "EUR";
   const [disableForm, setDisableForm] = useState(false);
   const { userPermissions, theme } = useGlobalContext();
   console.log(userPermissions);
@@ -142,7 +145,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
         if (error.response && error.response.status === 403) {
           message.error("You do not have permission to perform this action.");
         } else {
-          message.error("An error occurred while processing your request.");
+          message.error("Error offering salary to employee.");
         }
       }
     };
@@ -186,7 +189,6 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
           </>
         )}
         {/* Modal content here */}
-
         <Form
           disabled={(selectedSalaryData?.agreed && !disableForm) || !canEditSalaries}
           layout="vertical"
@@ -194,40 +196,48 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
             handleSubmit();
           }}
         >
-          <Form.Item label="Base Salary">
-            <Input
+          <Form.Item label="Base Salary" required={true}>
+            <InputNumber
+              min={0}
+              addonBefore="+"
+              addonAfter={currencyNameValueMap[currency]}
               value={selectedSalaryData?.base_salary}
-              onChange={(e: any) => {
+              onChange={(value: any) => {
                 setSelectedSalaryData((prev: any) => {
                   const updatedSalary = { ...prev };
-                  updatedSalary.base_salary = e.target.value;
+                  updatedSalary.base_salary = value;
                   return updatedSalary;
-                });
-              }}
+                })}}
             />
           </Form.Item>
           <Form.Item label="Bonus">
-            <Input
-              value={selectedSalaryData?.bonus}
-              onChange={(e: any) => {
-                setSelectedSalaryData((prev: any) => {
-                  const updatedSalary = { ...prev };
-                  updatedSalary.bonus = e.target.value;
-                  return updatedSalary;
-                });
-              }}
+            <InputNumber
+                min={0}
+                addonBefore="+"
+                addonAfter={currencyNameValueMap[currency]}
+                value={selectedSalaryData?.bonus}
+                onChange={(value: any) => {
+                  setSelectedSalaryData((prev: any) => {
+                    const updatedSalary = { ...prev };
+                    updatedSalary.bonus = value;
+                    return updatedSalary;
+                  });
+                }}
             />
           </Form.Item>
           <Form.Item label="Allowance">
-            <Input
-              value={selectedSalaryData?.allowance}
-              onChange={(e: any) => {
-                setSelectedSalaryData((prev: any) => {
-                  const updatedSalary = { ...prev };
-                  updatedSalary.allowance = e.target.value;
-                  return updatedSalary;
-                });
-              }}
+            <InputNumber
+                min={0}
+                addonBefore="+"
+                addonAfter={currencyNameValueMap[currency]}
+                value={selectedSalaryData?.allowance}
+                onChange={(value: any) => {
+                  setSelectedSalaryData((prev: any) => {
+                    const updatedSalary = { ...prev };
+                    updatedSalary.allowance = value;
+                    return updatedSalary;
+                  });
+                }}
             />
           </Form.Item>
           <Divider>Deductibles:</Divider>
@@ -242,7 +252,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
                   deductible.name +
                   " (" +
                   (deductible?.amount
-                    ? deductible?.amount + " EUR)"
+                    ? deductible?.amount + ` ${currency})`
                     : deductible?.percentage + " %)")
                 }
               >
@@ -272,16 +282,16 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
             </div>
           ))}
           <Divider>Payslip:</Divider>
-          <p>Base: +{selectedSalaryData?.base_salary} €</p>
-          <p>Bonus: +{selectedSalaryData?.bonus} €</p>
-          <p>Allowance: +{selectedSalaryData?.allowance} €</p>
+          <p>Base: +{selectedSalaryData?.base_salary} {currencyNameValueMap[currency]}</p>
+          <p>Bonus: +{selectedSalaryData?.bonus} {currencyNameValueMap[currency]}</p>
+          <p>Allowance: +{selectedSalaryData?.allowance} {currencyNameValueMap[currency]}</p>
           <hr className="rounded_grey" />
           {selectedSalaryData?.deductibles.map(
             (deductible: any, index: number) => {
               if (deductible.amount != null) {
                 return (
                   <p key={index}>
-                    {deductible.name}: -{deductible.amount} €
+                    {deductible.name}: -{deductible.amount} {currencyNameValueMap[currency]}
                   </p>
                 );
               } else {
@@ -303,7 +313,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
                 Number(amountDed),
               selectedSalaryData?.deductibles
             )}{" "}
-            €
+            {currency}
           </p>
           <Form.Item>
             <Button type="primary" htmlType="submit">
@@ -335,6 +345,7 @@ interface UserSort {
 }
 
 export default function Wages() {
+  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [users, setUsers] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -347,7 +358,7 @@ export default function Wages() {
   const [userFilter, setUserFilter] = useState<UserFilter>({});
   const [userSort, setUserSort] = useState<UserSort>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
   const [refetch, setRefetch] = useState(false);
 
   const [departments, setDepartments] = useState<any[]>([]);
@@ -356,7 +367,7 @@ export default function Wages() {
   const searchInput = useRef<any>(null);
   const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
-  const canViewSalaries = userPermissions.includes('View Salaries');
+  // const canViewSalaries = userPermissions.includes('View Salaries');
   const router = useRouter();
 
 
@@ -539,9 +550,9 @@ export default function Wages() {
           console.error("Failed to fetch users", data.error);
         }
 
-        if (!canViewSalaries && finishedFetchingPermissions) {
-          router.push('/forbidden');
-        }
+        // if (!canViewSalaries && finishedFetchingPermissions) {
+        //   router.push('/forbidden');
+        // }
 
         setLoading(false);
       } catch (error) {
@@ -816,9 +827,6 @@ export default function Wages() {
   return (
     console.log(users),
     (
-      !canViewSalaries && <div className="loading_spinner">
-      <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div> ||
       <Layout>
         <h2>{formatDateTime(currentTime)}</h2>
         <p>{calculateMonthEndInfo()}</p>

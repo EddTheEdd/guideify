@@ -25,19 +25,69 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest) {
   try {
+    const userId = getDataFromToken(request);
+
+    const canEditCourses = await checkUserPermissions(
+      userId,
+      "Edit Courses"
+    );
+
+    if (!canEditCourses) {
+      return NextResponse.json(
+        { error: "You do not have permission to edit courses. Permission required: Edit Courses" },
+        { status: 403 }
+      );
+    }
+
     const reqBody = await request.json();
-    const { name, description } = reqBody;
+    const { name, description, role_ids, color } = reqBody;
+
+    // Handle unique checks:
+
+    const checkNameQuery = knex("courses")
+      .select("*")
+      .where("name", name)
+      .first();
+    const checkNameResult = await checkNameQuery;
+    if (checkNameResult) {
+      return NextResponse.json(
+        { frontendErrorMessage: "Course name already exists." },
+        { status: 400 }
+      );
+    }
+
+    // Handle course creation:
 
     const insertQuery =
-      "INSERT INTO courses (name, description) VALUES ($1, $2) RETURNING *";
-    const newUser = await pool.query(insertQuery, [name, description]);
+      "INSERT INTO courses (name, description, rgb_value) VALUES ($1, $2, $3) RETURNING *";
+    const insertedCourse = await pool.query(insertQuery, [name, description, color]);
+    const courseId = insertedCourse.rows[0].course_id;
+    console.log(insertedCourse.rows[0]);
 
-    console.log(newUser.rows[0]);
+    // Handle connection with roles:
+
+    if (role_ids) {
+      // 1. Delete all existing connections that arent in our role_id list:
+      const deleteQuery = knex("roles_courses")
+        .whereNotIn("role_id", role_ids)
+        .andWhere("course_id", courseId)
+        .del();
+      await deleteQuery;
+
+      // 2. Insert all new connections that arent already in the database:
+      const insertRolesQuery = knex("roles_courses").insert(
+        role_ids.map((role_id: number) => ({
+          role_id,
+          course_id: courseId,
+        }))
+      ).returning("*");
+      await insertRolesQuery;
+    }
 
     return NextResponse.json({
       message: "Course created successfully",
       success: true,
-      response: newUser.rows[0],
+      response: insertedCourse.rows[0],
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -72,16 +122,19 @@ export async function GET(_request: NextRequest) {
     const descriptionFilter = _request.nextUrl.searchParams.get("description");
 
     let query;
+    let totalCoursesCount;
     if (canSeeAllCourses) {
-        console.log("CAN SEE ALL");
       query = knex
         .select("courses.*", "courses.course_id as id")
         .from("courses")
         .leftJoin(
-          "course_units",
+          "units",
           "courses.course_id",
-          "course_units.course_id"
+          "units.course_id"
         );
+
+      const queryClone = query.clone();
+      totalCoursesCount = await queryClone.clearSelect().count('* as total').first();
 
       if (nameFilter) {
         query = query.where("courses.name", "ilike", `%${nameFilter}%`);
@@ -94,21 +147,23 @@ export async function GET(_request: NextRequest) {
         );
       }
 
-      query = query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset).groupBy("courses.course_id").count("course_units.unit_id as units");
+      query = query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset).groupBy("courses.course_id").count("units.unit_id as units");
     } else {
       query = knex
         .select("courses.*", "courses.course_id as id")
         .from("courses")
-        .count("course_units.unit_id as units")
-        .leftJoin("course_units", "courses.course_id", "course_units.course_id")
+        .leftJoin("units", "courses.course_id", "units.course_id")
         .innerJoin(
           "roles_courses",
           "roles_courses.course_id",
           "courses.course_id"
         )
-        .innerJoin("roles", "roles_courses.role_id", "roles.id")
-        .innerJoin("user_roles", "roles.id", "user_roles.role_id")
+        .innerJoin("roles", "roles_courses.role_id", "roles.role_id")
+        .innerJoin("user_roles", "roles.role_id", "user_roles.role_id")
         .where("user_roles.user_id", userId);
+
+      const queryClone = query.clone();
+      totalCoursesCount = await queryClone.clearSelect().count('* as total').first();
 
       if (nameFilter) {
         query = query.where("courses.name", "ilike", `%${nameFilter}%`);
@@ -121,11 +176,10 @@ export async function GET(_request: NextRequest) {
         );
       }
 
-      query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset);
+      query.orderBy(sortColumn, sortOrder).limit(limit).offset(offset).groupBy("courses.course_id").count("units.unit_id as units");
     }
 
     const result: any = await query;
-    console.log("RESSSULT");
     console.log(result);
     // count courses:
     const countQuery = knex("courses").count("* as total").first();
@@ -137,7 +191,7 @@ export async function GET(_request: NextRequest) {
         ...row,
         units: parseInt(row.units, 10), // Ensure that units is a number
       })),
-      coursesCount: coursesCount ? coursesCount.total : 0,
+      coursesCount: totalCoursesCount ? totalCoursesCount.total : 0,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

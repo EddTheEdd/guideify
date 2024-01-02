@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   const markAsCompleteResposne = pool.query(
     `
-     UPDATE user_course_progress SET completed = true WHERE unit_id = $1 AND user_id = $2 RETURNING *;`,
+     UPDATE user_unit_progress SET completed = true WHERE unit_id = $1 AND user_id = $2 RETURNING *;`,
     [unitId, userId]
   );
 

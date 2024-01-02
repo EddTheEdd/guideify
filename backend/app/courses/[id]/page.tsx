@@ -9,14 +9,16 @@ import UnitsBox from "@/components/UnitsBox";
 import { LoadingOutlined, SettingOutlined } from "@ant-design/icons";
 import { useGlobalContext } from "@/contexts/GlobalContext";
 import { useRouter } from "next/navigation";
+import CourseModal from "@/components/CourseModal";
 
 const { Title, Text } = Typography;
 
 interface Course {
-  id: number;
+  course_id: number;
   name: string;
   description: string;
   color: string;
+  roleIds: any[];
 }
 
 const CoursePage: React.FC = ({ params }: any) => {
@@ -27,13 +29,16 @@ const CoursePage: React.FC = ({ params }: any) => {
   const [editableName, setEditableName] = useState<string>("");
   const [editableDescription, setEditableDescription] = useState<string>("");
 
+  const [refetch, setRefetch] = useState(false);
+  const [roles, setRoles] = useState<any[]>([]);
+
   const [colorRgb, setColorRgb] = useState<any>("rgb(22, 119, 255)");
   const [formatRgb, setFormatRgb] = useState<"rgb">("rgb");
   const [textColor, setTextColor] = useState<string>("#000");
 
   const { userPermissions, theme } = useGlobalContext();
   const router = useRouter();
-  const canEditCourses = userPermissions.includes("Edit Courses");
+  // const canEditCourses = userPermissions.includes("Edit Courses");
 
   const rgbString = useMemo(() => {
     if (colorRgb) {
@@ -59,36 +64,53 @@ const CoursePage: React.FC = ({ params }: any) => {
         setCourse(response.data.course);
         setColorRgb(response.data.course.rgb_value);
 
-        if (!canEditCourses) {
-            router.push('/forbidden');
-        }
+        // if (!canEditCourses) {
+        //     router.push('/forbidden');
+        // }
       } catch (error) {
         console.error("Error fetching the course data", error);
       }
     };
 
-    fetchCourse(); // Call the async function
+    const fetchRoles = async () => {
+      try {
+        const res = await fetch("/api/roles/names");
+        const data = await res.json();
+
+        if (data.success) {
+          console.log(data.roles);
+          setRoles(data.roles);
+        } else {
+          console.error("Failed to fetch roles", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching roles", error);
+      }
+    };
+
+    fetchCourse();
+    fetchRoles();
   }, [id]);
 
-  const handleOk = async () => {
-    try {
-      if (!course) {
-        console.error("Course is undefined");
-        return;
-      }
+  // const handleOk = async () => {
+  //   try {
+  //     if (!course) {
+  //       console.error("Course is undefined");
+  //       return;
+  //     }
 
-      const updatedCourse = {
-        id: id,
-        name: editableName,
-        description: editableDescription,
-        color: rgbString,
-      };
+  //     const updatedCourse = {
+  //       id: id,
+  //       name: editableName,
+  //       description: editableDescription,
+  //       color: rgbString,
+  //     };
 
-      await axios.put(`/api/courses/${id}`, updatedCourse);
-      setCourse(updatedCourse);
-    } catch (error) {}
-    setModalVisible(false);
-  };
+  //     await axios.put(`/api/courses/${id}`, updatedCourse);
+  //     setCourse(updatedCourse);
+  //   } catch (error) {}
+  //   setModalVisible(false);
+  // };
 
   const handleCancel = () => {
     setModalVisible(false);
@@ -105,11 +127,7 @@ const CoursePage: React.FC = ({ params }: any) => {
 
   return (
     console.log(id),
-    (!canEditCourses && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
+    (
       <>
         <Layout>
           {course ? (
@@ -146,33 +164,25 @@ const CoursePage: React.FC = ({ params }: any) => {
             />
           </Space>
         </Layout>
-        <Modal
-          title="Course settings"
-          visible={modalVisible}
-          onOk={handleOk}
-          onCancel={handleCancel}
-        >
-          <Space direction="vertical" size="middle" style={{ display: "flex" }}>
-            <div>
-              <Input
-                placeholder="Course Name"
-                value={editableName}
-                onChange={(e) => setEditableName(e.target.value)}
-              />
-              <Input
-                placeholder="Course Description"
-                value={editableDescription}
-                onChange={(e) => setEditableDescription(e.target.value)}
-              />
-              <ColorPicker
-                format={formatRgb}
-                value={colorRgb}
-                onChange={setColorRgb}
-              />
-              RGB: <span>{rgbString}</span>
-            </div>
-          </Space>
-        </Modal>
+        {modalVisible && (
+        <CourseModal
+          modalData={{
+            course_id: course?.course_id,
+            course_name: course?.name,
+            course_description: course?.description,
+            course_color: rgbString,
+            course_roleIds: course?.roleIds,
+          }}
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          setRefetch={setRefetch}
+          refetch={refetch}
+          roles={roles}
+          rgbString={rgbString}
+          setColorRgb={setColorRgb}
+          formatRgb={formatRgb}
+        />
+        )}
       </>
     )
   );

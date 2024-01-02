@@ -1,4 +1,5 @@
 import pool from "@/dbConfig/pgConfig";
+import knex from "@/dbConfig/knexConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     if (completeQuizAfterSubmit) {
       const completeQuiz = await pool.query(
         `
-        UPDATE user_course_progress SET completed = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
+        UPDATE user_unit_progress SET completed = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
         [userId, unitId]
       );
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
     } else {
       const completeQuiz = await pool.query(
         `
-        UPDATE user_course_progress SET submitted = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
+        UPDATE user_unit_progress SET submitted = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
         [userId, unitId]
       );
 

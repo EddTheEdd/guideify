@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   try {
     const result = await pool.query(
       `
-              SELECT * FROM course_units WHERE unit_id = $1
+              SELECT * FROM units WHERE unit_id = $1
           `,
       [unitId]
     );
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     const progressResult = await pool.query(
       `
-        SELECT * FROM user_course_progress WHERE unit_id = $1 AND user_id = $2
+        SELECT * FROM user_unit_progress WHERE unit_id = $1 AND user_id = $2
         `,
       [unitId, userId]
     );
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     if (progressResult.rows.length === 0) {
       const insertProgressResult = await pool.query(
         `
-                    INSERT INTO user_course_progress (user_id, unit_id) VALUES ($1, $2)
+                    INSERT INTO user_unit_progress (user_id, unit_id) VALUES ($1, $2)
                     ON CONFLICT (user_id, unit_id) DO NOTHING
                     RETURNING *;
                 `,
@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
           INNER JOIN questions qs ON q.quest_id = qs.quest_id
           LEFT JOIN user_answers a ON qs.question_id = a.question_id AND a.user_id = $2
           WHERE q.quest_id = $1
+          ORDER BY qs.order ASC
       `,
         [unit.quest_id, userId]
       );

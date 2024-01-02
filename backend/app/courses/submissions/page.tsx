@@ -36,12 +36,13 @@ interface UserSort {
 }
 
 export default function CourseSubmissions() {
+  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [userFilter, setUserFilter] = useState<UserFilter>({});
   const [userSort, setUserSort] = useState<UserSort>({});
   const [users, setUsers] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [pageSize, setPageSize] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
   const [newCourse, setNewCourse] = useState<Course>({
     name: "",
     description: "",
@@ -50,9 +51,7 @@ export default function CourseSubmissions() {
   });
   const { userPermissions, theme } = useGlobalContext();
   const router = useRouter();
-  const canViewCourseProgress = userPermissions.includes(
-    "View Course Progress"
-  );
+
 
   const handleFilterChange = (pagination: any, filters: any, sorter: any) => {
     console.log(filters);
@@ -89,14 +88,17 @@ export default function CourseSubmissions() {
       const data = await res.json();
 
       if (data.success) {
+        // transform phone number:
+        data.users.forEach((user: any) => {
+          if (user.phone_number) {
+            user.phone_number = JSON.parse(user.phone_number);
+            user.phone_number = `+${user.phone_number.countryCode} ${user.phone_number.areaCode} ${user.phone_number.phoneNumber}`;
+          }
+        });
         setUsers(data.users);
         setTotalUsers(data.totalUsers);
       } else {
         console.error("Failed to fetch users", data.error);
-      }
-
-      if (!canViewCourseProgress) {
-        router.push('/forbidden');
       }
 
     } catch (error) {
@@ -246,47 +248,10 @@ export default function CourseSubmissions() {
       dataIndex: "phone_number",
       key: "phone_number",
       sorter: true,
-      filterIcon: (filtered: boolean) => (
-        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
-      ),
-      filterDropdown: ({
-        setSelectedKeys,
-        selectedKeys,
-        confirm,
-        clearFilters,
-      }: FilterDropdownProps) => (
-        <div style={{ padding: 8 }}>
-          <Input
-            placeholder="Search Phone Number"
-            value={selectedKeys[0]}
-            onChange={(e: any) =>
-              setSelectedKeys(e.target.value ? [e.target.value] : [])
-            }
-            onPressEnter={() => confirm()}
-            style={{ marginBottom: 8, display: "block" }}
-          />
-          <Button
-            onClick={() => confirm()}
-            type="primary"
-            size="small"
-            style={{ width: 90, marginRight: 8 }}
-          >
-            Search
-          </Button>
-          <Button onClick={clearFilters} size="small" style={{ width: 90 }}>
-            Reset
-          </Button>
-        </div>
-      ),
     },
   ];
 
   return (
-    (!canViewCourseProgress && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
       <Layout>
         <CustomTableThree
           data={users}
@@ -304,6 +269,5 @@ export default function CourseSubmissions() {
           showQuickJumper
         />
       </Layout>
-    )
-  );
+    );
 }

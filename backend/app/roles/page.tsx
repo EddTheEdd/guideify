@@ -12,13 +12,16 @@ import {
   Divider,
   Input,
   Modal,
+  Pagination,
   Spin,
   Tag,
   Tooltip,
+  message,
 } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { InfoCircleOutlined, LoadingOutlined } from "@ant-design/icons";
 import { useGlobalContext } from "@/contexts/GlobalContext";
+import { buildQueryString } from "../helpers/buildQueryString";
 
 interface Role {
   name: string;
@@ -27,14 +30,12 @@ interface Role {
 }
 
 interface Permission {
-  id: number;
+  permission_id: number;
   name: string;
 }
 
 export default function Roles() {
-  const router = useRouter();
   const [user, setUser] = useState({ email: "", password: "", username: "" });
-  const [buttonDisabled, setButtonDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editRoleModalVisible, setEditRoleModalVisible] = useState(false);
@@ -42,19 +43,36 @@ export default function Roles() {
   const [tableData, setTableData] = useState([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [roleNameTouched, setRoleNameTouches] = useState(false);
+  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalRoles, setTotalRoles] = useState(0);
+  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
 
-  const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
-  console.log(userPermissions);
-  const canViewRoles = userPermissions.includes("View Roles");
+  const handlePageChange = (page: number) => {
+    console.log(page);
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (current: number, size: number) => {
+    console.log(size);
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
+  // const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
+  // console.log(userPermissions);
+  // const canViewRoles = userPermissions.includes("View Roles");
 
   const fetchRoles = async () => {
     try {
-      const res = await fetch("/api/roles");
+      const res = await fetch(`/api/roles?page=${currentPage}&limit=${pageSize}`);
       console.log(res);
       const data = await res.json();
 
       if (data.success) {
         setTableData(data.roles);
+        setTotalRoles(data.totalRoles);
       } else {
         console.error("Failed to fetch roles", data.error);
       }
@@ -65,9 +83,9 @@ export default function Roles() {
 
   useEffect(() => {
     setLoading(true);
-    if (!canViewRoles && finishedFetchingPermissions) {
-      router.push("/forbidden");
-    }
+    // if (!canViewRoles && finishedFetchingPermissions) {
+    //   router.push("/forbidden");
+    // }
     const fetchPermissions = async () => {
       try {
         const res = await fetch("/api/permissions");
@@ -87,7 +105,7 @@ export default function Roles() {
 
     fetchRoles();
     setLoading(false);
-  }, []);
+  }, [pageSize, currentPage]);
 
   const showModal = () => {
     setModalVisible(true);
@@ -100,33 +118,31 @@ export default function Roles() {
       await axios.post("/api/roles", newRole);
       toast.success("Role created successfully");
       fetchRoles();
-    } catch (error) {
-      toast.error("Error creating role");
-      console.error("Error creating role", error);
+      message.success("Role created successfully");
+      setModalVisible(false);
+    } catch (error: any) {
+      const frontendErrorMessage = error.response.data.frontendErrorMessage;
+      if (frontendErrorMessage) {
+        toast.error(frontendErrorMessage);
+        message.error(frontendErrorMessage);
+      } else {
+        toast.error("Error creating role");
+        console.error("Error creating role", error);
+        message.error("Error creating role");
+      }
     }
-    setModalVisible(false);
   };
 
   const handleCancel = () => {
+    setNewRole({ name: "", permissions: [] });
+    setRoleNameTouches(false);
     setModalVisible(false);
   };
-
-  useEffect(() => {
-    if (
-      user.email.length > 0 &&
-      user.password.length > 0 &&
-      user.username.length > 0
-    ) {
-      setButtonDisabled(false);
-    } else {
-      setButtonDisabled(true);
-    }
-  }, [user]);
 
   const handleRoleClick = (role: Role) => {
     const roleWithPermissionIds = {
       ...role,
-      permissions: role.permissions.map((permission: any) => permission.id),
+      permissions: role.permissions.map((permission: any) => permission.permission_id),
       original_name: role.role_name,
     };
 
@@ -150,11 +166,42 @@ export default function Roles() {
       toast.success("Role updated successfully");
       fetchRoles();
       setEditRoleModalVisible(false);
-    } catch (error) {
+    } catch (error: any) {
+      const frontendErrorMessage = error.response.data.frontendErrorMessage;
+      if (frontendErrorMessage) {
+        toast.error(frontendErrorMessage);
+        message.error(frontendErrorMessage);
+      }
       toast.error("Error updating role");
       console.error("Error updating role", error);
     }
   };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`/api/roles/${selectedRole.role_id}`);
+      toast.success("Role deleted successfully");
+      message.success("Role deleted successfully");
+      fetchRoles();
+      setEditRoleModalVisible(false);
+    } catch (error) {
+      toast.error("Error deleting role");
+      message.error("Error deleting role");
+      console.error("Error deleting role", error);
+    }
+  }
+
+  const confirmDelete = () => {
+    Modal.confirm({
+      title: "Are you sure you want to delete this role? Users who belong to this role will loose it.",
+      content: "This action cannot be undone",
+      okText: "Delete",
+      okType: "danger",
+      onOk: () => {
+        handleDelete();
+      },
+    });
+  }
 
   const columns: ColumnsType<Role> = [
     {
@@ -172,7 +219,7 @@ export default function Roles() {
       render: (permissions) => (
         <>
           {permissions.map((permission: any) => (
-            <Tag color="blue" key={permission.id}>
+            <Tag color="blue" key={permission.permission_id}>
               {permission.name}
             </Tag>
           ))}
@@ -203,80 +250,97 @@ export default function Roles() {
         <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
       </div>
     ) : (
-      (!canViewRoles && (
-        <div className="loading_spinner">
-          <Spin
-            indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />}
-          />
-        </div>
-      )) || (
+      (
         <Layout>
           <CustomTable data={tableData} columns={columns} />
-          <Button onClick={showModal}>Create a Role</Button>
+          <Pagination
+            className="tower_element"
+            current={currentPage}
+            total={totalRoles}
+            pageSize={pageSize}
+            onChange={handlePageChange}
+            onShowSizeChange={handlePageSizeChange}
+            showSizeChanger
+            showQuickJumper
+          />
+          <Button style={{marginTop: "13px"}} onClick={showModal}>Create a Role</Button>
 
           <Modal
             title="Create a Role"
             open={modalVisible}
             onOk={handleOk}
+            okText="Create Role"
             onCancel={handleCancel}
           >
             <Input
+              status={roleNameTouched && newRole.name === "" ? "error" : ""}
               placeholder="Role Name"
               value={newRole.name}
-              onChange={(e: any) =>
-                setNewRole({ ...newRole, name: e.target.value })
+              onChange={(e: any) => {
+                setRoleNameTouches(true);
+                setNewRole({ ...newRole, name: e.target.value })}
               }
             />
-            {permissions.map((permission) => (
-              <div key={permission.id}>
+            {roleNameTouched && newRole.name === "" && <p style={{color: "red"}}>Role name is required!</p>}
+            {permissions.map((permission, index) => (
+              <>
+              <div key={permission.permission_id}>
                 <Checkbox
-                  checked={newRole.permissions.includes(permission.id)}
+                  checked={newRole.permissions.includes(permission.permission_id)}
                   onChange={() => {
-                    if (newRole.permissions.includes(permission.id)) {
+                    if (newRole.permissions.includes(permission.permission_id)) {
                       setNewRole({
                         ...newRole,
                         permissions: newRole.permissions.filter(
-                          (p) => p !== permission.id
+                          (p) => p !== permission.permission_id
                         ),
                       });
                     } else {
                       setNewRole({
                         ...newRole,
-                        permissions: [...newRole.permissions, permission.id],
+                        permissions: [...newRole.permissions, permission.permission_id],
                       });
                     }
                   }}
                 >
                   {permission.name}
                 </Checkbox>
+                <Tooltip title={permissionDescriptions[permission.name]}>
+                  <InfoCircleOutlined />
+                </Tooltip>
               </div>
+              {[1, 5, 8].includes(index) && <Divider />}
+              </>
             ))}
           </Modal>
 
           <Modal
             title="Edit Role"
-            visible={editRoleModalVisible}
+            open={editRoleModalVisible}
             onOk={handleEditRole}
+            okText="Save Role"
             onCancel={() => setEditRoleModalVisible(false)}
           >
-            <Input
-              placeholder="Role Name"
-              value={selectedRole ? selectedRole.role_name : ""}
-              onChange={(e) =>
-                setSelectedRole({ ...selectedRole, role_name: e.target.value })
-              }
-            />
+              <Input
+                status={selectedRole && selectedRole.role_name === "" ? "error" : ""}
+                placeholder="Role Name"
+                value={selectedRole ? selectedRole.role_name : ""}
+                onChange={(e) =>
+                  setSelectedRole({ ...selectedRole, role_name: e.target.value })
+                }
+              />
+              {selectedRole && selectedRole.role_name === "" && <p style={{color: "red"}}>Role name is required!</p>}
             <Divider>Permissions</Divider>
             {permissions.map((permission, index: number) => (
               <>
-                <div key={permission.id}>
+                <div key={permission.permission_id}>
                   <Checkbox
                     checked={
                       selectedRole &&
-                      selectedRole.permissions.includes(permission.id)
+                      selectedRole.permissions.includes(permission.permission_id)
                     }
                     onChange={() => {
-                      handlePermissionChange(permission.id);
+                      handlePermissionChange(permission.permission_id);
                     }}
                   >
                     {permission.name}
@@ -288,6 +352,13 @@ export default function Roles() {
                 {[1, 5, 8].includes(index) && <Divider />}
               </>
             ))}
+            <Button danger
+              type = "primary"
+              style = {{marginTop: "20px"}}
+              onClick={() => {confirmDelete()}}
+            >
+              Delete Role
+            </Button>
           </Modal>
         </Layout>
       )

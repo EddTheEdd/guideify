@@ -30,11 +30,12 @@ interface SortProps {
 
 export default function UserWages({ params }: any) {
   const id = params.id;
+  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [usersSalaries, setUsersSalaries] = useState<Salary[]>([]);
   const [refetch, setRefetch] = useState(false);
   const [salarySort, setSalarySort] = useState<SortProps>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
   const [totalSalaries, setTotalSalaries] = useState(0);
 
 
@@ -84,7 +85,7 @@ export default function UserWages({ params }: any) {
 
   const handleSign = (salary_id: number) => async () => {
     try {
-      await axios.post(`/api/salary/${salary_id}`, { salary_id, agreed: true });
+      await axios.post(`/api/salary/${salary_id}/agree`, { salary_id });
       setRefetch(!refetch);
       message.success("Signed successfully");
     } catch (error) {

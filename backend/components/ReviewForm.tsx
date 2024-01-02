@@ -110,7 +110,8 @@ const ReviewForm: React.FC<QuestFormProps> = ({
     console.log(answerData),
     console.log(hasDoneQuest),
     (
-      <Form className="questform_quest_block">
+      <Form className="questform_quest_block" style={{maxWidth: "1200px", margin: "auto"}}>
+        {completed && (<p style={{textAlign: "center"}}>This test has been completed, so you can't review it anymore!</p>)}
         {quest.map(
           (question: any, index: number) => (
             console.log(question),
@@ -141,6 +142,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
                       >
                         <p>Mark answer as correct?</p>
                         <Checkbox
+                          disabled={completed}
                           className="answer_block_review_checkbox"
                           checked={answerData[question.question_id] ?? question.is_correct}
                           onChange={(e: any) => {handleAnswerCorrectChange(e.target.checked, question.question_id)}}

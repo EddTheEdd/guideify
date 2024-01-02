@@ -62,7 +62,7 @@ const UnitsBox: React.FC<Props> = ({courseId, rgbString, textColor}) => {
 
       {units.map((unit, index) => (
         <div key={index}>
-          <UnitForm courseId={courseId} key={unit.id} unit={unit} index={index} />
+          <UnitForm courseId={courseId} key={unit.id} unit={unit} index={index} setUnits={setUnits} />
           <Divider />
         </div>
       ))}

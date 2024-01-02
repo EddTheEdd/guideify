@@ -10,9 +10,10 @@ interface UnitFormProps {
   courseId: number;
   unit: any;
   index: number;
+  setUnits: any;
 }
 
-const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
+const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) => {
   console.log(unit);
   const [unitType, setUnitType] = useState<string | "null">(unit.content_type);
   const [formData, setFormData] = useState<any>({
@@ -70,7 +71,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
       console.log("Form Data:");
       console.log({ ...formData, type: unitType, title: unitName, courseId });
       const apiUrl = "/api/units";
-      await axios.post(apiUrl, {
+      const response: any = await axios.post(apiUrl, {
         ...formData,
         type: unitType,
         title: unitName,
@@ -81,12 +82,45 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
         questTitle: questTitle,
         quest: quest,
       });
+      if (response.data.createdUnit.content_type === "quest") {
+        response.data.createdUnit.questionnaire.forEach((quest: any) => {
+            quest.answers = JSON.parse(quest.answers);
+            quest.checked_answers = JSON.parse(quest.checked_answers);
+        });
+      }
+      if (!response.data.createdUnit?.questionnaire) {
+        response.data.createdUnit.questionnaire = [];
+      }
+      setUnits((prev: any) => {
+        const updatedUnits = [...prev];
+        updatedUnits[index] = {...response.data.createdUnit};
+        return updatedUnits;
+      });
+      setQuest(response.data.createdUnit.questionnaire);
       message.success("Unit saved successfully");
     } catch (error) {
       console.error("Error saving the unit", error);
-      message.error("Failed to save the unit");
+      message.error("Error saving unit");
     }
   };
+
+  const handleDelete = async () => {
+    try {
+      setUnits((prev: any) => {
+        const updatedUnits = [...prev];
+        updatedUnits.splice(index, 1);
+        return updatedUnits;
+      });
+      if (unit.unit_id) {
+        const apiUrl = `/api/units/${unit.unit_id}`;
+        await axios.delete(apiUrl);
+        message.success("Unit deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting the unit", error);
+      message.error("Error deleting unit");
+    }
+  }
 
   const unitTypes = {
     quest: "Questionnaire",
@@ -100,11 +134,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
       <>
         <p className={"unitform-unitname"}>{unitName}</p>{" "}
         <Divider>{unitTypes[unitType as keyof typeof unitTypes]}</Divider>
-        <Form layout="vertical">
+        <Form layout="vertical" disabled={unit.interacted}>
           <Form.Item
             label="Unit Name"
             name="unitName"
             initialValue={unit.title}
+            required={true}
           >
             <Input
               placeholder="New Unit"
@@ -117,6 +152,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
             label="Unit Description"
             name="unitDescription"
             initialValue={unit.description}
+            required={true}
           >
             <Input
               placeholder="New Description"
@@ -125,9 +161,9 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
             />
           </Form.Item>
 
-          <Form.Item label="Order" name="order" initialValue={unit.order}>
+          <Form.Item label="Weight" name="order" initialValue={unit.order} required={true} tooltip={"Higher values sink to the bottom, lower values rise to the top. Allows you to order units."}>
             <Input
-              placeholder="Order"
+              placeholder="1"
               value={order}
               onChange={(e: any) => setOrder(e.target.value)}
             />
@@ -137,6 +173,7 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
             label="Unit Type"
             name="unitType"
             initialValue={unit.content_type}
+            required={true}
           >
             <Select
               placeholder="Select unit type"
@@ -156,12 +193,13 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
                 label="Content"
                 name="course"
                 initialValue={unit.content}
+                required={true}
               >
                 <TextEditor
+                  readOnly={unit?.interacted}
                   placeholder="Start spreading your knowledge!"
                   value={unit.content}
                   onChange={handleEditorChange}
-                  readOnly={false}
                 />
               </Form.Item>
             </>
@@ -170,12 +208,13 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
           {unitType === "video" && (
             <Form.Item
               label="Video URL"
-              name="videoUrl"
-              initialValue={unit.videoUrl}
+              name="content"
+              initialValue={unit.content}
+              required={true}
             >
               <Input
                 placeholder="Enter video URL"
-                name="videoUrl"
+                name="content"
                 onChange={handleInputChange}
               />
             </Form.Item>
@@ -185,11 +224,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
             <>
               <Form.Item
                 label="Questionnaire Title"
-                tooltip="You can reuse this questionnaire in different units!"
                 name={`${index}-quest_title`}
                 initialValue={questTitle}
+                required={true}
               >
                 <Input
+                  disabled={unit?.unit_id}
                   placeholder="The capitals of the world!"
                   name="text"
                   value={questTitle}
@@ -202,15 +242,27 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index }) => {
             </>
           )}
 
-          <Form.Item>
-            <Button
-              type="primary"
-              onClick={handleSubmit}
-              style={{ marginTop: "13px" }}
-            >
-              Save Unit
-            </Button>
-          </Form.Item>
+          <div className="unit_buttons">
+            <Form.Item>
+              <Button
+                type="primary"
+                onClick={handleSubmit}
+                style={{ marginTop: "13px" }}
+              >
+                Save Unit
+              </Button>
+            </Form.Item>
+
+            <Form.Item>
+              <Button danger
+                type="primary"
+                onClick={handleDelete}
+                style={{ marginTop: "13px" }}
+              >
+                Delete Unit
+              </Button>
+            </Form.Item>
+          </div>
         </Form>
       </>
     )

@@ -24,7 +24,13 @@ const AnswerForm: React.FC<QuestFormProps> = ({
   unitId,
   completed,
 }) => {
-  const [answerData, setAnswerData] = useState<any>({});
+  // fill answerData with empty answers to each qestion, this should be object not an array
+  const [answerData, setAnswerData] = useState<any>(
+    quest.reduce((acc: any, curr: any) => {
+      if (curr.type === "multi_choice") {acc[curr.question_id] = []};
+      if (curr.type === "text") {acc[curr.question_id] = ""};
+      return acc;
+    }, {}));
   const [submittedData, setSubmittedData] = useState<any>({});
   console.log(quest);
   console.log(completed);
@@ -93,6 +99,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({
   };
 
   return (
+    console.log(quest),
     console.log(answerData),
     console.log(hasDoneQuest),
     (
@@ -157,7 +164,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({
                           (answer: any, answerIndex: number) => (
                             console.log(answerIndex),
                             console.log(question.checked_answers),
-                            console.log(completed && ((question.checked_answers.includes(answerIndex)) || (question?.answer.includes(answerIndex)))),
+                            console.log(completed && ((question.checked_answers && question?.checked_answers?.includes(answerIndex)) || (question?.answer.includes(answerIndex)))),
                             <div
                               key={answerIndex}
                               style={{ display: "flex", alignItems: "center" }}
@@ -165,12 +172,12 @@ const AnswerForm: React.FC<QuestFormProps> = ({
                               { completed ? 
                               <Checkbox
                                 className={
-                                  completed && (question.checked_answers.includes(answerIndex)
-                                  ? "answer_block_checkbox_basic_check" + (!question?.answer.includes(answerIndex) ? " missed" : ""
-                                  + (question?.answer.includes(answerIndex) ? " correct" : ""))
-                                  : (question?.answer.includes(answerIndex) ? "answer_block_checkbox_basic_check incorrect" : ""))
+                                  completed && (question.checked_answers && question?.checked_answers?.includes(answerIndex)
+                                  ? "answer_block_checkbox_basic_check" + (question.checked_answers &&  !question?.answer.includes(answerIndex) ? " missed" : ""
+                                  + (question.checked_answers &&  question?.answer.includes(answerIndex) ? " correct" : ""))
+                                  : (question.checked_answers &&  question?.answer.includes(answerIndex) ? "answer_block_checkbox_basic_check incorrect" : ""))
                                 }
-                                checked={completed && ((question.checked_answers.includes(answerIndex)) || (question?.answer.includes(answerIndex)))}
+                                checked={completed && ((question.checked_answers &&  question?.checked_answers?.includes(answerIndex)) || (question?.answer.includes(answerIndex)))}
                                 disabled={completed}
                                 onChange={() => {
                                   selectAnswer(

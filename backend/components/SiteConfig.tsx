@@ -6,6 +6,7 @@ import {
   DownOutlined,
   EditOutlined,
   InfoCircleOutlined,
+  LoadingOutlined,
   PlusCircleOutlined,
   SearchOutlined,
   UndoOutlined,
@@ -24,6 +25,7 @@ import {
   Tag,
   Tooltip,
   Select,
+  Spin,
 } from "antd";
 import { useRouter } from "next/navigation";
 import {
@@ -38,6 +40,7 @@ import UserModal from "@/components/UserModal";
 import DepartmentsConfig from "./DepartmentsConfig";
 import PositionsConfig from "./PositionsConfig";
 import currencies from "@/app/config/currencies";
+import DeductiblesConfig from "./DeductiblesConfig";
 
 interface DataType {
   key: string;
@@ -57,7 +60,7 @@ interface UsersSort {
 const SiteConfig: React.FC = () => {
   const [departments, setDepartments] = useState<any>([]);
   const [positions, setPositions] = useState<any>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [refetch, setRefetch] = useState(false);
   const [depsExpanded, setDepsExpanded] = useState(false);
   const [posExpanded, setPosExpanded] = useState(false);
@@ -111,25 +114,25 @@ const SiteConfig: React.FC = () => {
       }
     };
 
-    // const fetchDeductibles = async () => {
-    //   try {
-    //     const res = await fetch(`/api/deductibles`);
-    //     const data = await res.json();
+    const fetchDeductibles = async () => {
+      try {
+        const res = await fetch(`/api/deductibles`);
+        const data = await res.json();
 
-    //     if (data.success) {
-    //       const tempDeductibles = data.deductibles;
-    //       tempDeductibles.map((ded: any) => {
-    //         ded.inputLocked = true;
-    //         ded.forDeletion = false;
-    //       });
-    //       setDeductibles(tempDeductibles);
-    //     } else {
-    //       console.error("Failed to fetch positions", data.error);
-    //     }
-    //   } catch (error) {
-    //     console.error("Error fetching positions", error);
-    //   }
-    // };
+        if (data.success) {
+          const tempDeductibles = data.deductibles;
+          tempDeductibles.map((ded: any) => {
+            ded.inputLocked = true;
+            ded.forDeletion = false;
+          });
+          setDeductibles(tempDeductibles);
+        } else {
+          console.error("Failed to fetch positions", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching positions", error);
+      }
+    };
 
     const fetchConfig = async () => {
       try {
@@ -139,6 +142,7 @@ const SiteConfig: React.FC = () => {
         if (data.success) {
           setCurrency(data.config.currency);
           setDefaultEntriesPerPage(data.config.defaultEntriesPerPage);
+          setLoading(false);
         } else {
           console.error("Failed to fetch positions", data.error);
         }
@@ -149,10 +153,8 @@ const SiteConfig: React.FC = () => {
 
     fetchDepartment();
     fetchPositions();
-    // fetchDeductibles();
+    fetchDeductibles();
     fetchConfig();
-
-    setLoading(false);
   }, [refetch]);
 
   const saveCurrency = async () => {
@@ -178,8 +180,12 @@ const SiteConfig: React.FC = () => {
   };
 
   return (
-    console.log(departments),
-    console.log(deductibles),
+    console.log(loading),
+    loading ? (
+      <div className="loading_spinner">
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+      </div>
+    ) : (
     (
       <div>
         <Divider orientation="left">Positions and Departments</Divider>
@@ -219,7 +225,12 @@ const SiteConfig: React.FC = () => {
           />
         )}
         <Divider orientation="left">Deductibles</Divider>
-
+          <DeductiblesConfig
+          deductibles={deductibles}
+          setDeductibles={setDeductibles}
+          refetch={refetch}
+          setRefetch={setRefetch}
+          />
         <Divider orientation="left">Currency Settings</Divider>
         <Select
           style={{ width: "100px" }}
@@ -232,6 +243,7 @@ const SiteConfig: React.FC = () => {
             </Select.Option>
           ))}
         </Select>
+        <br></br>
         <Button
           type="default"
           onClick={() => saveCurrency()}
@@ -258,7 +270,7 @@ const SiteConfig: React.FC = () => {
           Save Pagination
         </Button>
       </div>
-    )
+    ))
   );
 };
 

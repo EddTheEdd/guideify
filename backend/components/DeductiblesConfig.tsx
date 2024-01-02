@@ -9,7 +9,7 @@ import {
   UndoOutlined,
   UpOutlined,
 } from "@ant-design/icons";
-import { Button, Input, message, Tag, Tooltip } from "antd";
+import { Button, Input, InputNumber, message, Tag, Tooltip } from "antd";
 import axios from "axios";
 
 interface DataType {
@@ -42,47 +42,47 @@ const DeductiblesConfig: React.FC<Props> = ({
 }) => {
   const handleDeductibleNameChange = (value: any, id: any) => {
     setDeductibles((prev: any) => {
-      const newDepartments = prev.map((department: any) => {
-        if (department.position_id === id) {
+      const newDeductibles = prev.map((ded: any) => {
+        if (ded.deductible_id === id) {
           return {
-            ...department,
-            position_title: value,
+            ...ded,
+            name: value,
           };
         }
-        return department;
+        return ded;
       });
-      return newDepartments;
+      return newDeductibles;
     });
   };
 
   // This should unlock the input field for editing:
   const handleEditDeductible = (id: any) => {
     setDeductibles((prev: any) => {
-      const newDepartments = prev.map((department: any) => {
-        if (department.position_id === id) {
+      const newDeductibles = prev.map((ded: any) => {
+        if (ded.deductible_id === id) {
           return {
-            ...department,
+            ...ded,
             inputLocked: false,
           };
         }
-        return department;
+        return ded;
       });
-      return newDepartments;
+      return newDeductibles;
     });
   };
 
   const handleDeleteDeductible = (id: any) => {
     setDeductibles((prev: any) => {
-      const newDepartments = prev.map((department: any) => {
-        if (department.position_id === id) {
+      const newDeductibles = prev.map((ded: any) => {
+        if (ded.deductible_id === id) {
           return {
-            ...department,
-            forDeletion: !department.forDeletion,
+            ...ded,
+            forDeletion: !ded.forDeletion,
           };
         }
-        return department;
+        return ded;
       });
-      return newDepartments;
+      return newDeductibles;
     });
   };
 
@@ -91,11 +91,14 @@ const DeductiblesConfig: React.FC<Props> = ({
       const newDepartments = [
         ...prev,
         {
-          position_title: "",
+          name: "",
           inputLocked: false,
           forDeletion: false,
           canBeDeleted: true,
-          position_id: prev.length + 5,
+          deductible_id: prev.length + 10005,
+          amount: 0,
+          percentage: null,
+          canBeTampered: true,
         },
       ];
       return newDepartments;
@@ -104,20 +107,72 @@ const DeductiblesConfig: React.FC<Props> = ({
 
   const saveDeductibles = async () => {
     try {
-      const result = await axios.post(`/api/deductibles`, { deductibles });
+      const result = await axios.post(`/api/deductibles`, deductibles);
       console.log(result);
-      message.success("deductibles saved successfully");
-    } catch (error) {
-      console.error("Error saving deductibles", error);
+      message.success("Deductibles saved successfully");
+    } catch (error: any) {
+      const frontendErrorMessage = error.response.data.frontendErrorMessage;
+      if (frontendErrorMessage) {
+        message.error(frontendErrorMessage);
+      } else {
+        console.error("Error saving deductibles", error);
+        message.error("Error saving deductibles");
+      }
     }
     setRefetch(!refetch);
   };
+
+  const handleTypeChange = (id: any) => {
+    setDeductibles((prev: any) => {
+      const newDeductibles = prev.map((ded: any) => {
+        if (ded.deductible_id === id) {
+          if (ded.amount != null) {
+            console.log("amount", ded.amount);	
+            return {
+              ...ded,
+              amount: null,
+              percentage: 0
+            }
+          }
+          console.log("percentage", ded.percentage);
+          return {
+            ...ded,
+            percentage: null,
+            amount: 0,
+          };
+        }
+        return ded;
+      });
+      return newDeductibles;
+    });
+  };
+
+  const handleDeductibleValueChange = (value: any, id: any) => {
+    setDeductibles((prev: any) => {
+      const newDeductibles = prev.map((ded: any) => {
+        if (ded.deductible_id === id) {
+          if (ded.amount != null) {
+            return {
+              ...ded,
+              amount: value,
+            };
+          }
+          return {
+            ...ded,
+            percentage: value,
+          };
+        }
+        return ded;
+      });
+      return newDeductibles;
+    });
+  }
 
   return (
     <>
       {deductibles.map((ded: any) => (
         <div key={ded.deductible_id} style={{ marginBottom: "10px" }}>
-          <Tag color={ded.forDeletion ? "red" : "blue"}>
+          <Tag color={ded.forDeletion || ded.name === "" ? "red" : "blue"}>
             <Input
               value={ded.name}
               disabled={ded.inputLocked}
@@ -127,29 +182,35 @@ const DeductiblesConfig: React.FC<Props> = ({
               }
             />
             {
-            ded.percentage ?
+            ded.percentage != null ?
             <>
-            <Input
+            <InputNumber
+              min={0}
               value={ded.percentage}
-              disabled={ded.inputLocked}
+              disabled={ded.inputLocked || !ded?.canBeTampered}
               style={{ width: "100px", marginRight: "10px" }}
-              onChange={(e) =>
-                handleDeductibleNameChange(e.target.value, ded.deductible_id)
+              onChange={(value) =>
+                handleDeductibleValueChange(value, ded.deductible_id)
               }
             />
-            <p>%</p>
+            <div className="type_icon">
+            <p onClick={() => {ded?.canBeTampered && handleTypeChange(ded.deductible_id)}}>%</p>
+            </div>
             </>
             :
             <>
-            <Input
+            <InputNumber
+              min={0}
               value={ded.amount}
-              disabled={ded.inputLocked}
+              disabled={ded.inputLocked || !ded?.canBeTampered}
               style={{ width: "100px", marginRight: "10px" }}
-              onChange={(e) =>
-                handleDeductibleNameChange(e.target.value, ded.deductible_id)
+              onChange={(value) =>
+                handleDeductibleValueChange(value, ded.deductible_id)
               }
             />
-            <p>EUR</p>
+             <div className="type_icon">
+            <p onClick={() => {ded?.canBeTampered && handleTypeChange(ded.deductible_id)}}>EUR</p>
+            </div>
             </>
             }
             <EditOutlined
@@ -169,13 +230,14 @@ const DeductiblesConfig: React.FC<Props> = ({
                 />
               ))}
             {!ded.canBeTampered && (
-              <Tooltip title={"There are existing salaries with this deductible."}>
+              <Tooltip title={"There are existing salaries with this deductible. You are only allowed to change this deductibles name."}>
                 <InfoCircleOutlined />
               </Tooltip>
             )}
           </Tag>
         </div>
       ))}
+      <div style={{display: "flex", flexDirection: "row", gap: "5px"}}>
       <Button
         type="default"
         onClick={() => addDeductible()}
@@ -194,6 +256,7 @@ const DeductiblesConfig: React.FC<Props> = ({
       >
         Save deductibles
       </Button>
+      </div>
     </>
   );
 };

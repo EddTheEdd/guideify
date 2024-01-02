@@ -13,7 +13,7 @@ export async function GET(_request: NextRequest) {
     const offset = (page - 1) * limit;
 
     const sortColumn =
-      _request.nextUrl.searchParams.get("sortColumn") || "users.id";
+      _request.nextUrl.searchParams.get("sortColumn") || "users.user_id";
 
     const sortOrder = _request.nextUrl.searchParams.get("sortOrder")
       ? _request.nextUrl.searchParams.get("sortOrder") === "desc"
@@ -62,6 +62,11 @@ export async function GET(_request: NextRequest) {
       knexQuery.where("created_at", "like", `%${createdAtFilter}%`);
     }
 
+    // Clone the base query for counting
+    const totalQuery = knexQuery.clone().clearSelect().count('* as total');
+    const totalResult = await totalQuery;
+    const totalUsers = totalResult[0].total;
+
     knexQuery = knexQuery
       .orderBy(sortColumn, sortOrder)
       .limit(limit)
@@ -75,15 +80,18 @@ export async function GET(_request: NextRequest) {
       delete user.password;
     });
 
-    // get total Users:
-    const totalUserQuery = await pool.query("SELECT COUNT(*) FROM users");
-    const totalUsers = parseInt(totalUserQuery.rows[0].count, 10);
 
-    return NextResponse.json({
+    // Create a response
+    const response = NextResponse.json({
       success: true,
       users: result,
       totalUsers,
     });
+
+    // Set no-cache headers
+    response.headers.set('Cache-Control', 'no-store, max-age=0');
+
+    return response;
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -95,24 +103,58 @@ export async function POST(_request: NextRequest) {
 
     const { id, values } = reqBody;
 
-    const { password, email, department_name, position_title } = values;
+    const { password, email, department_name, position_title, username } = values;
+
+    if (!password || !email || !username) {
+      return NextResponse.json(
+        { error: "Missing required fields." },
+        { status: 400 }
+      );
+    }
+
+    if (!id) {
+      // check for duplicate username:
+      const duplicateUsername = await knex.select("*").from("users").where("username", username).first();
+      if (duplicateUsername) {
+        return NextResponse.json(
+          { error: "Username already exists." },
+          { status: 400 }
+        );
+      }
+
+      // check for duplicate email:
+      const duplicateEmail = await knex.select("*").from("users").where("email", email).first();
+      if (duplicateEmail) {
+        return NextResponse.json(
+          { error: "Email already exists." },
+          { status: 400 }
+        );
+      }
+    }
 
     delete values.password;
-    delete values.email;
-    delete values.department_name;
-    delete values.position_title;
+    if (id) {
+      delete values.email;
+      delete values.username;
+    }
+    delete values?.department_name;
+    delete values?.position_title;
 
-    // find department id:
-    const departmentQuery = await knex.select("department_id").from("departments").where("department_name", department_name).first();
+    if (department_name) {
+      // find department id:
+      const departmentQuery = await knex.select("department_id").from("departments").where("department_name", department_name).first();
+      values.department_id = departmentQuery.department_id;
+    }
 
-    // find position id:
-    const positionQuery = await knex.select("position_id").from("positions").where("position_title", position_title).first();
-    
-    values.department_id = departmentQuery.department_id;
-    values.position_id = positionQuery.position_id;
+    if (position_title) {
+      // find position id:
+      const positionQuery = await knex.select("position_id").from("positions").where("position_title", position_title).first();
+      values.position_id = positionQuery.position_id;
+    }
+
 
     // Lets try to find the user first
-    const user = await knex.select("*").from("users").where("id", id).first();
+    const user = await knex.select("*").from("users").where("user_id", id).first();
 
     // salt the password:
     const salt = await bcryptjs.genSalt(10);
@@ -125,7 +167,7 @@ export async function POST(_request: NextRequest) {
       // update
       userQuery = await knex("users")
         .update(values)
-        .where("id", id)
+        .where("user_id", id)
         .returning("*");
     } else {
       // create

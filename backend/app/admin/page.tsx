@@ -18,7 +18,6 @@ import {
   Table,
   Input,
   Space,
-  Pagination,
   Spin,
   message,
 } from "antd";
@@ -260,9 +259,6 @@ const AdminPage: React.FC = () => {
     console.log(userPermissions);
     console.log("Finished:");
     console.log(finishedFetchingPermissions);
-    if (!canAdminPanel && finishedFetchingPermissions) {
-      router.push("/forbidden");
-    }
 
     const fetchDepartment = async () => {
       try {
@@ -339,14 +335,10 @@ const AdminPage: React.FC = () => {
       <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
     </div>
   ) : (
-    (!canAdminPanel && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
+    (
       <LayoutTwo style={{ background: "blue" }}>
         <Layout style={{ height: "100%" }}>
-          <Sider trigger={null} collapsible collapsed={collapsed}>
+          <Sider trigger={null} collapsible collapsed={collapsed} style={{ height: "100%" }}>
             <div className="demo-logo-vertical" />
             <Menu
               theme="dark"
@@ -367,7 +359,7 @@ const AdminPage: React.FC = () => {
               ]}
             />
           </Sider>
-          <Layout>
+          <Layout style={{height: "100%", overflowY: "scroll"}}>
             <Header style={{ padding: 0, background: colorBgContainer }}>
               <Button
                 type="text"
