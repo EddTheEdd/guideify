@@ -1,12 +1,24 @@
 import pool from "@/dbConfig/pgConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
+  const tokenUserId = getDataFromToken(request);
+
+  if (!tokenUserId) {
+    return NextResponse.json(
+      { error: "Forbidden" },
+      { status: 403 }
+    );
+  }
+
+  const canViewUserUnitProgress = await checkUserPermissions(tokenUserId, "View Course Progress");
+
   const submissionId = request.nextUrl.pathname.split("/").pop();
 
   const submissionResponse = await pool.query(
-    `SELECT * FROM user_course_progress WHERE progress_id = $1`,
+    `SELECT * FROM user_unit_progress WHERE progress_id = $1`,
     [submissionId]
   );
 
@@ -14,6 +26,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { error: "Submission not found." },
       { status: 404 }
+    );
+  }
+
+  const submissionCompleted = submissionResponse.rows[0].completed;
+  const submissionSubmitted = submissionResponse.rows[0].submitted;
+
+  if (!canViewUserUnitProgress) {
+    return NextResponse.json(
+      { frontendErrorMessage: "Forbidden." },
+      { status: 403 }
+    );
+  }
+
+  if (!submissionCompleted && !submissionSubmitted) {
+    return NextResponse.json(
+      { frontendErrorMessage: "The user is still answering this test, you will be able to review it once it has been submitted." },
+      { status: 400 }
     );
   }
 
@@ -30,7 +59,7 @@ export async function GET(request: NextRequest) {
   try {
     const result = await pool.query(
       `
-              SELECT * FROM course_units WHERE unit_id = $1
+              SELECT * FROM units WHERE unit_id = $1
           `,
       [unitId]
     );
@@ -43,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     const progressResult = await pool.query(
       `
-        SELECT * FROM user_course_progress WHERE unit_id = $1 AND user_id = $2
+        SELECT * FROM user_unit_progress WHERE unit_id = $1 AND user_id = $2
         `,
       [unitId, userId]
     );
@@ -52,7 +81,7 @@ export async function GET(request: NextRequest) {
     if (progressResult.rows.length === 0) {
       const insertProgressResult = await pool.query(
         `
-                    INSERT INTO user_course_progress (user_id, unit_id) VALUES ($1, $2)
+                    INSERT INTO user_unit_progress (user_id, unit_id) VALUES ($1, $2)
                     ON CONFLICT (user_id, unit_id) DO NOTHING
                     RETURNING *;
                 `,

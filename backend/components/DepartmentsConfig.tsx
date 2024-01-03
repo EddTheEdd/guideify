@@ -108,19 +108,24 @@ const DepartmentsConfig: React.FC<Props> = ({departments, setDepartments, refetc
       const result = await axios.post(`/api/departments`, { departments });
       console.log(result);
       message.success("Departments saved successfully");
-    } catch (error) {
-      console.error("Error saving departments", error);
+    } catch (error: any) {
+      const frontendErrorMessage = error.response.data.frontendErrorMessage;
+      if (frontendErrorMessage) {
+        message.error(frontendErrorMessage);
+      } else {
+        console.error("Error saving departments", error);
+        message.error("Error saving departments");
+      }
     }
     setRefetch(!refetch);
   };
-
 
 
   return (
     <>
       {departments.map((department: any) => (
         <div key={department.department_id} style={{ marginBottom: "10px" }}>
-          <Tag color={department.forDeletion ? "red" : "blue"}>
+          <Tag color={department.forDeletion || department.department_name === "" ? "red" : "blue"}>
             <Input
               value={department.department_name}
               disabled={department.inputLocked}
@@ -160,6 +165,7 @@ const DepartmentsConfig: React.FC<Props> = ({departments, setDepartments, refetc
           </Tag>
         </div>
       ))}
+      <div style={{display: "flex", flexDirection: "row", gap: "5px"}}>
       <Button
         type="default"
         onClick={() => addDepartment()}
@@ -178,6 +184,7 @@ const DepartmentsConfig: React.FC<Props> = ({departments, setDepartments, refetc
       >
         Save Departments
       </Button>
+      </div>
     </>
   );
 };

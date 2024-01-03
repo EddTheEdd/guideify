@@ -107,8 +107,14 @@ const PositionsConfig: React.FC<Props> = ({
       const result = await axios.post(`/api/positions`, { positions });
       console.log(result);
       message.success("Positions saved successfully");
-    } catch (error) {
-      console.error("Error saving positions", error);
+    } catch (error: any) {
+      const frontendErrorMessage = error.response.data.frontendErrorMessage;
+      if (frontendErrorMessage) {
+        message.error(frontendErrorMessage);
+      } else {
+        console.error("Error saving positions", error);
+        message.error("Error saving positions");
+      }
     }
     setRefetch(!refetch);
   };
@@ -117,7 +123,7 @@ const PositionsConfig: React.FC<Props> = ({
     <>
       {positions.map((position: any) => (
         <div key={position.position_id} style={{ marginBottom: "10px" }}>
-          <Tag color={position.forDeletion ? "red" : "blue"}>
+          <Tag color={position.forDeletion || position.position_title === "" ? "red" : "blue"}>
             <Input
               value={position.position_title}
               disabled={position.inputLocked}
@@ -150,6 +156,7 @@ const PositionsConfig: React.FC<Props> = ({
           </Tag>
         </div>
       ))}
+      <div style={{display: "flex", flexDirection: "row", gap: "5px"}}>
       <Button
         type="default"
         onClick={() => addPosition()}
@@ -168,6 +175,7 @@ const PositionsConfig: React.FC<Props> = ({
       >
         Save Positions
       </Button>
+      </div>
     </>
   );
 };

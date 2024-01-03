@@ -1,4 +1,5 @@
 import pool from "@/dbConfig/pgConfig";
+import knex from "@/dbConfig/knexConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -9,6 +10,23 @@ export async function POST(request: NextRequest) {
     const reqBody = await request.json();
     const { answers, unitId } = reqBody;
     console.log("Answers: ", Object.entries(answers));
+
+    // check if this unit belongs to the users roles:
+    const checkUnitResponse = await knex("units")
+    .leftJoin("courses", "units.course_id", "courses.course_id")
+    .leftJoin("roles_courses", "courses.course_id", "roles_courses.course_id")
+    .leftJoin("roles", "roles_courses.role_id", "roles.role_id")
+    .leftJoin("user_roles", "roles.role_id", "user_roles.role_id")
+    .where("user_roles.user_id", userId)
+    .andWhere("units.unit_id", unitId)
+    .countDistinct("user_roles.user_id as count");
+
+    if (checkUnitResponse[0].count === "0") {
+      return NextResponse.json(
+        { error: "You do not have permission to submit this quiz." },
+        { status: 403 }
+      );
+    }
 
     let completeQuizAfterSubmit = true;
     for (const [questionId, answer] of Object.entries(answers)) {
@@ -63,7 +81,7 @@ export async function POST(request: NextRequest) {
     if (completeQuizAfterSubmit) {
       const completeQuiz = await pool.query(
         `
-        UPDATE user_course_progress SET completed = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
+        UPDATE user_unit_progress SET completed = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
         [userId, unitId]
       );
 
@@ -76,7 +94,7 @@ export async function POST(request: NextRequest) {
     } else {
       const completeQuiz = await pool.query(
         `
-        UPDATE user_course_progress SET submitted = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
+        UPDATE user_unit_progress SET submitted = true WHERE user_id = $1 AND unit_id = $2 RETURNING *`,
         [userId, unitId]
       );
 

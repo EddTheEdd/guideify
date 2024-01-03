@@ -29,7 +29,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
         columns={columns} 
         onRow={(record: any) => ({
           onClick: () => {
-            showModal(record.id);
+            showModal(record.user_id);
           }
         })}
         onChange={onChange}
@@ -46,6 +46,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
           }
         })}
         onChange={onChange}
+        pagination={false}
       />
   );
 };

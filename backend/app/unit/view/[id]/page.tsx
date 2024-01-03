@@ -3,9 +3,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Layout from "@/components/Layout";
-import { Button, Divider, Tag, Typography } from "antd";
+import { Button, Divider, Spin, Tag, Typography } from "antd";
 import DOMPurify from "dompurify";
 import AnswerForm from "@/components/AnswerForm";
+import { LoadingOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -59,7 +60,7 @@ const UnitPage: React.FC = ({ params }: any) => {
   const [hasDoneQuest, setHasDoneQuest] = useState(false);
   const [courseId, setCourseId] = useState(0);
   const [quest, setQuest] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(true);
     if (!id) return;
@@ -121,7 +122,9 @@ const UnitPage: React.FC = ({ params }: any) => {
       <>
         <Layout>
           {loading ? (
-            <p>Loading...</p>
+            <div className="loading_spinner">
+              <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+            </div>
           ) : (
             <>
               <div className="unitpage_main_content">

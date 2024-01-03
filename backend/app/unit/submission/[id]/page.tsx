@@ -3,10 +3,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Layout from "@/components/Layout";
-import { Button, Divider, Tag, Typography } from "antd";
+import { Button, Divider, Result, Spin, Tag, Typography } from "antd";
 import DOMPurify from "dompurify";
 import AnswerForm from "@/components/AnswerForm";
 import ReviewForm from "@/components/ReviewForm";
+import { useRouter } from "next/navigation";
+import { LoadingOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -60,7 +62,9 @@ const UnitPage: React.FC = ({ params }: any) => {
   const [hasDoneQuest, setHasDoneQuest] = useState(false);
   const [courseId, setCourseId] = useState(0);
   const [quest, setQuest] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [frontendErrorMessage, setFrontendErrorMessage] = useState("");
+  const router = useRouter();
   useEffect(() => {
     setLoading(true);
     if (!submissionId) return;
@@ -88,10 +92,15 @@ const UnitPage: React.FC = ({ params }: any) => {
         setCompleted(response.data.unit.progress.completed);
         setHasDoneQuest(response.data.hasDoneQuest);
         setCourseId(response.data.unit.course_id);
-        console.log(response.data.unit);
         setLoading(false);
-      } catch (error) {
+        console.log(response.data.unit);
+      } catch (error: any) {
+        const frontendErrorMessage = error.response.data.frontendErrorMessage;
+        if (frontendErrorMessage) {
+          setFrontendErrorMessage(error.response.data.frontendErrorMessage);
+        }
         console.error("Error fetching the unit data", error);
+        setLoading(false);
       }
     };
 
@@ -122,8 +131,21 @@ const UnitPage: React.FC = ({ params }: any) => {
       <>
         <Layout>
           {loading ? (
-            <p>Loading...</p>
+            <div className="loading_spinner">
+              <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
+            </div>
           ) : (
+            frontendErrorMessage && (
+              <Result
+                title={frontendErrorMessage}
+                extra={
+                  <Button type="primary" key="console" onClick={() => {router.push("/courses")}}>
+                    Go Back
+                  </Button>
+                }
+              />
+            )
+            ||
             <>
               <div className="unitpage_main_content">
                 <h1>{unit ? unit.title : ""}</h1>
@@ -137,6 +159,7 @@ const UnitPage: React.FC = ({ params }: any) => {
                 >
                   {completed ? "Completed" : "In Progress"}
                 </Tag>
+                {completed && <div style={{textAlign: "center"}}>This test has been completed, so you can&apos;t review it anymore!</div>}
                 <Divider></Divider>
                 <div
                   className="unitpage_main_body"

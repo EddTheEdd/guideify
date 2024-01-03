@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
 
         // Retrieve user by ID but exclude password
         const { rows } = await pool.query(
-            'SELECT id, username, email FROM users WHERE id = $1',
+            'SELECT username, email, first_name, last_name, date_of_birth, phone_number FROM users WHERE user_id = $1',
             [userId]
         );
         const user = rows[0];
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
             message: "User Found",
-            data: user
+            user
         });
 
     } catch (error: any) {

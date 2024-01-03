@@ -44,6 +44,8 @@ export default function LoginPage() {
         password,
       });
       console.log("Login success", response.data);
+      localStorage.setItem("defaultEntriesPerPage", response.data.site_config.defaultEntriesPerPage);
+      localStorage.setItem("currency", response.data.site_config.currency);
       router.push("/home");
     } catch (error: any) {
       setLoginFail(true);
@@ -128,7 +130,7 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="footer">
-        <p>Current version: 0.1.2.0, 11.12.2023 version</p>
+        <p>Current version: 0.1.2.9, 03.01.2023 version</p>
       </div>
     </>
   );

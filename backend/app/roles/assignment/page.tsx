@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 const ItemType = "USER";
 
 interface User {
-  id: number;
+  user_id: number;
   username: string;
 }
 
@@ -38,13 +38,13 @@ export default function AssignRoles() {
   const [refresh, setRefresh] = useState(false);
   const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
   console.log(userPermissions);
-  const canAssignRoles = userPermissions.includes("Assign Roles");
+  // const canAssignRoles = userPermissions.includes("Assign Roles");
   const router = useRouter();
 
   useEffect(() => {
-    if (!canAssignRoles && finishedFetchingPermissions) {
-      router.push("/forbidden");
-    }
+    // if (!canAssignRoles && finishedFetchingPermissions) {
+    //   router.push("/forbidden");
+    // }
 
     const fetchUsers = async () => {
       const res = await fetch("/api/users");
@@ -90,7 +90,7 @@ export default function AssignRoles() {
           users: userRolesFetched
             .filter((ur) => ur.role_id === role.role_id)
             .map((ur) => {
-              const user = usersFetched.find((u) => u.id === ur.user_id);
+              const user = usersFetched.find((u) => u.user_id === ur.user_id);
               return user || null;
             })
             .filter(Boolean), // This filters out any potential null values
@@ -174,27 +174,25 @@ export default function AssignRoles() {
     console.log(roles),
     console.log(users),
     console.log(userRoles),
-    (!canAssignRoles && (
-      <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    )) || (
+    (
       <DndProvider backend={HTML5Backend}>
         <Layout>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", height: "100%", margin: "auto" }}>
             <div
               style={{
                 borderRight: "solid 2px black",
                 padding: "16px",
-                width: "200px",
+                height: "100%",
+                overflowY: "scroll",
+                minWidth: "100px"
               }}
             >
               <p style={{ fontWeight: "900", margin: "0" }}>Users:</p>
               {users.map((user, index) => (
-                <UserItem key={index} id={user.id} username={user.username} />
+                <UserItem key={index} id={user.user_id} username={user.username} />
               ))}
             </div>
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", width: "100rem" }}>
+            <div className="role_assignment_rolebox_container">
               {roles.map((role, index) => (
                 <RoleBox
                   key={index}
@@ -204,8 +202,8 @@ export default function AssignRoles() {
                   onDrop={(item) => onDrop(item, role.role_id)}
                 />
               ))}
-              <DeleteBox onDrop={(item: any) => removeItem(item)} />
             </div>
+            <DeleteBox onDrop={(item: any) => removeItem(item)} />
           </div>
         </Layout>
       </DndProvider>

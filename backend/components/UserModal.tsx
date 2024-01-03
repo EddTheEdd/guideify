@@ -1,44 +1,21 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import {
-  LoadingOutlined,
   LockOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  SearchOutlined,
-  SettingOutlined,
   UnlockOutlined,
-  UploadOutlined,
-  UserOutlined,
-  VideoCameraOutlined,
 } from "@ant-design/icons";
 import {
-  Layout,
-  Menu,
   Button,
-  theme,
-  Table,
   Input,
-  Space,
-  Pagination,
-  Spin,
   Modal,
   Divider,
   Form,
   DatePicker,
-  Dropdown,
   Select,
 } from "antd";
-import { useGlobalContext } from "@/contexts/GlobalContext";
-import { useRouter } from "next/navigation";
-import {
-  FilterConfirmProps,
-  FilterDropdownProps,
-} from "antd/es/table/interface";
-import { ColumnType } from "antd/lib/table";
-import { renderHighlightText } from "@/helpers/renderHighlightText";
-import axios from "axios";
+import PhoneInput from "antd-phone-input";
+
 
 interface Props {
   onFinish: (value: any) => void;
@@ -66,17 +43,26 @@ const UserModal: React.FC<Props> = ({
   const [email, setEmail] = useState(modalData?.email || "");
   const [form] = Form.useForm();
 
-  const [isEmailValid, setIsEmailValid] = useState(false);
+  const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
 
-  const validateEmail = (email: string) => {
+  const validateEmail = (email: any) => {
+    console.log(email);
+    if (!email || email.trim() === '') {
+      return false; // Reject empty or only whitespace
+    }
+  
     const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     return re.test(email);
   };
 
   const validatePassword = (password: string) => {
+    if (!password || password.trim() === '') {
+      return false;
+    }
+
     return /[A-Z]/.test(password);
   };
 
@@ -92,7 +78,7 @@ const UserModal: React.FC<Props> = ({
   const initialValues = {
     username: modalData.username,
     email: modalData.email,
-    password: "filler",
+    password: "PASSWORD_PLACEHOLDER",
     first_name: modalData.first_name,
     last_name: modalData.last_name,
     date_of_birth: modalData.date_of_birth
@@ -105,17 +91,19 @@ const UserModal: React.FC<Props> = ({
 
   useEffect(() => {
     form.resetFields(); // Resets all fields
+    if (!modalData?.username) {initialValues.password = "";}
     form.setFieldsValue(initialValues); // Sets new values
     setIsLocked(true);
     setPassword("filler");
   }, [modalData, form]);
 
   return (
+    console.log(modalData),
     <Modal
       className="user_modal"
       title={modalData?.username ? "Update User Data" : "Create New User"}
       open={modalVisible}
-      onCancel={handleCancel}
+      onCancel={() => {setIsEmailValid(true); handleCancel();}}
       onOk={onOk}
       okText={"Delete"}
     >
@@ -123,18 +111,26 @@ const UserModal: React.FC<Props> = ({
         form={form}
         onFinish={onFinish}
         initialValues={initialValues}
-        key={modalData.id}
+        key={modalData.user_id}
       >
         <Divider>Account Data:</Divider>
-        <Form.Item required={true} name="username" label="Username">
-          <Input placeholder="Username" />
+        <Form.Item rules={[{ required: true, message: 'Username is requried' }]} name="username" label={`Username ${modalData?.username ? "(not editable)" : ""}`}>
+          <Input disabled={modalData?.username} placeholder="Username" />
         </Form.Item>
         <Form.Item
-          required={true}
           name="email"
           label={`Email ${modalData?.username ? "(not editable)" : ""}`}
-          validateStatus={emailTouched && !isEmailValid ? "error" : ""}
-          help={emailTouched && !isEmailValid && "Please enter a valid email"}
+          rules={[
+            { required: true, message: 'Email is required!' },
+            () => ({
+              validator(_, value) {
+                if (!value || validateEmail(value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('Please enter a valid email'));
+              },
+            }),
+          ]}
         >
           <Input
             placeholder="Email"
@@ -146,15 +142,19 @@ const UserModal: React.FC<Props> = ({
           />
         </Form.Item>
         <Form.Item
-          required={true}
           name="password"
           label="Password"
-          validateStatus={passwordTouched && !isPasswordValid ? "error" : ""}
-          help={
-            passwordTouched &&
-            !isPasswordValid &&
-            "Password must contain at least one capital letter"
-          }
+          rules={[
+            { required: true, message: 'Password is required!' },
+            () => ({
+              validator(_, value) {
+                if (!value || validatePassword(value)) {
+                  return Promise.resolve();
+                }
+                return Promise.reject(new Error('The password must contain atleast one uppercase letter'));
+              },
+            }),
+          ]}
         >
           <Input.Password
             placeholder="Password"
@@ -174,21 +174,21 @@ const UserModal: React.FC<Props> = ({
           />
         </Form.Item>
         <Divider>User Profile:</Divider>
-        <Form.Item required={true} name="first_name" label="First Name">
+        <Form.Item required={false} name="first_name" label="First Name">
           <Input placeholder="First Name" />
         </Form.Item>
-        <Form.Item required={true} name="last_name" label="Last Name">
+        <Form.Item required={false} name="last_name" label="Last Name">
           <Input placeholder="Last Name" />
         </Form.Item>
-        <Form.Item required={true} name="date_of_birth" label="Date Of Birth">
+        <Form.Item required={false} name="date_of_birth" label="Date Of Birth">
           <DatePicker placeholder="Date of Birth" />
         </Form.Item>
-        <Form.Item required={true} name="phone_number" label="Phone Number">
-          <Input placeholder="Phone Number" />
+        <Form.Item required={false} name="phone_number" label="Phone Number">
+          <PhoneInput enableSearch/>
         </Form.Item>
         <Form.Item
           name={"department_name"}
-          required={true}
+          required={false}
           label="Department Name"
         >
           <Select>
@@ -199,7 +199,7 @@ const UserModal: React.FC<Props> = ({
             ))}
           </Select>
         </Form.Item>
-        <Form.Item name={"position_title"} required={true} label="Position">
+        <Form.Item name={"position_title"} required={false} label="Position">
           <Select>
             {positions.map((position: any, index: number) => (
               <Select.Option value={position.position_title} key={index}>

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import Layout from "@/components/Layout";
@@ -10,12 +10,15 @@ import { Option } from "antd/lib/mentions";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import { useRouter } from "next/navigation";
 import { LoadingOutlined } from "@ant-design/icons";
+import { on } from "events";
+import { useGlobalContext } from "@/contexts/GlobalContext";
 
 interface Course {
   id: number;
   name: string;
   description: string;
   units: number;
+  rgb_value: string;
 }
 
 interface Unit {
@@ -33,9 +36,8 @@ interface CardProps {
   contentType: string;
   description: string;
   progress: any;
+  rgb_value?: string;
 }
-
-
 
 const tags = [
   {
@@ -63,7 +65,13 @@ const tagColors = {
   Withdrawn: "gray",
 };
 
-const Card: React.FC<CardProps> = ({ title, unitId, contentType, description, progress }) => {
+const Card: React.FC<CardProps> = ({
+  title,
+  unitId,
+  contentType,
+  description,
+  progress,
+}) => {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -130,6 +138,7 @@ export default function CourceView({ params }: any) {
   const [colorRgb, setColorRgb] = useState<string>("rgb(22, 119, 255)");
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(0);
   const [newCourse, setNewCourse] = useState<Course>({
     name: "",
     description: "",
@@ -137,26 +146,50 @@ export default function CourceView({ params }: any) {
     id: 0,
   });
   const [modalVisible, setModalVisible] = useState(false);
+  const [users, setUsers] = useState([]);
   const router = useRouter();
+
+  const { userPermissions, finishedFetchingPermissions } = useGlobalContext();
+  console.log(userPermissions);
+  const canSeeOtherUserDropdown = userPermissions.includes(
+    "View Course Progress"
+  );
+
   useEffect(() => {
     if (!id) return; // Return if id is not available yet
     setLoading(true);
+
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(`/api/users`);
+        console.log(response.data.users);
+        setUsers(response.data.users);
+      } catch (error) {
+        console.error("Error fetching the users data", error);
+      }
+    };
+
     const fetchCourse = async () => {
       try {
         const response = await axios.get(`/api/courses/${id}`);
         setCourse(response.data.course);
         setColorRgb(response.data.course.rgb_value);
-
       } catch (error: any) {
         console.error("Error fetching the course data", error);
-        router.push("/forbidden");
+        // router.push("/forbidden");
       }
       setLoading(false);
     };
 
     const fetchUnits = async () => {
       try {
-        const response = await axios.get(`/api/units/${id}`);
+        let queryStrying = "/api/units/" + id;
+        console.log(selectedUserId);
+        if (selectedUserId) {
+          queryStrying += "?user_id=" + selectedUserId;
+        }
+        console.log(queryStrying);
+        const response = await axios.get(queryStrying);
         // extract answers and checked_answers, json decode and put back in:
         response.data.units.forEach((unit: any) => {
           if (unit.content_type === "quest") {
@@ -176,34 +209,93 @@ export default function CourceView({ params }: any) {
       }
     };
 
+    fetchUsers();
+
     fetchUnits();
 
     fetchCourse(); // Call the async function
-  }, [id]);
+  }, [id, selectedUserId]);
+
+  const textColor = useMemo(() => {
+    if (!course || !course.rgb_value) { return "#fff"; }
+      const rgbValues = course?.rgb_value.match(/\d+/g);
+      if (rgbValues) {
+        const [r, g, b] = rgbValues.map(Number);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness > 128 ? "#000" : "#fff";
+      }
+    }, [course]);
 
   return (
-    loading ? 
-    <div className="loading_spinner">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />} />
-      </div>
-    :
     <Layout>
-      <>
-      <h1>{course?.name || "Course not found"}</h1>
-      <h2>{course?.description || "Description not found"}</h2>
-      <div className="courses_view_unit_container">
-        {units.map((unit, index) => (
-          <Card
-            key={index}
-            unitId={unit.unit_id}
-            title={unit.title}
-            contentType={unit.content_type}
-            description={unit.description}
-            progress={unit.progress}
+      {loading ? (
+        <div className="loading_spinner">
+          <Spin
+            indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />}
           />
-        ))}
-      </div>
-      </>
+        </div>
+      ) : (
+        <div style={{maxWidth: "1200px", margin: "auto", height: "100%"}}>
+          <h2>Course Unit Progress</h2>
+          {canSeeOtherUserDropdown ? (
+            <h4>
+              Check how far you and other people have progressed in a given
+              course
+            </h4>
+          ) : (
+            <h4>Check how far you have progressed in a given course</h4>
+          )}
+          <>
+            {/* select with users: */}
+            {canSeeOtherUserDropdown && (
+              <>
+                <p>
+                  You can view other users progress by selecting them bellow:
+                </p>
+                <Select
+                  showSearch
+                  value={selectedUserId || undefined}
+                  style={{ width: 200, marginBottom: "13px" }}
+                  placeholder="Select a user"
+                  optionFilterProp="children"
+                  onSelect={(value: any) => {
+                    setSelectedUserId(value);
+                  }}
+                  filterOption={(input, option: any) =>
+                    option.children
+                      .toLowerCase()
+                      .indexOf(input.toLowerCase()) >= 0
+                  }
+                >
+                  {users.map((user: any) => (
+                    <Select.Option key={user.user_id} value={user.id}>
+                      {user.email}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </>
+            )}
+            <div>
+            <div style={{borderRadius: "15px 15px 0 0", color: textColor, backgroundColor: course?.rgb_value ? course?.rgb_value : "rgb(22, 119, 255)", padding: "10px"}}>
+              <h1>{course?.name || "Course not found"}</h1>
+              <h2>{course?.description || "Description not found"}</h2>
+            </div>
+            <div className="courses_view_unit_container" style={{borderLeft: "solid 2px gray", borderRight: "solid 2px gray", borderBottom: "solid 2px gray", padding: "3px"}}>
+              {units.map((unit, index) => (
+                <Card
+                  key={index}
+                  unitId={unit.unit_id}
+                  title={unit.title}
+                  contentType={unit.content_type}
+                  description={unit.description}
+                  progress={unit.progress}
+                />
+              ))}
+            </div>
+            </div>
+          </>
+        </div>
+      )}
     </Layout>
   );
 }

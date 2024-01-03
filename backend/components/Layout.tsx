@@ -8,7 +8,7 @@ import {
   LogoutOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Menu, Dropdown } from "antd";
+import { Menu, Dropdown, Breadcrumb } from "antd";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -100,14 +100,14 @@ const Layout: React.FC<any> = ({ children }) => {
         <Link className="svg-container" href="/home">
           <div>
             <img
-              src="../Union.svg"
+              src="/Union.svg"
               alt="logo"
               className="default-svg"
               style={{ width: "50px", height: "40px" }}
             />
 
             <img
-              src="../Union_hover.svg"
+              src="/Union_hover.svg"
               alt="logo hover"
               className="hover-svg"
               style={{ width: "50px", height: "40px" }}
@@ -116,7 +116,7 @@ const Layout: React.FC<any> = ({ children }) => {
         </Link>
       ),
       key: "logo",
-      disabled: true, // Disable if you don't want it to be clickable
+      disabled: true,
     },
     {
       label: (
@@ -200,14 +200,16 @@ const Layout: React.FC<any> = ({ children }) => {
   ];
 
   return (
-    <div>
+    console.log(currentPath),
+    console.log(currentPath.replace(/\/\d+$/, '')),
+    <div style={{height: "100vh"}}>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           width: "100%",
-          height: "6rem",
+          // height: "5.5rem",
         }}
       >
         {/* Main Menu */}
@@ -230,8 +232,12 @@ const Layout: React.FC<any> = ({ children }) => {
       {currentPath.includes("admin") ? (
         <div style={{ height: "89.5vh" }}>{children}</div>
       ) : (
-        <div style={{ margin: "30px", height: "80vh" }}>{children}</div>
-      )}
+        currentPath.includes("courses/view") ? (
+          <div style={{ height: "calc(100vh - 100px)" }}>{children}</div>
+        ) : (
+          <div style={{ margin: "30px", height: "80vh" }}>{children}</div>
+        )
+        )}
     </div>
   );
 };

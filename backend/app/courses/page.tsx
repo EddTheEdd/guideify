@@ -1,20 +1,30 @@
 "use client";
 import Link from "next/link";
-import React, { useEffect, useRef, useState } from "react";
-import axios from "axios";
-import { toast } from "react-hot-toast";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "../../components/Layout";
-import CustomTable from "@/components/CustomTable";
-import { Button, Checkbox, Input, Modal, Pagination, Select, Space } from "antd";
-import { Option } from "antd/lib/mentions";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Input,
+  Modal,
+  Pagination,
+  Select,
+  Space,
+  message,
+} from "antd";
 import CustomTableTwo from "@/components/CustomTableTwo";
-import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/contexts/GlobalContext";
 import type { ColumnType, ColumnsType } from "antd/es/table";
-import { FilterConfirmProps, FilterDropdownProps } from "antd/es/table/interface";
+import {
+  FilterConfirmProps,
+  FilterDropdownProps,
+} from "antd/es/table/interface";
 import { SearchOutlined } from "@ant-design/icons";
 import { renderHighlightText } from "@/helpers/renderHighlightText";
 import { buildQueryString } from "../helpers/buildQueryString";
+import CourseModal from "@/components/CourseModal";
+import { useRouter } from "next/navigation";
 
 interface Course {
   id: number;
@@ -26,7 +36,7 @@ interface Course {
 interface Unit {
   id: number;
   name: string;
-  type: string; // For instance: 'text', 'video', or 'questionnaire'
+  type: string;
 }
 
 interface DataType {
@@ -44,68 +54,62 @@ interface CoursesSort {
   [column: string]: string;
 }
 
-
 export default function Courses() {
+  const { userPermissions, theme } = useGlobalContext();
+  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [courses, setCourses] = useState<Course[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [newCourse, setNewCourse] = useState<Course>({
-    name: "",
-    description: "",
-    units: 0,
-    id: 0,
-  });
+  const [roles, setRoles] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const searchInput = useRef<any>(null);
   const [coursesFilter, setCoursesFilter] = useState<CoursesFilter>({});
   const [coursesSort, setCoursesSort] = useState<CoursesSort>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
   const [coursesCount, setCoursesCount] = useState(0);
-
-  const { userPermissions, theme } = useGlobalContext();
-  const router = useRouter();
+  const [refetch, setRefetch] = useState(false);
   const canEditCourses = userPermissions.includes("Edit Courses");
-
-  const fetchCourses = async () => {
-    try {
-      const queryParams = `${buildQueryString(
-        coursesFilter,
-        coursesSort
-      )}&page=${currentPage}&limit=${pageSize}`;
-      const res = await fetch(`/api/courses?${queryParams}`);
-      const data = await res.json();
-
-      if (data.success) {
-        setCourses(data.courses);
-        setCoursesCount(data.coursesCount);
-      } else {
-        console.error("Failed to fetch courses", data.error);
-      }
-    } catch (error) {
-      console.error("Error fetching courses", error);
-    }
-  };
+  
 
   useEffect(() => {
-    const fetchUnits = async () => {
+    const fetchRoles = async () => {
       try {
-        const res = await fetch("/api/units");
+        const res = await fetch("/api/roles/names");
         const data = await res.json();
 
         if (data.success) {
-          setUnits(data.units);
+          console.log(data.roles);
+          setRoles(data.roles);
         } else {
-          console.error("Failed to fetch units", data.error);
+          console.error("Failed to fetch roles", data.error);
         }
       } catch (error) {
-        console.error("Error fetching units", error);
+        console.error("Error fetching roles", error);
       }
     };
 
-    fetchUnits();
+    const fetchCourses = async () => {
+      try {
+        const queryParams = `${buildQueryString(
+          coursesFilter,
+          coursesSort
+        )}&page=${currentPage}&limit=${pageSize}`;
+        const res = await fetch(`/api/courses?${queryParams}`);
+        const data = await res.json();
 
+        if (data.success) {
+          setCourses(data.courses);
+          setCoursesCount(data.coursesCount);
+        } else {
+          console.error("Failed to fetch courses", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching courses", error);
+      }
+    };
+
+    canEditCourses && fetchRoles(); // fetch roles only if user can edit courses
     fetchCourses();
-  }, [coursesFilter, coursesSort, currentPage, pageSize]);
+  }, [coursesFilter, coursesSort, currentPage, pageSize, refetch]);
 
   const showModal = () => {
     setModalVisible(true);
@@ -139,87 +143,73 @@ export default function Courses() {
     confirm();
   };
 
-  const handleOk = async () => {
-    try {
-      await axios.post("/api/courses", newCourse);
-      toast.success("Course created successfully");
-      fetchCourses();
-    } catch (error) {
-      toast.error("Error creating course");
-      console.error("Error creating course", error);
-    }
-    setModalVisible(false);
-  };
-
   const handleCancel = () => {
     setModalVisible(false);
   };
 
   const getColumnSearchProps = (dataIndex: any): ColumnType<DataType> => {
-      return {
-        filterDropdown: ({
-          setSelectedKeys,
-          selectedKeys,
-          confirm,
-          clearFilters,
-          close,
-        }: FilterDropdownProps) => (
-          <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
-            <Input
-              ref={searchInput}
-              placeholder={`Search ${dataIndex}`}
-              value={selectedKeys[0]}
-              onChange={(e: any) =>
-                setSelectedKeys(e.target.value ? [e.target.value] : [])
-              }
-              onPressEnter={() => confirm()}
-              style={{ marginBottom: 8, display: "block" }}
-            />
-            <Space>
-              <Button
-                type="primary"
-                onClick={() => confirm()}
-                icon={<SearchOutlined />}
-                size="small"
-                style={{ width: 90 }}
-              >
-                Search
-              </Button>
-              <Button
-                onClick={() =>
-                  clearFilters && handleReset(clearFilters, confirm)
-                }
-                size="small"
-                style={{ width: 90 }}
-              >
-                Reset
-              </Button>
-            </Space>
-          </div>
-        ),
-        filterIcon: (filtered: boolean) => (
-          <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
-        ),
-        onFilter: (value: any, record: any) =>
-          record[dataIndex]
-            ? record[dataIndex]
-                .toString()
-                .toLowerCase()
-                .includes((value as string).toLowerCase())
-            : false,
-        onFilterDropdownOpenChange: (visible) => {
-          if (visible) {
-            setTimeout(() => searchInput.current?.select(), 100);
-          }
-        },
-        render: (text: string) =>
-          coursesFilter[dataIndex]
-            ? renderHighlightText(
-                text ? text.toString() : "",
-                coursesFilter[dataIndex][0]
-              )
-            : text,
-      };
+    return {
+      filterDropdown: ({
+        setSelectedKeys,
+        selectedKeys,
+        confirm,
+        clearFilters,
+        close,
+      }: FilterDropdownProps) => (
+        <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+          <Input
+            ref={searchInput}
+            placeholder={`Search ${dataIndex}`}
+            value={selectedKeys[0]}
+            onChange={(e: any) =>
+              setSelectedKeys(e.target.value ? [e.target.value] : [])
+            }
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Search
+            </Button>
+            <Button
+              onClick={() => clearFilters && handleReset(clearFilters, confirm)}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => (
+        <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+      ),
+      onFilter: (value: any, record: any) =>
+        record[dataIndex]
+          ? record[dataIndex]
+              .toString()
+              .toLowerCase()
+              .includes((value as string).toLowerCase())
+          : false,
+      onFilterDropdownOpenChange: (visible) => {
+        if (visible) {
+          setTimeout(() => searchInput.current?.select(), 100);
+        }
+      },
+      render: (text: string) =>
+        coursesFilter[dataIndex]
+          ? renderHighlightText(
+              text ? text.toString() : "",
+              coursesFilter[dataIndex][0]
+            )
+          : text,
+    };
   };
 
   const courseColumns = [
@@ -234,20 +224,20 @@ export default function Courses() {
         children: <div>{text}</div>,
       }),
       sorter: true,
-      ...getColumnSearchProps("name")
+      ...getColumnSearchProps("name"),
     },
     {
       title: "Description",
       dataIndex: "description",
       key: "description",
       sorter: true,
-      ...getColumnSearchProps("description")
+      ...getColumnSearchProps("description"),
     },
     {
       title: "Units",
       dataIndex: "units",
       key: "units",
-      sorter: true
+      sorter: true,
     },
     {
       title: "Actions",
@@ -255,9 +245,11 @@ export default function Courses() {
       render: (_: any, record: Unit) => (
         <>
           <Link href={`/courses/view/${record.id}`}>View</Link>
-          {canEditCourses && <Link style={{ marginLeft: "13px" }} href={`/courses/${record.id}`}>
-            Edit
-          </Link>}
+          {canEditCourses && (
+            <Link style={{ marginLeft: "13px" }} href={`/courses/${record.id}`}>
+              Edit
+            </Link>
+          )}
         </>
       ),
     },
@@ -272,40 +264,27 @@ export default function Courses() {
         showModal={() => {}}
         onChange={handleFilterChange}
       />
-      <Button onClick={showModal}>Create a Course</Button>
+      {canEditCourses && <Button onClick={showModal} style={{marginTop: "13px"}}>Create a Course</Button>}
       <Pagination
-          className="tower_element"
-          current={currentPage}
-          total={coursesCount}
-          pageSize={pageSize}
-          onChange={handlePageChange}
-          onShowSizeChange={handlePageSizeChange}
-          showSizeChanger
-          showQuickJumper
+        className="tower_element"
+        current={currentPage}
+        total={coursesCount}
+        pageSize={pageSize}
+        onChange={handlePageChange}
+        onShowSizeChange={handlePageSizeChange}
+        showSizeChanger
+        showQuickJumper
+      />
+      {modalVisible && (
+        <CourseModal
+          modalData={{}}
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          setRefetch={setRefetch}
+          refetch={refetch}
+          roles={roles}
         />
-      <Modal
-        title="Create a Course"
-        visible={modalVisible}
-        onOk={handleOk}
-        onCancel={handleCancel}
-      >
-        <Input
-          placeholder="Course Name"
-          value={newCourse.name}
-          onChange={(e: any) =>
-            setNewCourse({ ...newCourse, name: e.target.value })
-          }
-        />
-
-        <Input
-          style={{ marginTop: "13px" }}
-          placeholder="Course Description"
-          value={newCourse.description}
-          onChange={(e: any) =>
-            setNewCourse({ ...newCourse, description: e.target.value })
-          }
-        />
-      </Modal>
+      )}
     </Layout>
   );
 }

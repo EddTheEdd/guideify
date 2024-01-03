@@ -1,3 +1,4 @@
+import currencyNameValueMap from "@/app/config/currencyNameValueMap";
 import knex from "@/dbConfig/knexConfig"; // Update this path according to your project structure
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextApiRequest, NextApiResponse } from "next";
@@ -33,6 +34,14 @@ export async function POST(req: NextRequest) {
     let updatedConfig;
 
     if (currency) {
+
+      if (!Object.keys(currencyNameValueMap).includes(currency)) {
+        return NextResponse.json(
+          { frontendErrorMessage: "Invalid currency." },
+          { status: 400 }
+        );
+      }
+
       // check if requested currency has been altered from what is in db:
       const data: any = await knex("site_config")
         .select("*")
@@ -48,6 +57,14 @@ export async function POST(req: NextRequest) {
     }
 
     if (defaultEntriesPerPage) {
+
+      if (defaultEntriesPerPage < 1 || defaultEntriesPerPage > 100) {
+        return NextResponse.json(
+          { frontendErrorMessage: "Invalid number of entries per page." },
+          { status: 400 }
+        );
+      }
+
       // check if requested defaultEntriesPerPage has been altered from what is in db:
       const data2: any = await knex("site_config")
         .select("*")
