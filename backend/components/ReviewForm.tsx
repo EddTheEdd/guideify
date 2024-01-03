@@ -111,7 +111,6 @@ const ReviewForm: React.FC<QuestFormProps> = ({
     console.log(hasDoneQuest),
     (
       <Form className="questform_quest_block" style={{maxWidth: "1200px", margin: "auto"}}>
-        {completed && (<p style={{textAlign: "center"}}>This test has been completed, so you can't review it anymore!</p>)}
         {quest.map(
           (question: any, index: number) => (
             console.log(question),
