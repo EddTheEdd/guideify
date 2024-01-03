@@ -8,6 +8,7 @@ import {
   InfoCircleFilled,
 } from "@ant-design/icons";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const { Option } = Select;
 
@@ -33,6 +34,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
   const [answerData, setAnswerData] = useState<any>({});
   const [submittedData, setSubmittedData] = useState<any>({});
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const router = useRouter();
   console.log(quest);
   console.log(completed);
 
@@ -60,7 +62,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
       const data = await res.data;
       if (data.success) {
         message.success("Answers submitted successfully");
-        setReviewSubmitted(true);
+        router.push("/courses/submissions");
       } else {
         message.error("Failed to submit answers");
       }
