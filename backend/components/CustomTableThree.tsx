@@ -307,10 +307,9 @@ const CustomTableThree: React.FC<Props> = ({ data, columns, onChange }) => {
 
   const expandedRowRender = (record: any) => {
     const processedData = subTableData.get(record.key) || [];
-    const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "3");
     const pageState = paginationStates[record.key] || {
       currentPage: 1,
-      pageSize: defaultEntriesPerPage || 3,
+      pageSize: 3,
     };
     const indexOfLastItem = pageState.currentPage * pageState.pageSize;
     const indexOfFirstItem = indexOfLastItem - pageState.pageSize;

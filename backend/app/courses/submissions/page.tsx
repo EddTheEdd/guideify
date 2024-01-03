@@ -36,13 +36,12 @@ interface UserSort {
 }
 
 export default function CourseSubmissions() {
-  const defaultEntriesPerPage: number = localStorage ? parseInt(localStorage.getItem("defaultEntriesPerPage") || "10") : 10;
   const [userFilter, setUserFilter] = useState<UserFilter>({});
   const [userSort, setUserSort] = useState<UserSort>({});
   const [users, setUsers] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
+  const [pageSize, setPageSize] = useState(10);
   const [newCourse, setNewCourse] = useState<Course>({
     name: "",
     description: "",

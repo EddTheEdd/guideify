@@ -56,7 +56,6 @@ interface CoursesSort {
 
 export default function Courses() {
   const { userPermissions, theme } = useGlobalContext();
-  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [courses, setCourses] = useState<Course[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
@@ -64,11 +63,11 @@ export default function Courses() {
   const [coursesFilter, setCoursesFilter] = useState<CoursesFilter>({});
   const [coursesSort, setCoursesSort] = useState<CoursesSort>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
+  const [pageSize, setPageSize] = useState(10);
   const [coursesCount, setCoursesCount] = useState(0);
   const [refetch, setRefetch] = useState(false);
+  const [loading, setLoading] = useState(true);
   const canEditCourses = userPermissions.includes("Edit Courses");
-  
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -99,6 +98,7 @@ export default function Courses() {
         if (data.success) {
           setCourses(data.courses);
           setCoursesCount(data.coursesCount);
+          setLoading(false);
         } else {
           console.error("Failed to fetch courses", data.error);
         }
@@ -109,7 +109,14 @@ export default function Courses() {
 
     canEditCourses && fetchRoles(); // fetch roles only if user can edit courses
     fetchCourses();
-  }, [coursesFilter, coursesSort, currentPage, pageSize, refetch]);
+  }, [
+    coursesFilter,
+    coursesSort,
+    currentPage,
+    pageSize,
+    refetch,
+    canEditCourses,
+  ]);
 
   const showModal = () => {
     setModalVisible(true);
@@ -258,14 +265,20 @@ export default function Courses() {
   return (
     <Layout>
       <CustomTableTwo
+        loading={loading}
         data={courses}
         columns={courseColumns}
         sideModalFeature={false}
         showModal={() => {}}
         onChange={handleFilterChange}
       />
-      {canEditCourses && <Button onClick={showModal} style={{marginTop: "13px"}}>Create a Course</Button>}
+      {canEditCourses && (
+        <Button onClick={showModal} style={{ marginTop: "13px" }}>
+          Create a Course
+        </Button>
+      )}
       <Pagination
+        style={{marginTop: "13px"}}
         className="tower_element"
         current={currentPage}
         total={coursesCount}

@@ -47,6 +47,7 @@ const CustomTableTwo: React.FC<Props> = ({ data, columns, sideModalFeature, show
         })}
         onChange={onChange}
         pagination={false}
+        loading={loading}
       />
   );
 };

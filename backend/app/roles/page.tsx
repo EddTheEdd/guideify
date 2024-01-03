@@ -44,10 +44,9 @@ export default function Roles() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selectedRole, setSelectedRole] = useState<any>(null);
   const [roleNameTouched, setRoleNameTouches] = useState(false);
-  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRoles, setTotalRoles] = useState(0);
-  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
+  const [pageSize, setPageSize] = useState(10);
 
   const handlePageChange = (page: number) => {
     console.log(page);

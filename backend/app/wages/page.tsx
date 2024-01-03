@@ -111,8 +111,8 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
   refetch,
   setIsModalVisible,
 }) => {
-  const currency: string = localStorage.getItem("currency") || "EUR";
   const [disableForm, setDisableForm] = useState(false);
+  const [currency, setCurrency] = useState("EUR");
   const { userPermissions, theme } = useGlobalContext();
   console.log(userPermissions);
   const canEditSalaries = userPermissions.includes('Edit Salaries');
@@ -127,6 +127,10 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
     });
     return remainingSalary;
   };
+
+  useEffect(() => {
+    setCurrency(localStorage.getItem("currency") || "EUR")
+  }, []);
 
   const handleSubmit = async () => {
     const createSalary = async () => {
@@ -345,7 +349,6 @@ interface UserSort {
 }
 
 export default function Wages() {
-  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [users, setUsers] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -358,7 +361,7 @@ export default function Wages() {
   const [userFilter, setUserFilter] = useState<UserFilter>({});
   const [userSort, setUserSort] = useState<UserSort>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
+  const [pageSize, setPageSize] = useState(10);
   const [refetch, setRefetch] = useState(false);
 
   const [departments, setDepartments] = useState<any[]>([]);

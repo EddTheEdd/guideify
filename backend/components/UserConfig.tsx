@@ -40,14 +40,13 @@ interface UsersSort {
 }
 
 const UserConfig: React.FC = () => {
-  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [totalUsers, setTotalUsers] = useState(0);
   const [usersFilter, setUsersFilter] = useState<UsersFilter>({});
   const [usersSort, setUsersSort] = useState<UsersSort>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
+  const [pageSize, setPageSize] = useState(10);
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);

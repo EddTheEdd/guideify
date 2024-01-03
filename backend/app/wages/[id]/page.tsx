@@ -30,12 +30,11 @@ interface SortProps {
 
 export default function UserWages({ params }: any) {
   const id = params.id;
-  const defaultEntriesPerPage: number = parseInt(localStorage.getItem("defaultEntriesPerPage") || "10");
   const [usersSalaries, setUsersSalaries] = useState<Salary[]>([]);
   const [refetch, setRefetch] = useState(false);
   const [salarySort, setSalarySort] = useState<SortProps>({});
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(defaultEntriesPerPage || 10);
+  const [pageSize, setPageSize] = useState(10);
   const [totalSalaries, setTotalSalaries] = useState(0);
 
 
