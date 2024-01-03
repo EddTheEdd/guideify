@@ -140,6 +140,7 @@ export default function CourceView({ params }: any) {
   const [loading, setLoading] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(0);
   const [newCourse, setNewCourse] = useState<Course>({
+    rgb_value: "rgb(22, 119, 255)",
     name: "",
     description: "",
     units: 0,
