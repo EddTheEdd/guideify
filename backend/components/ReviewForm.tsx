@@ -32,6 +32,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
 }) => {
   const [answerData, setAnswerData] = useState<any>({});
   const [submittedData, setSubmittedData] = useState<any>({});
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
   console.log(quest);
   console.log(completed);
 
@@ -48,7 +49,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
     };
 
     fetchSubmittedData();
-  }, []);
+  }, [reviewSubmitted, quest]);
 
   const submitAnswers = async () => {
     try {
@@ -59,9 +60,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
       const data = await res.data;
       if (data.success) {
         message.success("Answers submitted successfully");
-        // if (typeof window !== 'undefined') {
-        //   window.location.reload();
-        // }
+        setReviewSubmitted(true);
       } else {
         message.error("Failed to submit answers");
       }
@@ -211,8 +210,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
                                 {
                                   <Checkbox
                                     className={
-                                      completed
-                                        ? (question.checked_answers.includes(answerIndex)
+                                      (question.checked_answers.includes(answerIndex)
                                             ? "answer_block_checkbox_basic_check" +
                                               (!question?.answer.includes(answerIndex)
                                                 ? " missed"
@@ -223,7 +221,6 @@ const ReviewForm: React.FC<QuestFormProps> = ({
                                             : question?.answer.includes(answerIndex)
                                               ? "answer_block_checkbox_basic_check incorrect"
                                               : "")
-                                        : undefined // Ensures that if not completed, className receives 'undefined'
                                     }
                                     checked={
                                       question.checked_answers.includes(

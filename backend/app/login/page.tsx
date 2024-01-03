@@ -44,9 +44,9 @@ export default function LoginPage() {
         password,
       });
       console.log("Login success", response.data);
-      // if (typeof window !== 'undefined') {
-      //   localStorage.setItem("currency", response.data.site_config.currency);
-      // }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("currency", response.data.site_config.currency);
+      }
       router.push("/home");
     } catch (error: any) {
       setLoginFail(true);

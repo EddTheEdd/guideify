@@ -32,6 +32,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({
       return acc;
     }, {}));
   const [submittedData, setSubmittedData] = useState<any>({});
+  const [answersSubmitted, setAnswersSubmitted] = useState(false);
   console.log(quest);
   console.log(completed);
 
@@ -59,10 +60,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({
       const data = await res.data;
       if (data.success) {
         message.success("Answers submitted successfully");
-        // reload window:
-        // if (typeof window !== 'undefined') {
-        //   window.location.reload();
-        // }
+        setAnswersSubmitted(true);
       } else {
         message.error("Failed to submit answers");
       }
@@ -107,7 +105,7 @@ const AnswerForm: React.FC<QuestFormProps> = ({
     console.log(answerData),
     console.log(hasDoneQuest),
     (
-        (hasDoneQuest && !completed) ? (
+        ((hasDoneQuest && !completed) || answersSubmitted) ? (
           <div style={{textAlign: "center"}}>
           <p>You have submitted your answers! Wait for someone to review them and then they will be available here!</p>
           <Link href={`/courses/view/${courseId}`}>Return to course menu</Link>

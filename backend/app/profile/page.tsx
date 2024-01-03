@@ -37,7 +37,7 @@ export default function ProfilePage({ params }: any) {
       const formattedUserData = {
         ...fetchedUserData,
         date_of_birth: fetchedUserData.date_of_birth
-          ? dayjs(fetchedUserData.date_of_birth).toDate()
+          ? dayjs(fetchedUserData.date_of_birth)
           : null,
       };
 
