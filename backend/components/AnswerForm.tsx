@@ -60,7 +60,9 @@ const AnswerForm: React.FC<QuestFormProps> = ({
       if (data.success) {
         message.success("Answers submitted successfully");
         // reload window:
-        window.location.reload();
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
       } else {
         message.error("Failed to submit answers");
       }
