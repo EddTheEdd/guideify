@@ -59,9 +59,9 @@ const ReviewForm: React.FC<QuestFormProps> = ({
       const data = await res.data;
       if (data.success) {
         message.success("Answers submitted successfully");
-        if (typeof window !== 'undefined') {
-          window.location.reload();
-        }
+        // if (typeof window !== 'undefined') {
+        //   window.location.reload();
+        // }
       } else {
         message.error("Failed to submit answers");
       }
