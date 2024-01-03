@@ -8,7 +8,7 @@ export async function GET() {
         });
 
         // Set the Cache-Control header to no-cache
-        response.headers.set('Cache-Control', 'no-cache');
+        response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
         response.cookies.set("token", "", { httpOnly: true, expires: new Date(0) });
         return response;
