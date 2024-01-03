@@ -5,9 +5,8 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import Layout from "../../components/Layout";
-import { DatePicker, Divider, Form, Input } from "antd";
+import { DatePicker, Divider, Form, Input, InputNumber } from "antd";
 import dayjs from "dayjs";
-import PhoneInput from "antd-phone-input";
 
 interface UserData {
   username: string;
@@ -78,7 +77,7 @@ export default function ProfilePage({ params }: any) {
             <DatePicker disabled={true} placeholder="Date of Birth" />
           </Form.Item>
           <Form.Item required={false} name="phone_number" label="Phone Number">
-            <PhoneInput disabled={true} enableSearch />
+            <InputNumber disabled={true} />
           </Form.Item>
         </Form>
       </div>

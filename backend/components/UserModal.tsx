@@ -13,9 +13,8 @@ import {
   Form,
   DatePicker,
   Select,
+  InputNumber,
 } from "antd";
-import PhoneInput from "antd-phone-input";
-
 
 interface Props {
   onFinish: (value: any) => void;
@@ -184,7 +183,7 @@ const UserModal: React.FC<Props> = ({
           <DatePicker placeholder="Date of Birth" />
         </Form.Item>
         <Form.Item required={false} name="phone_number" label="Phone Number">
-          <PhoneInput enableSearch/>
+          <InputNumber />
         </Form.Item>
         <Form.Item
           name={"department_name"}

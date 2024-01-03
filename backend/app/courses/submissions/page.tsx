@@ -87,13 +87,6 @@ export default function CourseSubmissions() {
       const data = await res.json();
 
       if (data.success) {
-        // transform phone number:
-        data.users.forEach((user: any) => {
-          if (user.phone_number) {
-            user.phone_number = JSON.parse(user.phone_number);
-            user.phone_number = `+${user.phone_number.countryCode} ${user.phone_number.areaCode} ${user.phone_number.phoneNumber}`;
-          }
-        });
         setUsers(data.users);
         setTotalUsers(data.totalUsers);
       } else {
