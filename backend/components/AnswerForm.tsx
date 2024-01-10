@@ -33,11 +33,8 @@ const AnswerForm: React.FC<QuestFormProps> = ({
     }, {}));
   const [submittedData, setSubmittedData] = useState<any>({});
   const [answersSubmitted, setAnswersSubmitted] = useState(false);
-  console.log(quest);
-  console.log(completed);
 
   useEffect(() => {
-    console.log("fettch stuff:");
     const fetchSubmittedData = async () => {
       try {
         const res = await axios.get(`/api/user-answers/${quest[0].quest_id}`);
@@ -101,9 +98,6 @@ const AnswerForm: React.FC<QuestFormProps> = ({
   };
 
   return (
-    console.log(quest),
-    console.log(answerData),
-    console.log(hasDoneQuest),
     (
         ((hasDoneQuest && !completed) || answersSubmitted) ? (
           <div style={{textAlign: "center"}}>
@@ -164,9 +158,6 @@ const AnswerForm: React.FC<QuestFormProps> = ({
                       <div className="questform_answer_block">
                         {question?.answers.map(
                           (answer: any, answerIndex: number) => (
-                            console.log(answerIndex),
-                            console.log(question.checked_answers),
-                            console.log(completed && ((question.checked_answers && question?.checked_answers?.includes(answerIndex)) || (question?.answer.includes(answerIndex)))),
                             <div
                               key={answerIndex}
                               style={{ display: "flex", alignItems: "center" }}

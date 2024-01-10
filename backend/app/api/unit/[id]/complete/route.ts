@@ -2,6 +2,11 @@ import pool from "@/dbConfig/pgConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Mark a unit as complete
+ * @param request 
+ * @returns 
+ */
 export async function POST(request: NextRequest) {
   const userId = getDataFromToken(request);
 

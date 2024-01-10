@@ -4,15 +4,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkUserPermissions } from "@/utils/permissions";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 
+/**
+ * Offer salary
+ * @param request 
+ * @returns 
+ */
 export async function POST(request: NextRequest) {
   try {
     const reqBody = await request.json();
 
+    // Validate the requester
     const userId = getDataFromToken(request);
 
+    // Extract from the body
     const { base_salary, bonus, allowance, user_id, deductibles } =
       reqBody;
 
+    // Validate the values:
     if (!user_id) {
       return NextResponse.json(
         { error: "User ID is required." },
@@ -20,13 +28,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!base_salary) {
+    if (base_salary === null) {
       return NextResponse.json(
-        { error: "Base salary is required." },
+        { frontendErrorMessage: "Base salary is required." },
         { status: 400 }
       );
     }
 
+    if (base_salary < 0 || base_salary > 100000) {
+      return NextResponse.json(
+        { frontendErrorMessage: "Base salary cannot be out of range (0-100000)" },
+        { status: 400 }
+      );
+    }
+
+    if (bonus < 0 || bonus > 100000) {
+      return NextResponse.json(
+        { frontendErrorMessage: "Bonus cannot be out of range (0-100000)" },
+        { status: 400 }
+      );
+    }
+
+    if (allowance < 0 || allowance > 100000) {
+      return NextResponse.json(
+        { frontendErrorMessage: "Allowance cannot be out of range (0-100000)" },
+        { status: 400 }
+      );
+    }
+
+    // Check for permission
     const hasPermission = await checkUserPermissions(userId, 'Edit Salaries');
     if (!hasPermission) {
       return NextResponse.json(
@@ -150,10 +180,23 @@ export async function POST(request: NextRequest) {
 
 export async function GET(_request: NextRequest) {
   try {
+    const tokenUserId = getDataFromToken(_request);
+
     const userId = _request.nextUrl.pathname.split("/").pop();
 
     const getall = _request.nextUrl.searchParams.get("getall");
     console.log(getall);
+
+    if (tokenUserId !== userId) {
+      const hasPermission = await checkUserPermissions(tokenUserId, 'View Salaries');
+      if (!hasPermission) {
+        return NextResponse.json(
+          { error: "Forbidden! You do not have permission to view salaries. Permission required: View Salaries." },
+          { status: 403 }
+        );
+      }
+    }
+    
     if (getall) {
       const page = parseInt(_request.nextUrl.searchParams.get("page") || '1', 10);
       const limit = parseInt(_request.nextUrl.searchParams.get("limit") || '10', 10);

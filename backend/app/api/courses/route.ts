@@ -25,8 +25,15 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest) {
   try {
+
+    // Validate the requester:
     const userId = getDataFromToken(request);
 
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to create a course." }, { status: 403 });
+    }
+
+    // Check for permissions:
     const canEditCourses = await checkUserPermissions(
       userId,
       "Edit Courses"
@@ -39,8 +46,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract the values from body:
     const reqBody = await request.json();
     const { name, description, role_ids, color } = reqBody;
+
+    // Check for missing required values:
+    if (!name) {
+      return NextResponse.json(
+        { frontendErrorMessage: "Course name is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!description) {
+      return NextResponse.json(
+        { frontendErrorMessage: "Course description is required." },
+        { status: 400 }
+      );
+    }
 
     // Handle unique checks:
 
@@ -94,15 +117,28 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Get courses
+ * @param _request 
+ * @returns 
+ */
 export async function GET(_request: NextRequest) {
   try {
+    
+    // Validate the requester:
     const userId = getDataFromToken(_request);
 
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to view courses." }, { status: 403 });
+    }
+
+    // Get permissions:
     const canSeeAllCourses = await checkUserPermissions(
       userId,
       "See All Courses"
     );
 
+    // Extract the values from the url:
     const page = parseInt(_request.nextUrl.searchParams.get("page") || "1", 10);
     const limit = parseInt(
       _request.nextUrl.searchParams.get("limit") || "10",
@@ -121,6 +157,7 @@ export async function GET(_request: NextRequest) {
     const nameFilter = _request.nextUrl.searchParams.get("name");
     const descriptionFilter = _request.nextUrl.searchParams.get("description");
 
+    // Build query:
     let query;
     let totalCoursesCount;
     if (canSeeAllCourses) {
@@ -181,10 +218,11 @@ export async function GET(_request: NextRequest) {
 
     const result: any = await query;
     console.log(result);
-    // count courses:
+    // Count total courses:
     const countQuery = knex("courses").count("* as total").first();
     const coursesCount = await countQuery;
 
+    // Return the result:
     return NextResponse.json({
       success: true,
       courses: result.map((row: any) => ({

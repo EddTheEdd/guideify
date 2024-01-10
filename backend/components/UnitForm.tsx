@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Select, Input, Button, message, Divider } from "antd";
+import { Form, Select, Input, Button, message, Divider, InputNumber } from "antd";
 import axios from "axios";
 import TextEditor from "./TextEditor";
 import QuestForm from "./QuestForm";
@@ -64,6 +64,26 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
 
   const handleSubmit = async () => {
     try {
+      if (!unitName) {
+        message.error("Please enter a unit name");
+        return;
+      }
+      if (!unitDescription) {
+        message.error("Please enter a unit description");
+        return;
+      }
+      if (!order) {
+        message.error("Please enter a unit weight");
+        return;
+      }
+      if (unitType === "text" && !formData.content) {
+        message.error("Please enter unit content!");
+        return;
+      }
+      if (unitType === "video" && !formData.videoUrl) {
+        message.error("Please enter a video url!");
+        return;
+      }
       if (!unitType) {
         message.error("Please select a unit type");
         return;
@@ -132,6 +152,14 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
     video: "Video Content",
   };
 
+  const validateYouTubeURL = (_: any, value: any) => {
+    const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/watch\?v=.+$/;
+    if (!value || pattern.test(value)) {
+      return Promise.resolve();
+    }
+    return Promise.reject(new Error('Please enter a valid YouTube video URL'));
+  };
+
   return (
     console.log(formData),
     (
@@ -144,6 +172,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
             name="unitName"
             initialValue={unit.title}
             required={true}
+            rules={[
+              {
+                required: true,
+                message: "Please input the unit name!",
+              },
+            ]}
           >
             <Input
               placeholder="New Unit"
@@ -157,6 +191,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
             name="unitDescription"
             initialValue={unit.description}
             required={true}
+            rules={[
+              {
+                required: true,
+                message: "Please input the unit description!",
+              },
+            ]}
           >
             <Input
               placeholder="New Description"
@@ -165,11 +205,18 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
             />
           </Form.Item>
 
-          <Form.Item label="Weight" name="order" initialValue={unit.order} required={true} tooltip={"Higher values sink to the bottom, lower values rise to the top. Allows you to order units."}>
-            <Input
+          <Form.Item rules={[
+              {
+                required: true,
+                message: "Please input the unit weight!",
+              },
+            ]} label="Weight [min -100, max 100]" name="order" initialValue={unit.order} required={true} tooltip={"Higher values sink to the bottom, lower values rise to the top. Allows you to order units."}>
+            <InputNumber
               placeholder="1"
               value={order}
-              onChange={(e: any) => setOrder(e.target.value)}
+              min={-100}
+              max={100}
+              onChange={(value: any) => setOrder(value)}
             />
           </Form.Item>
 
@@ -178,6 +225,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
             name="unitType"
             initialValue={unit.content_type}
             required={true}
+            rules={[
+              {
+                required: true,
+                message: "Please input the unit type!",
+              },
+            ]}
           >
             <Select
               placeholder="Select unit type"
@@ -198,6 +251,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
                 name="course"
                 initialValue={unit.content}
                 required={true}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input the unit content!",
+                  },
+                ]}
               >
                 <TextEditor
                   readOnly={unit?.interacted}
@@ -211,17 +270,26 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
 
           {unitType === "video" && (
             <Form.Item
-              label="Video URL"
+            label="Video URL"
+            name="content"
+            initialValue={unit.content}
+            required={true}
+            rules={[
+              { 
+                required: true, 
+                message: 'Please enter a video URL' 
+              },
+              { 
+                validator: validateYouTubeURL 
+              }
+            ]}
+          >
+            <Input
+              placeholder="Enter video URL"
               name="content"
-              initialValue={unit.content}
-              required={true}
-            >
-              <Input
-                placeholder="Enter video URL"
-                name="content"
-                onChange={handleInputChange}
-              />
-            </Form.Item>
+              onChange={handleInputChange}
+            />
+          </Form.Item>
           )}
 
           {unitType === "quest" && (
@@ -231,6 +299,12 @@ const UnitForm: React.FC<UnitFormProps> = ({ courseId, unit, index, setUnits }) 
                 name={`${index}-quest_title`}
                 initialValue={questTitle}
                 required={true}
+                rules={[
+                  {
+                    required: true,
+                    message: "Please input the questionnaire title!",
+                  },
+                ]}
               >
                 <Input
                   disabled={unit?.unit_id}

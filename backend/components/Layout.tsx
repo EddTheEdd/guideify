@@ -16,41 +16,6 @@ import axios from "axios";
 import { useRouter, usePathname } from "next/navigation";
 import { useGlobalContext } from "@/contexts/GlobalContext";
 
-const roleMenu = (
-  <Menu>
-    <Menu.Item key="roles:1">
-      <Link href="/roles">View Roles</Link>
-    </Menu.Item>
-    <Menu.Item key="roles:2">
-      <Link href="/roles/assignment">Role Assignment</Link>
-    </Menu.Item>
-  </Menu>
-);
-
-const coursesMenu = (
-  <Menu>
-    <Menu.Item key="courses:1">
-      <Link href="/courses">View Courses</Link>
-    </Menu.Item>
-    <Menu.Item key="courses:2">
-      <Link href="/courses/submissions">View Course Progress</Link>
-    </Menu.Item>
-  </Menu>
-);
-
-const userProfileMenu = (
-  <Menu>
-    <Menu.Item key="profile:1">
-      <Link href="/profile">Profile Details</Link>
-    </Menu.Item>
-    {true && (
-      <Menu.Item key="profile:2">
-        <Link href="/admin">Admin Page</Link>
-      </Menu.Item>
-    )}
-  </Menu>
-);
-
 const Layout: React.FC<any> = ({ children }) => {
   const router = useRouter();
   const currentPath = usePathname();
@@ -60,11 +25,46 @@ const Layout: React.FC<any> = ({ children }) => {
   const { userPermissions, finishedFetchingPermissions, activeUserId } =
     useGlobalContext();
 
+  const roleMenu = (
+    <Menu>
+      {userPermissions.includes("View Roles") && (<Menu.Item key="roles:1">
+        <Link href="/roles">View Roles</Link>
+      </Menu.Item>)}
+      {userPermissions.includes("Assign Roles") && (<Menu.Item key="roles:2">
+        <Link href="/roles/assignment">Role Assignment</Link>
+      </Menu.Item>)}
+    </Menu>
+  );
+
+  const coursesMenu = (
+    <Menu>
+      <Menu.Item key="courses:1">
+        <Link href="/courses">View Courses</Link>
+      </Menu.Item>
+      {userPermissions.includes("View Course Progress") && (<Menu.Item key="courses:2">
+        <Link href="/courses/submissions">View Course Progress</Link>
+      </Menu.Item>)}
+    </Menu>
+  );
+
+  const userProfileMenu = (
+    <Menu>
+      <Menu.Item key="profile:1">
+        <Link href="/profile">Profile Details</Link>
+      </Menu.Item>
+      {userPermissions.includes("Admin Panel") && (
+        <Menu.Item key="profile:2">
+          <Link href="/admin">Admin Page</Link>
+        </Menu.Item>
+      )}
+    </Menu>
+  );
+
   const wagesMenu = (
     <Menu>
-      <Menu.Item key="wages:1">
+      {userPermissions.includes("View Salaries") && (<Menu.Item key="wages:1">
         <Link href="/wages">Employee Salaries</Link>
-      </Menu.Item>
+      </Menu.Item>)}
       <Menu.Item key="wages:2">
         <Link href={`/wages/${activeUserId}`}>My Salary</Link>
       </Menu.Item>
@@ -126,7 +126,7 @@ const Layout: React.FC<any> = ({ children }) => {
       ),
       key: "home",
     },
-    {
+    (userPermissions.includes("View Roles") || userPermissions.includes("Assign Roles")) && {
       label: (
         <Dropdown
           overlay={roleMenu}
@@ -201,44 +201,44 @@ const Layout: React.FC<any> = ({ children }) => {
 
   return (
     console.log(currentPath),
-    console.log(currentPath.replace(/\/\d+$/, '')),
-    <div style={{height: "100vh"}}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          width: "100%",
-          // height: "5.5rem",
-        }}
-      >
-        {/* Main Menu */}
-        <Menu
-          style={{ width: "86%", paddingTop: "15px", height: "5rem" }}
-          className="guideify_navbar"
-          mode="horizontal"
-          items={menuItems}
-          selectedKeys={[selectedKey]}
-        />
+    console.log(currentPath.replace(/\/\d+$/, "")),
+    (
+      <div style={{ height: "100vh" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            width: "100%",
+            // height: "5.5rem",
+          }}
+        >
+          {/* Main Menu */}
+          <Menu
+            style={{ width: "86%", paddingTop: "15px", height: "5rem" }}
+            className="guideify_navbar"
+            mode="horizontal"
+            items={menuItems}
+            selectedKeys={[selectedKey]}
+          />
 
-        {/* User Menu */}
-        <Menu
-          className="navbar_user_menu"
-          style={{ width: "14%", paddingTop: "15px", height: "5rem" }}
-          mode="horizontal"
-          items={userMenuItems}
-        />
-      </div>
-      {currentPath.includes("admin") ? (
-        <div style={{ height: "89.5vh" }}>{children}</div>
-      ) : (
-        currentPath.includes("courses/view") ? (
+          {/* User Menu */}
+          <Menu
+            className="navbar_user_menu"
+            style={{ width: "14%", paddingTop: "15px", height: "5rem" }}
+            mode="horizontal"
+            items={userMenuItems}
+          />
+        </div>
+        {currentPath.includes("admin") ? (
+          <div style={{ height: "89.5vh" }}>{children}</div>
+        ) : currentPath.includes("courses/view") ? (
           <div style={{ height: "calc(100vh - 100px)" }}>{children}</div>
         ) : (
           <div style={{ margin: "30px", height: "80vh" }}>{children}</div>
-        )
         )}
-    </div>
+      </div>
+    )
   );
 };
 

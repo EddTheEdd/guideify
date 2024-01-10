@@ -5,6 +5,11 @@ import User from "@/models/User";
 import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
 
+/**
+ * Creates a user after a signup
+ * @param request 
+ * @returns 
+ */
 export async function POST(request: NextRequest) {
     try {
         

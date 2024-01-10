@@ -3,7 +3,13 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Request the user submission
+ * @param request 
+ * @returns 
+ */
 export async function GET(request: NextRequest) {
+  // Get the user id from the token
   const tokenUserId = getDataFromToken(request);
 
   if (!tokenUserId) {
@@ -13,8 +19,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Validation check
   const canViewUserUnitProgress = await checkUserPermissions(tokenUserId, "View Course Progress");
 
+  // Get the submission id
   const submissionId = request.nextUrl.pathname.split("/").pop();
 
   const submissionResponse = await pool.query(
@@ -22,6 +30,7 @@ export async function GET(request: NextRequest) {
     [submissionId]
   );
 
+  // Check if submission exists
   if (submissionResponse.rows.length === 0) {
     return NextResponse.json(
       { error: "Submission not found." },
@@ -29,9 +38,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // What state is the submission in?
   const submissionCompleted = submissionResponse.rows[0].completed;
   const submissionSubmitted = submissionResponse.rows[0].submitted;
 
+  // Forbidden if cant view
   if (!canViewUserUnitProgress) {
     return NextResponse.json(
       { frontendErrorMessage: "Forbidden." },
@@ -39,6 +50,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // If the submission is not completed or submitted, the user is still answering the test
   if (!submissionCompleted && !submissionSubmitted) {
     return NextResponse.json(
       { frontendErrorMessage: "The user is still answering this test, you will be able to review it once it has been submitted." },
@@ -46,9 +58,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Get the unit id
   const unitId = submissionResponse.rows[0].unit_id;
   const userId = submissionResponse.rows[0].user_id;
 
+  // Unit is required
   if (!unitId) {
     return NextResponse.json(
       { error: "Unit ID is required." },
@@ -57,6 +71,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Get the unit
     const result = await pool.query(
       `
               SELECT * FROM units WHERE unit_id = $1
@@ -68,8 +83,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unit not found." }, { status: 404 });
     }
 
-    const unit = result.rows[0];
+    const unit = result.rows[0]; // This is our unit
 
+    // Get the progress
     const progressResult = await pool.query(
       `
         SELECT * FROM user_unit_progress WHERE unit_id = $1 AND user_id = $2
@@ -77,8 +93,8 @@ export async function GET(request: NextRequest) {
       [unitId, userId]
     );
 
-    let wasInserted = false;
-    if (progressResult.rows.length === 0) {
+    let wasInserted = false; // Was the submission inserted?
+    if (progressResult.rows.length === 0) { // if there is no progress, insert it
       const insertProgressResult = await pool.query(
         `
                     INSERT INTO user_unit_progress (user_id, unit_id) VALUES ($1, $2)
@@ -87,7 +103,7 @@ export async function GET(request: NextRequest) {
                 `,
         [userId, unitId]
       );
-      const progress = {
+      const progress = { // Set the progress
         completed: false,
       };
       unit.progress = progress;
@@ -95,7 +111,7 @@ export async function GET(request: NextRequest) {
       unit.progress = progressResult.rows[0];
     }
 
-    let hasAnsweredThisQuiz = false;
+    let hasAnsweredThisQuiz = false; // Has the user answered this quiz?
     if (unit.content_type === "quest") {
       // check if there is atleast one user answer as a flag for the user having done the quest
       const atleastOneAnswer = await pool.query(
@@ -106,7 +122,7 @@ export async function GET(request: NextRequest) {
       );
 
       if (atleastOneAnswer.rows.length > 0) {
-        hasAnsweredThisQuiz = true;
+        hasAnsweredThisQuiz = true; // The user has answered this quiz
       }
 
       // Get the questionnaire but without the answers
@@ -121,14 +137,14 @@ export async function GET(request: NextRequest) {
         [unit.quest_id, userId]
       );
 
-      if (!hasAnsweredThisQuiz) {
+      if (!hasAnsweredThisQuiz) { // If hasnt answered this quiz we remove the answers because we will send the submission to the user
         questResult.rows.forEach((question: any) => {
           delete question.checked_answers;
           delete question.correct_answer;
         });
       }
 
-      unit.questionnaire = questResult.rows;
+      unit.questionnaire = questResult.rows; // This is the questionnaire
     }
 
     return NextResponse.json({

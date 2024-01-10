@@ -5,11 +5,22 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Returns site configuration
+ * @param req 
+ * @returns 
+ */
 export async function GET(req: NextRequest) {
   try {
+    // Get validation
+    const userId = getDataFromToken(req);
+
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to view site config." }, { status: 403 });
+    }
+
+    // Fetch from site config table
     const data: any = await knex("site_config").select("*");
-    console.log("CONFIG:");
-    console.log(data);
 
     let site_config: any = {};
     data.forEach((config: any) => {
@@ -25,14 +36,28 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Update site config
+ * @param req 
+ * @returns 
+ */
 export async function POST(req: NextRequest) {
   try {
+
+    // Get validation
     const userId = getDataFromToken(req);
 
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to edit site config." }, { status: 403 });
+    }
+
+    // Extract data from request
     const reqBody = await req.json();
     const { currency, defaultEntriesPerPage } = reqBody;
     let updatedConfig;
 
+
+    // If currency is provided, check if it is valid
     if (currency) {
 
       if (!Object.keys(currencyNameValueMap).includes(currency)) {
@@ -48,6 +73,7 @@ export async function POST(req: NextRequest) {
         .where("config_name", "currency")
         .where("value", currency);
 
+      // If currency is different from what is in db, update it
       if (data.length === 0) {
         await knex("site_config")
           .where("config_name", "currency")
@@ -56,6 +82,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // If defaultEntriesPerPage is provided, check if it is valid
     if (defaultEntriesPerPage) {
 
       if (defaultEntriesPerPage < 1 || defaultEntriesPerPage > 100) {

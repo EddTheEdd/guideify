@@ -11,6 +11,7 @@ import {
   Pagination,
   message,
   Modal,
+  DatePicker,
 } from "antd";
 import { useRouter } from "next/navigation";
 import {
@@ -52,12 +53,13 @@ const UserConfig: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalData, setModalData] = useState<any>({});
   const [refetch, setRefetch] = useState(false);
-
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const searchInput = useRef<any>(null);
 
   const router = useRouter();
 
   const getColumnSearchProps = (dataIndex: any): ColumnType<DataType> => {
+    const isDateColumn = dataIndex === 'updated_at' || dataIndex === 'created_at';
     return {
       filterDropdown: ({
         setSelectedKeys,
@@ -67,6 +69,15 @@ const UserConfig: React.FC = () => {
         close,
       }: FilterDropdownProps) => (
         <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+          {isDateColumn ? (
+          // Use DatePicker for date columns
+          <DatePicker
+            onChange={(date, dateString) =>
+              setSelectedKeys(dateString ? [dateString] : [])
+            }
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+        ) : (
           <Input
             ref={searchInput}
             placeholder={`Search ${dataIndex}`}
@@ -77,6 +88,7 @@ const UserConfig: React.FC = () => {
             onPressEnter={() => confirm()}
             style={{ marginBottom: 8, display: "block" }}
           />
+          )}
           <Space>
             <Button
               type="primary"
@@ -98,17 +110,23 @@ const UserConfig: React.FC = () => {
         </div>
       ),
       filterIcon: (filtered: boolean) => (
-        <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
       ),
-      onFilter: (value: any, record: any) =>
-        record[dataIndex]
-          ? record[dataIndex]
-              .toString()
-              .toLowerCase()
-              .includes((value as string).toLowerCase())
-          : false,
+      onFilter: (value: any, record: any) => {
+        if (isDateColumn) {
+          return true;  // Ensure this value is returned
+        } else {
+          // Existing filter logic for other columns
+          return record[dataIndex]
+            ? record[dataIndex]
+                .toString()
+                .toLowerCase()
+                .includes((value as string).toLowerCase())
+            : false;
+        }
+      },
       onFilterDropdownOpenChange: (visible) => {
-        if (visible) {
+        if (visible && !isDateColumn) {
           setTimeout(() => searchInput.current?.select(), 100);
         }
       },
@@ -117,7 +135,7 @@ const UserConfig: React.FC = () => {
       
         // Check if the text is a date and format it
         const formattedText = (dataIndex === 'created_at' || dataIndex === "updated_at") ? formatDate(new Date(text)) : text;
-      
+        if (isDateColumn) { return formattedText; }
         // Apply highlighting
         return usersFilter[dataIndex]
           ? renderHighlightText(formattedText, usersFilter[dataIndex][0])
@@ -180,8 +198,8 @@ const UserConfig: React.FC = () => {
   const onFinish = async (values: any) => {
     try {
       console.log(values);
-      // one call to create user, api will check if he exists via email:
-      await axios.post(`/api/users`, { id: modalData.user_id ?? 0, values });
+      // one call to create user, api will check if he exists via id:
+      await axios.post(`/api/users`, { id: modalData.user_id ?? 0, values, passwordTouched });
       setModalVisible(false);
       setRefetch(!refetch); // will cause a refresh which is what we need.
       if (modalData.user_id) {
@@ -205,10 +223,12 @@ const UserConfig: React.FC = () => {
   const showModal = (record: any) => {
     console.log(record);
     setModalData(record);
+    setPasswordTouched(false);
     setModalVisible(true);
   };
 
   const handleCancel = () => {
+    setPasswordTouched(false);
     setModalVisible(false);
   };
 
@@ -368,6 +388,8 @@ const UserConfig: React.FC = () => {
         departments={departments}
         positions={positions}
         onOk={deleteUser}
+        passwordTouched={passwordTouched}
+        setPasswordTouched={setPasswordTouched}
       />
       <Button
         type="default"

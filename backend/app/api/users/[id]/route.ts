@@ -1,8 +1,28 @@
 import knex from "@/dbConfig/knexConfig";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(_request: NextRequest) {
   try {
+    const tokenUserId = getDataFromToken(_request);
+
+    if (!tokenUserId) {
+      return NextResponse.json(
+        { error: "You must be logged in to delete a user." },
+        { status: 403 }
+      );
+    }
+
+    const canAdminPanel = await checkUserPermissions(tokenUserId, "Admin Panel");
+
+    if (!canAdminPanel) {
+      return NextResponse.json(
+        { error: "Forbidden. You do not have permission to delete users. Permission required: Admin Panel" },
+        { status: 403 }
+      );
+    }
+
     const userId = _request.nextUrl.pathname.split("/").pop();
 
     const userQuery = await knex("users")

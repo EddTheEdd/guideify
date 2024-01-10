@@ -24,6 +24,8 @@ interface Props {
   departments: any;
   positions: any;
   onOk: () => void;
+  passwordTouched: boolean;
+  setPasswordTouched: (value: boolean) => void;
 }
 
 const UserModal: React.FC<Props> = ({
@@ -34,6 +36,8 @@ const UserModal: React.FC<Props> = ({
   departments,
   positions,
   onOk,
+  passwordTouched,
+  setPasswordTouched
 }) => {
   console.log("Modal data:");
   console.log(modalData);
@@ -41,11 +45,9 @@ const UserModal: React.FC<Props> = ({
   const [password, setPassword] = useState("filler");
   const [email, setEmail] = useState(modalData?.email || "");
   const [form] = Form.useForm();
-
   const [isEmailValid, setIsEmailValid] = useState(true);
   const [isPasswordValid, setIsPasswordValid] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
-  const [passwordTouched, setPasswordTouched] = useState(false);
 
   const validateEmail = (email: any) => {
     console.log(email);
@@ -97,6 +99,7 @@ const UserModal: React.FC<Props> = ({
   }, [modalData, form]);
 
   return (
+    console.log(passwordTouched),
     console.log(modalData),
     <Modal
       className="user_modal"

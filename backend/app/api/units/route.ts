@@ -1,4 +1,5 @@
 import pool from "@/dbConfig/pgConfig";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -42,25 +43,59 @@ export async function POST(request: NextRequest) {
       quest,
       description
     } = reqBody;
-    console.log({ courseId, title, type, content, videoUrl, order });
     let result;
     let query;
     let message;
     let values;
     let questId: any;
-    console.log(quest);
-    console.log(questTitle);
-    // check if questTitle is present and isnt empty string:
+    
+    const userId = getDataFromToken(request);
+
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to edit a unit." }, { status: 403 });
+    }
+
+    // If someone has interacted with the unit we dont allow changing it:
+    const interactedResult = await pool.query(`
+        SELECT * FROM user_unit_progress WHERE unit_id = $1`, [unitId]);
+    const interacted = interactedResult.rows.length > 0;
+
+    if (interacted) {
+      return NextResponse.json({ error: "You cannot edit a unit that someone has interacted with." }, { status: 403 });
+    }
+
+    // Check input for missing fields:
+    if (!title) {
+      return NextResponse.json({ frontendErrorMessage: "Title is required!" }, { status: 400 });
+    }
+    if (!description) {
+      return NextResponse.json({ frontendErrorMessage: "Description is required!" }, { status: 400 });
+    }
+    if (!type) {
+      return NextResponse.json({ frontendErrorMessage: "Content type is required!" }, { status: 400 });
+    }
+    if (!order) {
+      return NextResponse.json({ frontendErrorMessage: "Order is required!" }, { status: 400 });
+    }
+    if (type === "video" && (!videoUrl || videoUrl === "")) {
+      return NextResponse.json({ frontendErrorMessage: "Video URL is required!" }, { status: 400 });
+    }
+    if (type === "text" && (!content || content === "")) {
+      return NextResponse.json({ frontendErrorMessage: "Text content is required!" }, { status: 400 });
+    }
     if (type === "quest" && (!questTitle || questTitle === "")) {
       return NextResponse.json({ frontendErrorMessage: "Questionnaire title is required!" }, { status: 400 });
     }
     if (type === "quest" && (quest.length === 0 || !quest)) {
       return NextResponse.json({ frontendErrorMessage: "You must provide atleast one question for the questionnaire!" }, { status: 400 });
     }
+
+    // Check if unit has assigned quest with it
     if (quest.length > 0) {
-      // check if questionnaire exists
+      // Does the questionnaire that came with the unit exist in the database?
       result = await pool.query(`SELECT * FROM questionnaires WHERE title = $1`, [questTitle]);
 
+      // If not, insert it:
       if (result.rows.length === 0) {
         query = `INSERT INTO questionnaires (title) VALUES ($1) RETURNING *`;
         values = [questTitle];
@@ -69,20 +104,23 @@ export async function POST(request: NextRequest) {
 
         console.log(result.rows[0]);
       }
-      questId = result.rows[0].quest_id;
+      questId = result.rows[0].quest_id; // Get the questionnaire id
       console.log(questId);
-      if (questId) {
-        const promises = quest.map((question: any) => {
 
-          if (question?.question_id) {
-              if (question?.deletable) {
+      if (questId) {
+        // Lets update, delete or insert questions
+        const promises = quest.map((question: any) => { 
+
+          if (question?.question_id) { // If question has an id, it already exists in the database and we either UPDATE or DELETE
+              if (question?.deletable) { // If marked as deletable, we DELETE
                 query = `DELETE FROM questions WHERE question_id = $1`;
                 values = [question.question_id];
                 console.log(values);
         
-                return pool.query(query, values);
+                return pool.query(query, values); // RETURN the query
               }
 
+              // If not deletable, we UPDATE
               query = `UPDATE questions SET question_text = $1, type = $2, correct_answer = $3, requires_review = $4, "order" = $5, answers = $6, checked_answers = $7 WHERE question_id = $8 RETURNING *`;
               values = [
                 question.question_text,
@@ -96,9 +134,10 @@ export async function POST(request: NextRequest) {
               ];
               console.log(values);
         
-              return pool.query(query, values);
+              return pool.query(query, values); // RETURN the query
           }
 
+          // If question has no id, it is a new question and we INSERT
           query = `INSERT INTO questions (quest_id, question_text, type, correct_answer, requires_review, "order", answers, checked_answers)
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`;
           values = [
@@ -113,10 +152,10 @@ export async function POST(request: NextRequest) {
           ];
           console.log(values);
     
-          return pool.query(query, values);
+          return pool.query(query, values); // RETURN the query
         });
-        console.log(promises);
-        const results = await Promise.all(promises);
+
+        const results = await Promise.all(promises); // Wait for all the queries to finish
     
         results.forEach(result => {
           console.log(result.rows[0]);
@@ -124,6 +163,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // If unitId is present, we UPDATE; otherwise, we INSERT (deletion has its own method)
     if (unitId) {
       console.log("UPDATING UNIT");
       // Update the existing unit
@@ -147,11 +187,9 @@ export async function POST(request: NextRequest) {
       message = "Unit added successfully";
     }
 
-    result = await pool.query(query, values);
+    result = await pool.query(query, values); // Execute the query
 
-    console.log(result.rows[0]);
-
-    // fetch the inserted unit so we can update the state:
+    // Fetch the inserted unit with the questionnaire if it exists, so we can update teh state:
     const insertedUnitId = result.rows[0].unit_id;
     const insertedUnit = await pool.query(`SELECT * FROM units WHERE unit_id = $1`, [insertedUnitId]);
     const insertedUnitObj = insertedUnit.rows[0];

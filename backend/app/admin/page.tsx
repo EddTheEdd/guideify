@@ -20,6 +20,7 @@ import {
   Space,
   Spin,
   message,
+  DatePicker,
 } from "antd";
 import LayoutTwo from "../../components/Layout";
 import { useGlobalContext } from "@/contexts/GlobalContext";
@@ -77,6 +78,7 @@ const AdminPage: React.FC = () => {
   const router = useRouter();
 
   const getColumnSearchProps = (dataIndex: any): ColumnType<DataType> => {
+    const isDateColumn = dataIndex === 'updated_at' || dataIndex === 'created_at';
     return {
       filterDropdown: ({
         setSelectedKeys,
@@ -86,6 +88,15 @@ const AdminPage: React.FC = () => {
         close,
       }: FilterDropdownProps) => (
         <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+          {isDateColumn ? (
+          // Use DatePicker for date columns
+          <DatePicker
+            onChange={(date, dateString) =>
+              setSelectedKeys(dateString ? [dateString] : [])
+            }
+            style={{ marginBottom: 8, display: 'block' }}
+          />
+        ) : (
           <Input
             ref={searchInput}
             placeholder={`Search ${dataIndex}`}
@@ -96,6 +107,7 @@ const AdminPage: React.FC = () => {
             onPressEnter={() => confirm()}
             style={{ marginBottom: 8, display: "block" }}
           />
+          )}
           <Space>
             <Button
               type="primary"
@@ -117,24 +129,35 @@ const AdminPage: React.FC = () => {
         </div>
       ),
       filterIcon: (filtered: boolean) => (
-        <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />
+        <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />
       ),
-      onFilter: (value: any, record: any) =>
-        record[dataIndex]
-          ? record[dataIndex]
-              .toString()
-              .toLowerCase()
-              .includes((value as string).toLowerCase())
-          : false,
+      onFilter: (value: any, record: any) => {
+        if (isDateColumn) {
+          // Compare formatted date strings for date columns
+          return record[dataIndex]
+            ? new Date(record[dataIndex])
+                .toLocaleDateString()
+                .includes(value)
+            : false;
+        } else {
+          // Existing filter logic for other columns
+          return record[dataIndex]
+            ? record[dataIndex]
+                .toString()
+                .toLowerCase()
+                .includes((value as string).toLowerCase())
+            : false;
+        }
+      },
       onFilterDropdownOpenChange: (visible) => {
-        if (visible) {
+        if (visible && !isDateColumn) {
           setTimeout(() => searchInput.current?.select(), 100);
         }
       },
       render: (text: string) =>
         usersFilter[dataIndex]
           ? renderHighlightText(
-              text ? text.toString() : "",
+              text ? text.toString() : '',
               usersFilter[dataIndex][0]
             )
           : text,
@@ -349,7 +372,7 @@ const AdminPage: React.FC = () => {
                 {
                   key: "1",
                   icon: <UserOutlined />,
-                  label: "Users",
+                  label: "User Configuration",
                 },
                 {
                   key: "2",

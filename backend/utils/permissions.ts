@@ -6,6 +6,11 @@ interface RoleWithPermissions {
     permissions: string[];
 }
 
+/**
+ * Gets user roles and permissions.
+ * @param userId 
+ * @returns 
+ */
 export async function getUserRolesAndPermissions(userId: number): Promise<RoleWithPermissions[]> {
     try {
         const userRoles = await knex('user_roles')
@@ -33,6 +38,12 @@ export async function getUserRolesAndPermissions(userId: number): Promise<RoleWi
     }
 }
   
+/**
+ * Check if user has a permission
+ * @param userId 
+ * @param requiredPermission 
+ * @returns 
+ */
 export async function checkUserPermissions(userId: number, requiredPermission: string) {
     const userRoles = await getUserRolesAndPermissions(userId);
     return userRoles.some((role: RoleWithPermissions) => 

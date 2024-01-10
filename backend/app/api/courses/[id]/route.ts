@@ -4,9 +4,15 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Update course
+ * @param request 
+ * @returns 
+ */
 export async function PUT(request: NextRequest) {
     try {
 
+        // Validation check
         const userId = getDataFromToken(request);
 
         const courseId = request.nextUrl.pathname.split('/').pop();
@@ -21,14 +27,34 @@ export async function PUT(request: NextRequest) {
             );
         }
 
+        // Extract values from the body:
+
         const reqBody = await request.json();
         const { name, description, color, role_ids } = reqBody;
 
         // Handle updating course:
 
+        // Check for value validation:
+
         if (!courseId) {
             throw new Error('Course ID is required');
         }
+
+        if (!name) {
+            return NextResponse.json(
+                { frontendErrorMessage: "Course name is required." },
+                { status: 400 }
+            );
+        }
+
+        if (!description) {
+            return NextResponse.json(
+                { frontendErrorMessage: "Course description is required." },
+                { status: 400 }
+            );
+        }
+
+        // Update query:
 
         const updateResult = await knex('courses').update({
             name,
@@ -80,7 +106,14 @@ export async function PUT(request: NextRequest) {
     }
 }
 
+/**
+ * Get a specific course
+ * @param request 
+ * @returns 
+ */
 export async function GET(request: NextRequest) {
+
+    // Validate:
 
     const userId = getDataFromToken(request);
 
@@ -129,6 +162,7 @@ export async function GET(request: NextRequest) {
 
         const courseIsDeletable = doesCourseHaveAnyFilledUnits[0].count === '0';
 
+        // Return course with its data:
         const course = {
             course_id: result[0].course_id,
             name: result[0].name,

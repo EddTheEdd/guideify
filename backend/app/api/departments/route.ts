@@ -5,6 +5,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Get deparments
+ * @param req 
+ * @returns 
+ */
 export async function GET(req: NextRequest) {
   try {
     const data = await knex('departments').select('department_name', 'department_id');
@@ -31,10 +36,19 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Update departments config
+ * @param req 
+ * @returns 
+ */
 export async function POST(req: NextRequest) {
   try {
+
+    // Validate request
     const userId = getDataFromToken(req);
 
+
+    // Check the permissions
     const canEditDepartments = await checkUserPermissions(userId, 'Admin Panel');
 
     if (!canEditDepartments) {
@@ -44,6 +58,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get the departments
     const reqBody = await req.json();
     const { departments } = reqBody;
 
@@ -56,12 +71,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Update the departments
     await Promise.all(departments.map(async (dept: any) => {
       if (dept.forDeletion) {
         await knex('departments').where('department_id', dept.department_id).del();
       } else {
         const existingDept = await knex('departments').where('department_id', dept.department_id).first();
-        console.log("DEP EXISTS:");
         if (existingDept) {
           await knex('departments')
             .where('department_id', dept.department_id)

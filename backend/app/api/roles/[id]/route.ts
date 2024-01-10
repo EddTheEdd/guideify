@@ -4,11 +4,22 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Delete a role
+ * @param request 
+ * @returns 
+ */
 export async function DELETE(request: NextRequest) {
     try {
   
+      // Validating the requester
       const userId = getDataFromToken(request);
   
+      if (!userId) {
+        return NextResponse.json({ error: "You must be logged in to delete a role." }, { status: 403 });
+      }
+
+      // Validate the permission
       const hasPermission = await checkUserPermissions(userId, 'Edit Roles');
       if (!hasPermission) {
         return NextResponse.json(

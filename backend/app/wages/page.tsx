@@ -144,6 +144,11 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
         setRefetch(!refetch);
         setIsModalVisible(false);
       } catch (error: any) {
+        const frontendErrorMessage = error.response?.data?.frontendErrorMessage;
+        if (frontendErrorMessage) {
+          message.error(frontendErrorMessage);
+          return;
+        }
         console.error("Error:", error.message);
 
         if (error.response && error.response.status === 403) {
@@ -200,9 +205,11 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
             handleSubmit();
           }}
         >
+          <p>Ievadāmās vērtības atļauj ievadi no 0 {currency} līdz 100000 {currency} apmērā</p>
           <Form.Item label="Base Salary" required={true}>
             <InputNumber
               min={0}
+              max={100001}
               addonBefore="+"
               addonAfter={currencyNameValueMap[currency]}
               value={selectedSalaryData?.base_salary}
@@ -217,6 +224,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
           <Form.Item label="Bonus">
             <InputNumber
                 min={0}
+                max={100000}
                 addonBefore="+"
                 addonAfter={currencyNameValueMap[currency]}
                 value={selectedSalaryData?.bonus}
@@ -232,6 +240,7 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
           <Form.Item label="Allowance">
             <InputNumber
                 min={0}
+                max={100000}
                 addonBefore="+"
                 addonAfter={currencyNameValueMap[currency]}
                 value={selectedSalaryData?.allowance}
@@ -328,7 +337,12 @@ const SalaryModal: React.FC<SalaryModalProps> = ({
               style={{ marginLeft: "10px" }}
               type="default"
               onClick={() => {
-                generatePayslip(selectedSalaryData);
+                try {
+                  generatePayslip(selectedSalaryData);
+                } catch (error: any) {
+                  console.error(error);
+                  message.error("Error generating payslip");
+                }
               }}
             >
               Download PDF
@@ -519,7 +533,7 @@ export default function Wages() {
       }
     } catch (error) {
       console.error("Error fetching salary data", error);
-      toast.error("Error fetching salary data");
+      toast.error("Error requesting user salary data.");
     }
   };
 
@@ -550,7 +564,7 @@ export default function Wages() {
           setUsers(data.users);
           setTotalUsers(data.totalUsers);
         } else {
-          console.error("Failed to fetch users", data.error);
+          console.error("Error requesting user salary data", data.error);
         }
 
         // if (!canViewSalaries && finishedFetchingPermissions) {
@@ -559,7 +573,7 @@ export default function Wages() {
 
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching courses", error);
+        console.error("Error requesting user salary data", error);
       }
     };
 
@@ -683,13 +697,16 @@ export default function Wages() {
         onFilter:
           dataIndex === "salary_status"
             ? (value: any, record: any) =>
-                value === "salary_ok"
-                  ? record.base_salary != null
-                    ? true
-                    : false
-                  : record.base_salary != null
-                  ? false
-                  : true
+                value === "salary_ok" ?
+                (record.base_salary != null && record.agreed)
+                :
+                (value === "salary_pending" ?
+                (record.base_salary != null && !record.agreed)
+                :
+                (value === "salary_nok" ?
+                (record.base_salary == null)
+                :
+                (false)))
             : (value: any, record: any) =>
                 record[dataIndex]
                   ? record[dataIndex]

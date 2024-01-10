@@ -7,6 +7,7 @@ import UserItem from "./UserItem";
 interface User {
   user_id: number;
   username: string;
+  rgb_value: string;
 }
 
 interface RoleBoxProps {
@@ -25,6 +26,7 @@ const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
   });
 
   return (
+    console.log(users),
     <div
       ref={drop}
       style={{
@@ -32,14 +34,13 @@ const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
         padding: "1rem",
         border: "2px solid black",
         borderRadius: "5px",
-        minWidth: "200px",
-        minHeight: "100px",
         position: "relative",
-        height: "200px"
+        maxWidth: "25rem"
       }}
+      className="role_box_container"
     >
       <div style={{ fontWeight: "900" }}>{role}</div>
-      <div style={{ display: "flex", gap: "5px"}}>
+      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap"}}>
         {users &&
           users.map((user: User, index) => (
             <UserItem
@@ -47,6 +48,7 @@ const RoleBox: React.FC<RoleBoxProps> = ({ role, role_id, users, onDrop }) => {
               id={user.user_id}
               currentRole={role_id}
               username={user.username}
+              color={user?.rgb_value}
             />
           ))}
       </div>

@@ -2,13 +2,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/dbConfig/pgConfig'; // Adjust the import path according to your folder structure
 
+/**
+ * Delete a link between a user and a role
+ * @param request 
+ * @returns 
+ */
 export async function DELETE(request: NextRequest) {
-    console.log(request.url);
     const urlParts = request.url.split('/');
-    const userId = urlParts[5]; // Adjust the index depending on your actual URL structure
+    const userId = urlParts[5];
     const roleId = urlParts[6];
-    console.log(userId);
-    console.log(roleId);
     if (!userId || !roleId) {
         return NextResponse.json({ error: 'User ID and Role ID are required.' }, { status: 400 });
     }

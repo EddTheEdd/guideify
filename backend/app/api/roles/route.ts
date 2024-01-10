@@ -4,11 +4,22 @@ import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Handles creating a new role
+ * @param request 
+ * @returns 
+ */
 export async function POST(request: NextRequest) {
   try {
 
+    // Validating the requester
     const userId = getDataFromToken(request);
 
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to create a role." }, { status: 403 });
+    }
+
+    // Does the requester have permission to edit roles?
     const hasPermission = await checkUserPermissions(userId, 'Edit Roles');
     if (!hasPermission) {
       return NextResponse.json(
@@ -17,10 +28,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract the values
     const reqBody = await request.json();
-    const { name, permissions } = reqBody; // Assuming permissions are an array of permission ids
+    const { name, permissions } = reqBody;
 
-    if (name === "") {
+    // Name is required for the role
+    if (!name) {
       return NextResponse.json(
         { frontendErrorMessage: "Role name is required." },
         { status: 400 }
@@ -31,6 +44,7 @@ export async function POST(request: NextRequest) {
     const roleQuery = "SELECT * FROM roles WHERE name = $1";
     const roleExists = await pool.query(roleQuery, [name]);
 
+    // If role exists, return error
     if (roleExists.rowCount > 0) {
       return NextResponse.json(
         { frontendErrorMessage: "Role with this name already exists." },
@@ -60,11 +74,22 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Updated the role
+ * @param request 
+ * @returns 
+ */
 export async function PUT(request: NextRequest) {
   try {
 
+    // Validating the requester
     const userId = getDataFromToken(request);
 
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to edit a role." }, { status: 403 });
+    }
+
+    // Check for permissions
     const hasPermission = await checkUserPermissions(userId, 'Edit Roles');
     if (!hasPermission) {
       return NextResponse.json(
@@ -73,10 +98,13 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Extract the body elements
     const reqBody = await request.json();
     const { role_name, permissions, original_name } = reqBody;
 
-    if (role_name === "") {
+
+    // Errors if role name empty or if trying to edit root role.
+    if (!role_name) {
       return NextResponse.json(
         { frontendErrorMessage: "Role name is required." },
         { status: 400 }
@@ -89,23 +117,32 @@ export async function PUT(request: NextRequest) {
             { status: 400 }
         );
     }
+
     // Update role:
     const updateRoleQuery = "UPDATE roles SET name = $1 WHERE name = $2 RETURNING *";
     const updatedRole = await pool.query(updateRoleQuery, [role_name, original_name]);
     const roleId = updatedRole.rows[0].role_id;
 
     // Update permissions
-    // remove all permissions for that role:
-    const deletePermissionsQuery =
-      "DELETE FROM role_permissions WHERE role_id = $1";
-    await pool.query(deletePermissionsQuery, [roleId]);
-    // add new ones:
-    const updateRolePermissionsQuery =
-      "INSERT INTO role_permissions (role_id, permission_id) VALUES ($1, $2)";
-    for (const permissionId of permissions) {
-      await pool.query(updateRolePermissionsQuery, [roleId, permissionId]);
-    }
+    // Remove all permissions for that role that do not include our permissions:
+    await knex.transaction(async trx => {
+      // Remove permissions that are no longer needed
+      await trx('role_permissions')
+        .where('role_id', roleId)
+        .whereNotIn('permission_id', permissions)
+        .del();
+    
+      // Insert new permissions and handle conflicts
+      await trx('role_permissions')
+        .insert(permissions.map((permissionId: number) => ({ role_id: roleId, permission_id: permissionId })))
+        .onConflict(['role_id', 'permission_id'])
+        .ignore();
+    
+    }).catch(err => {
+      console.error('Transaction failed: ', err);
+    });
 
+    // Success response
     return NextResponse.json({
       message: "Role updated successfully",
       success: true,
@@ -116,11 +153,22 @@ export async function PUT(request: NextRequest) {
   }
 }
 
+/**
+ * Gets all the roles
+ * @param _request 
+ * @returns 
+ */
 export async function GET(_request: NextRequest) {
   try {
 
+    // Validating the requester
     const userId = getDataFromToken(_request);
 
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to view roles." }, { status: 403 });
+    }
+
+    // Permission check
     const hasPermission = await checkUserPermissions(userId, 'View Roles');
     if (!hasPermission) {
       return NextResponse.json(
@@ -129,11 +177,12 @@ export async function GET(_request: NextRequest) {
       );
     }
 
+    // Parameters
     const page = parseInt(_request.nextUrl.searchParams.get("page") || '1', 10);
     const limit = parseInt(_request.nextUrl.searchParams.get("limit") || '10', 10);
     const offset = (page - 1) * limit;
 
-
+    // Query the roles and permissions
     const result = await knex('roles')
         .select(
           'roles.role_id as role_id',
@@ -146,13 +195,14 @@ export async function GET(_request: NextRequest) {
 
     const totalRoles = await knex('roles').count('role_id');
 
+    // Remove null permissions
     return NextResponse.json({
       success: true,
       roles: result.map((row) => ({
         ...row,
         permissions: row.permissions.filter(
           (permission: any) => permission.permission_id !== null
-        ), // remove null permissions (when a role has no permissions)
+        ),
       })),
       totalRoles: totalRoles[0].count,
     });

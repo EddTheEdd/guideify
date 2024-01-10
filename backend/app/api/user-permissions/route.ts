@@ -8,6 +8,11 @@ interface RoleWithPermissions {
   permissions: string[];
 }
 
+/**
+ * Get the user permissions
+ * @param request 
+ * @returns 
+ */
 export async function GET(request: NextRequest) {
   try {
     const userId = getDataFromToken(request);

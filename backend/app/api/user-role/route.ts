@@ -1,9 +1,21 @@
 // pages/api/assignRoleToUser.ts
 import pool from "@/dbConfig/pgConfig"; 
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Add user role relation
+ * @param request 
+ * @returns 
+ */
 export async function POST(request: NextRequest) {
     try {
+        const tokenUserId = getDataFromToken(request);
+
+        if (!tokenUserId) {
+          return NextResponse.json({ error: "You must be logged in to assign roles." }, { status: 403 });
+        }
+
         const { userId, roleId } = await request.json();
 
         // Check if this user-role relation already exists
@@ -27,8 +39,19 @@ export async function POST(request: NextRequest) {
     }
 }
 
+/**
+ * Get user roles
+ * @param _request 
+ * @returns 
+ */
 export async function GET(_request: NextRequest) {
     try {
+        const userId = getDataFromToken(_request);
+
+        if (!userId) {
+          return NextResponse.json({ error: "You must be logged in to get role data." }, { status: 403 });
+        }
+
         const result = await pool.query("SELECT * FROM user_roles");
         return NextResponse.json({
             success: true,

@@ -154,16 +154,19 @@ const CourseModal: React.FC<Props> = ({
               RGB: <span>{rgbString}</span>
             </Form.Item>
           )}
-
-          <Button danger
-              disabled={!modalData?.course_canBeDeleted}
-              type = "primary"
-              style = {{marginTop: "20px"}}
-              onClick={() => {handleDelete()}}
-            >
-              Delete Course
-          </Button>
-          {!modalData?.course_canBeDeleted && <p>Course cant be deleted because its units have been answered to!</p>}
+          {modalData?.course_id && (
+            <>
+              <Button danger
+                  disabled={!modalData?.course_canBeDeleted}
+                  type = "primary"
+                  style = {{marginTop: "20px"}}
+                  onClick={() => {handleDelete()}}
+                >
+                  Delete Course
+              </Button>
+              {!modalData?.course_canBeDeleted && <p>Course cant be deleted because its units have been answered to!</p>}
+            </>
+          )}
         </Form>
       </Modal>
     )

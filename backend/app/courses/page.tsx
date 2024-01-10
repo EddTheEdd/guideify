@@ -4,18 +4,13 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Layout from "../../components/Layout";
 import {
   Button,
-  Checkbox,
-  Form,
   Input,
-  Modal,
   Pagination,
-  Select,
   Space,
-  message,
 } from "antd";
 import CustomTableTwo from "@/components/CustomTableTwo";
 import { useGlobalContext } from "@/contexts/GlobalContext";
-import type { ColumnType, ColumnsType } from "antd/es/table";
+import type { ColumnType } from "antd/es/table";
 import {
   FilterConfirmProps,
   FilterDropdownProps,
@@ -24,7 +19,6 @@ import { SearchOutlined } from "@ant-design/icons";
 import { renderHighlightText } from "@/helpers/renderHighlightText";
 import { buildQueryString } from "../helpers/buildQueryString";
 import CourseModal from "@/components/CourseModal";
-import { useRouter } from "next/navigation";
 
 interface Course {
   id: number;

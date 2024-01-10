@@ -1,10 +1,27 @@
 import pool from "@/dbConfig/pgConfig";
+import knex from "@/dbConfig/knexConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { NextRequest, NextResponse } from "next/server";
+import { checkUserPermissions } from "@/utils/permissions";
 
+/**
+ * Get unit data form passed unit
+ * @param request 
+ * @returns 
+ */
 export async function GET(request: NextRequest) {
+
+  // Validate the requester
   const userId = getDataFromToken(request);
 
+  if (!userId) {
+    return NextResponse.json(
+      { error: "You must be logged in to view a unit." },
+      { status: 403 }
+    );
+  }
+
+  // Get the unit id
   const unitId = request.nextUrl.pathname.split("/").pop();
 
   if (!unitId) {
@@ -13,6 +30,30 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  // check if user can see all courses:
+  const canSeeAllCourses = await checkUserPermissions(userId, 'See All Courses');
+
+  if (!canSeeAllCourses) {
+    // check if this unit belongs to the users roles:
+    const checkUnitResponse = await knex("units")
+      .leftJoin("courses", "units.course_id", "courses.course_id")
+      .leftJoin("roles_courses", "courses.course_id", "roles_courses.course_id")
+      .leftJoin("roles", "roles_courses.role_id", "roles.role_id")
+      .leftJoin("user_roles", "roles.role_id", "user_roles.role_id")
+      .where("user_roles.user_id", userId)
+      .andWhere("units.unit_id", unitId)
+      .countDistinct("user_roles.user_id as count");
+
+    if (checkUnitResponse[0].count === "0") {
+      return NextResponse.json(
+        { error: "You do not have permission to view this unnit." },
+        { status: 403 }
+      );
+    }
+  }
+
+  
 
   try {
     const result = await pool.query(
@@ -55,7 +96,6 @@ export async function GET(request: NextRequest) {
 
     let hasAnsweredThisQuiz = false;
     if (unit.content_type === "quest") {
-     
       // check if there is atleast one user answer as a flag for the user having done the quest
       const atleastOneAnswer = await pool.query(
         `

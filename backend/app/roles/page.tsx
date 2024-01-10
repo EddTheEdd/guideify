@@ -59,9 +59,9 @@ export default function Roles() {
     setCurrentPage(1);
   };
 
-  // const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
-  // console.log(userPermissions);
-  // const canViewRoles = userPermissions.includes("View Roles");
+  const { userPermissions } = useGlobalContext();
+  console.log(userPermissions);
+  const canEditRoles = userPermissions.includes("Edit Roles");
 
   const fetchRoles = async () => {
     try {
@@ -165,6 +165,7 @@ export default function Roles() {
       toast.success("Role updated successfully");
       fetchRoles();
       setEditRoleModalVisible(false);
+      message.success("Role updated successfully!")
     } catch (error: any) {
       const frontendErrorMessage = error.response.data.frontendErrorMessage;
       if (frontendErrorMessage) {
@@ -208,7 +209,10 @@ export default function Roles() {
       dataIndex: "role_name",
       key: "role_name",
       render: (text, record) => (
+        canEditRoles ?
         text === "ROOT" ? <p>{"ROOT (Uneditable)"}</p> : <a onClick={() => handleRoleClick(record)}>{text}</a>
+        :
+        text
       ),
     },
     {
@@ -262,8 +266,7 @@ export default function Roles() {
             showSizeChanger
             showQuickJumper
           />
-          <Button style={{marginTop: "13px"}} onClick={showModal}>Create a Role</Button>
-
+          { canEditRoles && <Button style={{marginTop: "13px"}} onClick={showModal}>Create a Role</Button> }
           <Modal
             title="Create a Role"
             open={modalVisible}
@@ -282,7 +285,6 @@ export default function Roles() {
             />
             {roleNameTouched && newRole.name === "" && <p style={{color: "red"}}>Role name is required!</p>}
             {permissions.map((permission, index) => (
-              <>
               <div key={permission.permission_id}>
                 <Checkbox
                   checked={newRole.permissions.includes(permission.permission_id)}
@@ -307,12 +309,10 @@ export default function Roles() {
                 <Tooltip title={permissionDescriptions[permission.name]}>
                   <InfoCircleOutlined />
                 </Tooltip>
+                {[1, 5, 8].includes(index) && <Divider />}
               </div>
-              {[1, 5, 8].includes(index) && <Divider />}
-              </>
             ))}
           </Modal>
-
           <Modal
             title="Edit Role"
             open={editRoleModalVisible}
@@ -331,8 +331,7 @@ export default function Roles() {
               {selectedRole && selectedRole.role_name === "" && <p style={{color: "red"}}>Role name is required!</p>}
             <Divider>Permissions</Divider>
             {permissions.map((permission, index: number) => (
-              <>
-                <div key={permission.permission_id}>
+              <div key={permission.permission_id}>
                   <Checkbox
                     checked={
                       selectedRole &&
@@ -347,9 +346,8 @@ export default function Roles() {
                   <Tooltip title={permissionDescriptions[permission.name]}>
                     <InfoCircleOutlined />
                   </Tooltip>
-                </div>
                 {[1, 5, 8].includes(index) && <Divider />}
-              </>
+              </div>
             ))}
             <Button danger
               type = "primary"

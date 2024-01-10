@@ -26,7 +26,8 @@ body {
     rgb(var(--background-start-rgb));
 } */
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -165,22 +166,30 @@ html, body {
   border-radius: 5px;
 }
 
-.answer_block_checkbox_basic_check.missed .ant-checkbox-checked .ant-checkbox-inner {
+.answer_block_checkbox_basic_check.missed
+  .ant-checkbox-checked
+  .ant-checkbox-inner {
   background-color: rgb(225, 136, 58);
   border-color: rgb(181, 88, 33);
 }
 
-.answer_block_checkbox_basic_check.correct .ant-checkbox-checked .ant-checkbox-inner {
-    background-color: rgb(75, 172, 72);
-    border-color: #008100;
+.answer_block_checkbox_basic_check.correct
+  .ant-checkbox-checked
+  .ant-checkbox-inner {
+  background-color: rgb(75, 172, 72);
+  border-color: #008100;
 }
 
-.answer_block_checkbox_basic_check.incorrect .ant-checkbox-checked .ant-checkbox-inner {
+.answer_block_checkbox_basic_check.incorrect
+  .ant-checkbox-checked
+  .ant-checkbox-inner {
   background-color: rgb(232, 27, 27);
   border-color: rgb(106, 6, 6);
 }
 
-.answer_block_checkbox_basic_check .ant-checkbox-checked .ant-checkbox-inner:after {
+.answer_block_checkbox_basic_check
+  .ant-checkbox-checked
+  .ant-checkbox-inner:after {
   border-color: rgb(255, 255, 255) !important;
 }
 
@@ -201,10 +210,10 @@ html, body {
 
 @keyframes slideInFromRight {
   0% {
-      transform: translateX(100%);
+    transform: translateX(100%);
   }
   100% {
-      transform: translateX(0);
+    transform: translateX(0);
   }
 }
 
@@ -231,7 +240,7 @@ hr.rounded_grey {
 }
 
 .role_dropdown_main span:nth-child(2) {
-  transition: transform 0.5s cubic-bezier(.68,-0.55,.27,1.55) !important;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
 }
 
 .dropdown-hover:hover .down-icon {
@@ -250,7 +259,7 @@ hr.rounded_grey {
 .login-container {
   position: relative;
   height: 100vh;
-  background-image: url('https://i.imgur.com/f08hRLF.png');
+  background-image: url("https://i.imgur.com/f08hRLF.png");
   background-size: cover;
   background-position: center;
   display: flex;
@@ -260,13 +269,18 @@ hr.rounded_grey {
 }
 
 .login-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(219, 219, 219, 0.5); /* Adjust the RGBA values as needed */
+  background-color: rgba(
+    219,
+    219,
+    219,
+    0.5
+  ); /* Adjust the RGBA values as needed */
   z-index: 0;
 }
 
@@ -283,7 +297,7 @@ hr.rounded_grey {
 }
 
 .tower_element {
-  margin-top: 13px;
+  margin-top: 13px !important;
 }
 
 .footer {
@@ -337,7 +351,7 @@ hr.rounded_grey {
 }
 
 .flip {
-  transition: transform 0.5s cubic-bezier(.68,-0.55,.27,1.55) !important;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
 }
 
 .flipped {
@@ -356,19 +370,18 @@ hr.rounded_grey {
   align-items: center;
 }
 
-.question_control_buttons{
+.question_control_buttons {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
 }
 
-.role_assignment_rolebox_container{
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  justify-content: center;
-  padding: 10px;
+.role_assignment_rolebox_container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: auto;
 }
 
 .welcome_text_container {
@@ -382,4 +395,83 @@ hr.rounded_grey {
 
 .alert_table {
   max-width: 500px;
+}
+
+.ant-layout-content {
+  overflow-x: scroll;
+}
+
+.container_user_list {
+  border-right: solid 2px black;
+  padding: 16px;
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.role_box_container {
+  flex: 1;
+  padding: 1rem;
+  border: 2px solid black;
+  border-radius: 5px;
+  position: relative;
+}
+
+.parent_container_user_list {
+  margin: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.delete_box_container {
+  padding: 1rem;
+  border: 2px solid black;
+  border-radius: 5px;
+  min-width: 60px;
+  min-height: 60px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media only screen and (min-width: 620px) {
+  .parent_container_user_list {
+    flex-wrap: wrap;
+  }
+  .role_box_container {
+    width: 25rem;
+  }
+  
+}
+
+@media only screen and (max-width: 620px) {
+  .delete_box_container {
+    width: 85%;
+    margin: auto;
+  }
+
+  .container_user_list {
+    border-right: none;
+    border-bottom: solid 2px black;
+    padding: 16px;
+    height: 100%;
+    overflow-y: scroll;
+    min-width: 100px;
+    margin: auto;
+  }
+
+  .container_phone_inner_user_list {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .parent_container_user_list {
+    flex-direction: column;
+  }
 }

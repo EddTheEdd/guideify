@@ -9,6 +9,7 @@ import {
 } from "@ant-design/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useGlobalContext } from "@/contexts/GlobalContext";
 
 const { Option } = Select;
 
@@ -35,6 +36,9 @@ const ReviewForm: React.FC<QuestFormProps> = ({
   const [submittedData, setSubmittedData] = useState<any>({});
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const router = useRouter();
+  const { userPermissions } = useGlobalContext();
+  console.log(userPermissions);
+  const canReviewCourses = userPermissions.includes("Review Courses");
   console.log(quest);
   console.log(completed);
 
@@ -115,6 +119,13 @@ const ReviewForm: React.FC<QuestFormProps> = ({
     console.log(hasDoneQuest),
     (
       <div>
+        {!completed && !canReviewCourses && (
+          <div style={{textAlign: "center"}}>
+            <p>You do not have permissions to review courses, you must wait for someone to review the course and then you can see the submission!</p>
+            <Link href={`/courses/submissions`}>Return to course submission menu</Link>
+          </div>
+        )}
+        {canReviewCourses &&
         <Form className="questform_quest_block" style={{maxWidth: "1200px", margin: "auto"}}>
           {quest.map(
             (question: any, index: number) => (
@@ -138,6 +149,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
                             display: "flex",
                             flexDirection: "row",
                             gap: "5px",
+                            flexWrap: "wrap"
                           }}
                         >
                           <p>Mark answer as correct?</p>
@@ -264,7 +276,7 @@ const ReviewForm: React.FC<QuestFormProps> = ({
               Submit Review
             </Button>
           )}
-        </Form>
+        </Form> }
       </div>
     )
   );

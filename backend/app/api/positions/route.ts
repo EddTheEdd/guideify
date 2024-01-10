@@ -5,8 +5,21 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Get list of positions
+ * @param req 
+ * @returns 
+ */
 export async function GET(req: NextRequest) {
   try {
+
+    // Validate request
+    const userId = getDataFromToken(req);
+
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to view positions." }, { status: 403 });
+    }
+
     const data = await knex('positions').select('position_title', 'position_id');
 
     // For each position check if there is at least one user assigned to it and if so set canBeDeleted to false
@@ -31,10 +44,22 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * Update positions config
+ * @param req 
+ * @returns 
+ */
 export async function POST(req: NextRequest) {
   try {
+
+    // Validate the requester
     const userId = getDataFromToken(req);
 
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to edit positions." }, { status: 403 });
+    }
+
+    // Validate the access:
     const canEditPositions = await checkUserPermissions(userId, 'Admin Panel');
 
     if (!canEditPositions) {
@@ -44,9 +69,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get positions objs.
     const reqBody = await req.json();
     const { positions } = reqBody;
 
+    // Check if any of positions are missing a title
     for (const pos of positions) {
       if (pos.position_title.length === 0) {
         return NextResponse.json(
@@ -56,6 +83,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Create a promise that goes over all positons
     await Promise.all(positions.map(async (pos: any) => {
       if (pos.forDeletion) {
         await knex('positions').where('position_id', pos.position_id).del();

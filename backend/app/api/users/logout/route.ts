@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+/**
+ * Logs out the user
+ * @returns 
+ */
 export async function GET() {
     try {
         const response = NextResponse.json({

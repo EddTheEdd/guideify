@@ -5,11 +5,18 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Get submissions
+ * @param req 
+ * @returns 
+ */
 export async function GET(req: NextRequest) {
   try {
 
+    // Extract user id from the token
     const userId = getDataFromToken(req);
 
+    // Check if has permission
     const hasPermission = await checkUserPermissions(userId, 'View Course Progress');
     if (!hasPermission) {
       return NextResponse.json(
@@ -18,8 +25,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log(req.nextUrl.searchParams);
-
+    // Extract params from the request
     if (req.nextUrl.searchParams.get("view") === "users") {
       const page = parseInt(req.nextUrl.searchParams.get("page") || '1', 10);
       const limit = parseInt(req.nextUrl.searchParams.get("limit") || '10', 10);
@@ -55,8 +61,6 @@ export async function GET(req: NextRequest) {
           users: []
         });
       }
-
-      const userIds = users.map((user) => user.user_id);
 
       for (const user of users) {
         console.log(user);

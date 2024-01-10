@@ -159,7 +159,12 @@ export default function UserWages({ params }: any) {
           <Button
             type="default"
             onClick={() => {
-              generatePayslip(record);
+              try{
+                generatePayslip(record);
+              } catch (error: any) {
+                console.error(error);
+                message.error("Error generating payslip");
+              }
             }}
           >
             Download PDF

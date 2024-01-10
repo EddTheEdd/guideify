@@ -14,16 +14,22 @@ export async function middleware(request: NextRequest) {
   };
 
   const path = request.nextUrl.pathname;
+  const isPublicApiPath = path.startsWith('/api/users/login') || path.startsWith('/api/users/signup');
   const isPublicPath = path === "/login" || path === "/signup";
   const token = request.cookies.get("token")?.value || "";
 
   try {
+
+    if (isPublicApiPath) {
+      return NextResponse.next();
+    }
+
     if (token) {
       const secretKey = new TextEncoder().encode(process.env.TOKEN_SECRET);
       const { payload } = await jwtVerify(token, secretKey);
 
       if (isPublicPath) {
-        return NextResponse.redirect(new URL("/", request.nextUrl));
+        return NextResponse.redirect(new URL("/home", request.nextUrl));
       }
 
       const userPermissions = payload.permissions || [];
@@ -101,6 +107,7 @@ export const config = {
     "/courses/:path*",
     "/roles/assignment",
     "/unit/view/:path*",
-    "/unit/submission/:path*"
+    "/unit/submission/:path*",
+    "/api/:path*"
   ],
 };

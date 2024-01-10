@@ -30,13 +30,14 @@ const DeleteBox: React.FC<DeleteBoxProps> = ({ onDrop }) => {
         padding: "1rem",
         border: "2px solid black",
         borderRadius: "5px",
-        maxWidth: "100px",
-        minHeight: "100px",
+        minWidth: "60px",
+        minHeight: "60px",
         position: "relative",
         display: "flex",
         justifyContent: "center",
         alignItems: "center", 
       }}
+      className={"delete_box_container"}
     >
       <DeleteFilled style={{fontSize: "30px"}}/>
     </div>

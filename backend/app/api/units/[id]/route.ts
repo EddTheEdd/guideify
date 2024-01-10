@@ -2,11 +2,23 @@ import pool from "@/dbConfig/pgConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
 import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
-
+/**
+ * Get units from passed course id
+ * @param request 
+ * @returns 
+ */
 export async function GET(request: NextRequest) {
+
+    // Validate the request
     const userId = getDataFromToken(request)
+
+    if (!userId) {
+        return NextResponse.json({ error: 'You must be logged in to view units.' }, { status: 403 });
+    }
+
+    // Check for permissions
     const canRequestOtherIds = await checkUserPermissions(userId, 'View Course Progress');
-    const courseId = request.nextUrl.pathname.split('/').pop();  // Extract the last part of the URL as course ID
+    const courseId = request.nextUrl.pathname.split('/').pop();
 
     if (!courseId) {
         return NextResponse.json({ error: 'Course ID is required.' }, { status: 400 });
@@ -57,9 +69,21 @@ export async function GET(request: NextRequest) {
     }
 }
 
+/**
+ * Delete a unit
+ * @param request 
+ * @returns 
+ */
 export async function DELETE(request: NextRequest) {
+
+    // Validate the request
     const userId = getDataFromToken(request);
 
+    if (!userId) {
+        return NextResponse.json({ error: 'You must be logged in to delete a unit.' }, { status: 403 });
+    }
+
+    // Check for permissions
     const hasPermission = await checkUserPermissions(userId, 'Edit Courses');
     if (!hasPermission) {
       return NextResponse.json(

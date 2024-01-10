@@ -2,9 +2,25 @@ import pool from "@/dbConfig/pgConfig";
 import knex from "@/dbConfig/knexConfig";
 import { NextRequest, NextResponse } from "next/server";
 import bcryptjs from "bcryptjs";
+import { getDataFromToken } from "@/helpers/getDataFromToken";
 
+/**
+ * Gets users data.
+ * @param _request 
+ * @returns 
+ */
 export async function GET(_request: NextRequest) {
   try {
+
+    // Get the user id from the token
+    const userId = getDataFromToken(_request);
+
+    // Check for existance
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to view users." }, { status: 403 });
+    }
+
+    // Get url paramters:
     const page = parseInt(_request.nextUrl.searchParams.get("page") || "1", 10);
     const limit = parseInt(
       _request.nextUrl.searchParams.get("limit") || "10",
@@ -28,6 +44,8 @@ export async function GET(_request: NextRequest) {
     const updatedAtFilter = _request.nextUrl.searchParams.get("updated_at");
     const createdAtFilter = _request.nextUrl.searchParams.get("created_at");
 
+
+    // Start building our query:
     let knexQuery = knex
       .select("*")
       .from("users")
@@ -55,11 +73,23 @@ export async function GET(_request: NextRequest) {
     }
 
     if (updatedAtFilter) {
-      knexQuery.where("updated_at", "like", `%${updatedAtFilter}%`);
+      // Parse the date filter
+      const updatedAtDate = new Date(updatedAtFilter);
+      const nextDay = new Date(updatedAtDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      // Adjust the query to filter for the entire day
+      knexQuery.whereBetween('users.updated_at', [updatedAtDate, nextDay]);
     }
 
     if (createdAtFilter) {
-      knexQuery.where("created_at", "like", `%${createdAtFilter}%`);
+      // Parse the date filter
+      const createdAtDate = new Date(createdAtFilter);
+      const nextDay = new Date(createdAtDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      // Adjust the query to filter for the entire day
+      knexQuery.whereBetween('users.created_at', [createdAtDate, nextDay]);
     }
 
     // Clone the base query for counting
@@ -75,7 +105,8 @@ export async function GET(_request: NextRequest) {
     const result: any = await knexQuery;
     console.log("USERS:");
     console.log(result);
-    // remove password
+  
+    // We dont want to show the password
     result.forEach((user: any) => {
       delete user.password;
     });
@@ -99,12 +130,24 @@ export async function GET(_request: NextRequest) {
 
 export async function POST(_request: NextRequest) {
   try {
+
+    // Get the userId
+    const userId = getDataFromToken(_request);
+
+    // Check for existance
+    if (!userId) {
+      return NextResponse.json({ error: "You must be logged in to edit a user." }, { status: 403 });
+    }
+    
+    // Extracting the body parameters
     const reqBody = await _request.json();
 
-    const { id, values } = reqBody;
+    const { id, values, passwordTouched } = reqBody;
 
     const { password, email, department_name, position_title, username } = values;
 
+
+    // If missing password, email, or username, return error
     if (!password || !email || !username) {
       return NextResponse.json(
         { error: "Missing required fields." },
@@ -112,6 +155,7 @@ export async function POST(_request: NextRequest) {
       );
     }
 
+    // If id isnt present then we check for duplicate username and email, as those cannot be changed for existing users
     if (!id) {
       // check for duplicate username:
       const duplicateUsername = await knex.select("*").from("users").where("username", username).first();
@@ -132,6 +176,7 @@ export async function POST(_request: NextRequest) {
       }
     }
 
+    // Remove password from values
     delete values.password;
     if (id) {
       delete values.email;
@@ -139,6 +184,8 @@ export async function POST(_request: NextRequest) {
     }
     delete values?.department_name;
     delete values?.position_title;
+
+    // Find the department and position ids
 
     if (department_name) {
       // find department id:
@@ -160,20 +207,26 @@ export async function POST(_request: NextRequest) {
     const salt = await bcryptjs.genSalt(10);
     const hashedPassword = await bcryptjs.hash(password, salt);
 
+    // set the value
     values.password = hashedPassword;
 
+    // Update or create the user
     let userQuery;
     if (user) {
-      // update
+      if (!passwordTouched) {
+        delete values.password;
+      }
+      // Update
       userQuery = await knex("users")
         .update(values)
         .where("user_id", id)
         .returning("*");
     } else {
-      // create
+      // Create
       userQuery = await knex("users").insert({...values, email}).returning("*");
     }
 
+    // If we have a user, return it
     if (userQuery.length > 0) {
       const updatedUser = userQuery[0];
       delete updatedUser.password;
@@ -183,6 +236,7 @@ export async function POST(_request: NextRequest) {
       });
     }
 
+    // If we dont have a user, return error
     return NextResponse.json({
       success: false,
       error: "Something went wrong while creating/updating user.",

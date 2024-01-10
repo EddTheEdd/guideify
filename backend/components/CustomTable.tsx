@@ -25,7 +25,7 @@ const CustomTable: React.FC<Props> = ({ data, columns }) => {
     ...role,
   }));
 
-  return <Table columns={columns} dataSource={dataSource} />;
+  return <Table pagination={false} columns={columns} dataSource={dataSource} />;
 };
 
 export default CustomTable;

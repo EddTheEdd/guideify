@@ -18,6 +18,7 @@ const ItemType = "USER";
 interface User {
   user_id: number;
   username: string;
+  rgb_value: string;
 }
 
 interface Role {
@@ -32,16 +33,19 @@ interface UserRole {
 }
 
 export default function AssignRoles() {
+  const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<Role[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const { userPermissions, theme, finishedFetchingPermissions } = useGlobalContext();
+  const { userPermissions, theme, finishedFetchingPermissions } =
+    useGlobalContext();
   console.log(userPermissions);
   // const canAssignRoles = userPermissions.includes("Assign Roles");
   const router = useRouter();
 
   useEffect(() => {
+    setLoading(true);
     // if (!canAssignRoles && finishedFetchingPermissions) {
     //   router.push("/forbidden");
     // }
@@ -50,7 +54,21 @@ export default function AssignRoles() {
       const res = await fetch("/api/users");
       const data = await res.json();
       if (data.success) {
-        return data.users;
+        const rainbowedUsers = data.users.map((user: User) => {
+          const highValueIndex = Math.floor(Math.random() * 3);
+          const rgb = [0, 0, 0].map((_, idx) =>
+            idx === highValueIndex
+              ? Math.floor(Math.random() * 127) + 128
+              : Math.floor(Math.random() * 256)
+          );
+
+          return {
+            ...user,
+            rgb_value: `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`,
+          };
+        });
+
+        return rainbowedUsers;
       } else {
         throw new Error("Failed to fetch users");
       }
@@ -106,10 +124,12 @@ export default function AssignRoles() {
         setUsers(usersData);
         setUserRoles(userRolesData);
         transformRoles(rolesData, userRolesData, usersData);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching data", error);
       });
+
   }, [refresh]);
 
   const assignUserRoles = async (userId: number, roleId: number) => {
@@ -169,7 +189,7 @@ export default function AssignRoles() {
       console.error("Error removing role", error);
     }
   };
-
+  const antIcon = <LoadingOutlined className="rainbow-spinner" spin />;
   return (
     console.log(roles),
     console.log(users),
@@ -177,34 +197,55 @@ export default function AssignRoles() {
     (
       <DndProvider backend={HTML5Backend}>
         <Layout>
-          <div style={{ display: "flex", gap: "10px", height: "100%", margin: "auto" }}>
+          {(loading && (
+            <div className="loading_spinner">
+              <Spin
+                indicator={<LoadingOutlined style={{ fontSize: 100 }} spin />}
+              />
+            </div>
+          )) || (
             <div
               style={{
-                borderRight: "solid 2px black",
-                padding: "16px",
-                height: "100%",
-                overflowY: "scroll",
-                minWidth: "100px"
+                display: "flex",
+                gap: "10px",
+                margin: "auto",
+                flexWrap: "wrap",
+                maxWidth: "1200px",
               }}
             >
-              <p style={{ fontWeight: "900", margin: "0" }}>Users:</p>
-              {users.map((user, index) => (
-                <UserItem key={index} id={user.user_id} username={user.username} />
-              ))}
+              <div
+                className="parent_container_user_list"
+              >
+                <div
+                  className="container_user_list"
+                >
+                  <p style={{ fontWeight: "900", margin: "0" }}>Users:</p>
+                  <div className="container_phone_inner_user_list">
+                    {users.map((user, index) => (
+                      <UserItem
+                        key={index}
+                        id={user.user_id}
+                        username={user.username}
+                        color={user?.rgb_value}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="role_assignment_rolebox_container">
+                  {roles.map((role, index) => (
+                    <RoleBox
+                      key={index}
+                      role={role.role_name}
+                      role_id={role.role_id}
+                      users={role.users}
+                      onDrop={(item) => onDrop(item, role.role_id)}
+                    />
+                  ))}
+                </div>
+                <DeleteBox onDrop={(item: any) => removeItem(item)} />
+              </div>
             </div>
-            <div className="role_assignment_rolebox_container">
-              {roles.map((role, index) => (
-                <RoleBox
-                  key={index}
-                  role={role.role_name}
-                  role_id={role.role_id}
-                  users={role.users}
-                  onDrop={(item) => onDrop(item, role.role_id)}
-                />
-              ))}
-            </div>
-            <DeleteBox onDrop={(item: any) => removeItem(item)} />
-          </div>
+          )}
         </Layout>
       </DndProvider>
     )

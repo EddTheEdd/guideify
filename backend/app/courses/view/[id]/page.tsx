@@ -206,7 +206,7 @@ export default function CourceView({ params }: any) {
         console.log(response.data.units);
         setUnits(response.data.units);
       } catch (error) {
-        console.error("Error fetching the units data", error);
+        console.error("Error requesting course progress data", error);
       }
     };
 

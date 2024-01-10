@@ -1,14 +1,32 @@
 import pool from "@/dbConfig/pgConfig";
 import { getDataFromToken } from "@/helpers/getDataFromToken";
+import { checkUserPermissions } from "@/utils/permissions";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * Review a user's answers
+ * @param request 
+ * @returns 
+ */
 export async function POST(request: NextRequest) {
   try {
+    const tokenUserId = getDataFromToken(request);
+    const canReviewUserAnswers = await checkUserPermissions(tokenUserId, "Review Courses");
+
+    if (!canReviewUserAnswers) {
+      return NextResponse.json(
+        { error: "Forbidden You do not have permission to review user answers. Permission required: Review Coursess" },
+        { status: 403 }
+      );
+    }
+
     const submissionId = request.nextUrl.pathname.split('/').pop();  // Extract the last part of the URL as course ID
 
+    // Extract the values
     const reqBody = await request.json();
     const { review, unitId } = reqBody;
 
+    // Check if submission exists
     const submissionResponse = await pool.query(
       `SELECT * FROM user_unit_progress WHERE progress_id = $1`,
       [submissionId]
@@ -23,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     const userId = submissionResponse.rows[0].user_id;
 
-    // loop through object of question.id: boolean correct or not:
+    // Loop through object of question.id: boolean correct or not:
     for (const [questionId, isCorrect] of Object.entries(review)) {
         const updateUserAnswer = await pool.query(
           `UPDATE user_answers SET is_reviewed = true, is_correct = $1 WHERE question_id = $2 AND user_id = $3 RETURNING *`,
@@ -38,11 +56,13 @@ export async function POST(request: NextRequest) {
         }
     }
 
+    // Update the quiz to be completed
     const completeQuiz = await pool.query(
       `UPDATE user_unit_progress SET completed = true WHERE progress_id = $1`,
       [submissionId]
     );
 
+    // Check if the quiz was updated
     if (completeQuiz.rowCount === 0) {
       return NextResponse.json(
         { error: "Could not complete quiz." },
@@ -50,6 +70,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Return successs
     return NextResponse.json({
       message: "Answers reviewed successfully",
       success: true,

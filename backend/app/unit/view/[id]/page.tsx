@@ -7,6 +7,8 @@ import { Button, Divider, Spin, Tag, Typography } from "antd";
 import DOMPurify from "dompurify";
 import AnswerForm from "@/components/AnswerForm";
 import { LoadingOutlined } from "@ant-design/icons";
+import { Router } from "express";
+import { useRouter } from "next/navigation";
 
 const { Title, Text } = Typography;
 
@@ -51,6 +53,7 @@ const tagColors = {
   Completed: "green",
   Failed: "red",
   Withdrawn: "gray",
+  Submitted: "pink"
 };
 
 const UnitPage: React.FC = ({ params }: any) => {
@@ -61,6 +64,7 @@ const UnitPage: React.FC = ({ params }: any) => {
   const [courseId, setCourseId] = useState(0);
   const [quest, setQuest] = useState([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   useEffect(() => {
     setLoading(true);
     if (!id) return;
@@ -90,7 +94,10 @@ const UnitPage: React.FC = ({ params }: any) => {
         setCourseId(response.data.unit.course_id);
         console.log(response.data.unit);
         setLoading(false);
-      } catch (error) {
+      } catch (error: any) {
+        if (error.response.status === 403) {
+          router.push("/forbidden");
+        }
         console.error("Error fetching the unit data", error);
       }
     };
@@ -134,10 +141,10 @@ const UnitPage: React.FC = ({ params }: any) => {
                 </p>
                 <Tag
                   color={`${
-                    tagColors[completed ? "Completed" : "In Progress"]
+                    tagColors[(hasDoneQuest && !completed && "Submitted") || (completed ? "Completed" : "In Progress")]
                   }`}
                 >
-                  {completed ? "Completed" : "In Progress"}
+                  {(hasDoneQuest && !completed && "Submitted") || (completed ? "Completed" : "In Progress")}
                 </Tag>
                 <Divider></Divider>
                 <div
