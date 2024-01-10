@@ -27,47 +27,73 @@ const Layout: React.FC<any> = ({ children }) => {
 
   const roleMenu = (
     <Menu>
-      {userPermissions.includes("View Roles") && (<Menu.Item key="roles:1">
-        <Link href="/roles">View Roles</Link>
-      </Menu.Item>)}
-      {userPermissions.includes("Assign Roles") && (<Menu.Item key="roles:2">
-        <Link href="/roles/assignment">Role Assignment</Link>
-      </Menu.Item>)}
+      {[
+        ...(userPermissions.includes("View Roles")
+          ? [
+              <Menu.Item key="roles:1">
+                <Link href="/roles">View Roles</Link>
+              </Menu.Item>,
+            ]
+          : []),
+        ...(userPermissions.includes("Assign Roles")
+          ? [
+              <Menu.Item key="roles:2">
+                <Link href="/roles/assignment">Role Assignment</Link>
+              </Menu.Item>,
+            ]
+          : []),
+      ]}
     </Menu>
   );
 
   const coursesMenu = (
     <Menu>
-      <Menu.Item key="courses:1">
-        <Link href="/courses">View Courses</Link>
-      </Menu.Item>
-      {userPermissions.includes("View Course Progress") && (<Menu.Item key="courses:2">
-        <Link href="/courses/submissions">View Course Progress</Link>
-      </Menu.Item>)}
+      {[
+        <Menu.Item key="courses:1">
+          <Link href="/courses">View Courses</Link>
+        </Menu.Item>,
+        ...(userPermissions.includes("View Course Progress")
+          ? [
+              <Menu.Item key="courses:2">
+                <Link href="/courses/submissions">View Course Progress</Link>
+              </Menu.Item>,
+            ]
+          : []),
+      ]}
     </Menu>
   );
 
   const userProfileMenu = (
     <Menu>
-      <Menu.Item key="profile:1">
-        <Link href="/profile">Profile Details</Link>
-      </Menu.Item>
-      {userPermissions.includes("Admin Panel") && (
-        <Menu.Item key="profile:2">
-          <Link href="/admin">Admin Page</Link>
-        </Menu.Item>
-      )}
+      {[
+        <Menu.Item key="profile:1">
+          <Link href="/profile">Profile Details</Link>
+        </Menu.Item>,
+        ...(userPermissions.includes("Admin Panel")
+          ? [
+              <Menu.Item key="profile:2">
+                <Link href="/admin">Admin Page</Link>
+              </Menu.Item>,
+            ]
+          : []),
+      ]}
     </Menu>
   );
 
   const wagesMenu = (
     <Menu>
-      {userPermissions.includes("View Salaries") && (<Menu.Item key="wages:1">
-        <Link href="/wages">Employee Salaries</Link>
-      </Menu.Item>)}
-      <Menu.Item key="wages:2">
-        <Link href={`/wages/${activeUserId}`}>My Salary</Link>
-      </Menu.Item>
+      {[
+        ...(userPermissions.includes("View Salaries")
+          ? [
+              <Menu.Item key="wages:1">
+                <Link href="/wages">Employee Salaries</Link>
+              </Menu.Item>,
+            ]
+          : []),
+        <Menu.Item key="wages:2">
+          <Link href={`/wages/${activeUserId}`}>My Salary</Link>
+        </Menu.Item>,
+      ]}
     </Menu>
   );
 
@@ -126,7 +152,8 @@ const Layout: React.FC<any> = ({ children }) => {
       ),
       key: "home",
     },
-    (userPermissions.includes("View Roles") || userPermissions.includes("Assign Roles")) && {
+    (userPermissions.includes("View Roles") ||
+      userPermissions.includes("Assign Roles")) && {
       label: (
         <Dropdown
           overlay={roleMenu}
