@@ -124,21 +124,7 @@ const Layout: React.FC<any> = ({ children }) => {
     {
       label: (
         <Link className="svg-container" href="/home">
-          <div>
-            <img
-              src="/Union.svg"
-              alt="logo"
-              className="default-svg"
-              style={{ width: "50px", height: "40px" }}
-            />
-
-            <img
-              src="/Union_hover.svg"
-              alt="logo hover"
-              className="hover-svg"
-              style={{ width: "50px", height: "40px" }}
-            />
-          </div>
+          {/* ... */}
         </Link>
       ),
       key: "logo",
@@ -152,28 +138,19 @@ const Layout: React.FC<any> = ({ children }) => {
       ),
       key: "home",
     },
-    (userPermissions.includes("View Roles") ||
-      userPermissions.includes("Assign Roles")) && {
+    ...(userPermissions.includes("View Roles") || userPermissions.includes("Assign Roles") ? [{
       label: (
-        <Dropdown
-          overlay={roleMenu}
-          trigger={["hover"]}
-          className="role_dropdown_main"
-        >
+        <Dropdown overlay={roleMenu} trigger={["hover"]} className="role_dropdown_main">
           <a className="dropdown-hover" onClick={(e) => e.preventDefault()}>
             <TeamOutlined /> Roles <DownOutlined className="down-icon" />
           </a>
         </Dropdown>
       ),
       key: "roles",
-    },
+    }] : []),
     {
       label: (
-        <Dropdown
-          overlay={wagesMenu}
-          trigger={["hover"]}
-          className="role_dropdown_main"
-        >
+        <Dropdown overlay={wagesMenu} trigger={["hover"]} className="role_dropdown_main">
           <a className="dropdown-hover" onClick={(e) => e.preventDefault()}>
             <DollarOutlined /> Salaries <DownOutlined className="down-icon" />
           </a>
@@ -183,11 +160,7 @@ const Layout: React.FC<any> = ({ children }) => {
     },
     {
       label: (
-        <Dropdown
-          overlay={coursesMenu}
-          trigger={["hover"]}
-          className="role_dropdown_main"
-        >
+        <Dropdown overlay={coursesMenu} trigger={["hover"]} className="role_dropdown_main">
           <a className="dropdown-hover" onClick={(e) => e.preventDefault()}>
             <TeamOutlined /> Courses <DownOutlined className="down-icon" />
           </a>
