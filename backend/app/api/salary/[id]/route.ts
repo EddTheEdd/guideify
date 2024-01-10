@@ -185,9 +185,8 @@ export async function GET(_request: NextRequest) {
     const userId = _request.nextUrl.pathname.split("/").pop();
 
     const getall = _request.nextUrl.searchParams.get("getall");
-    console.log(getall);
 
-    if (tokenUserId !== userId) {
+    if (tokenUserId != userId) {
       const hasPermission = await checkUserPermissions(tokenUserId, 'View Salaries');
       if (!hasPermission) {
         return NextResponse.json(

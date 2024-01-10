@@ -57,7 +57,7 @@ export default function UserWages({ params }: any) {
           console.error("Failed to fetch user salary", data.error);
         }
       } catch (error) {
-        console.error("Error fetching usersalaru", error);
+        console.error("Error fetching usersalary", error);
       }
     };
 
